@@ -86,6 +86,19 @@
           <button class="primary-action" onclick="openDebtForm('new')">+ Nova dívida</button>
         </div>
         <div id="debtMetrics" class="debt-metrics"></div>
+        <div class="sort-bar">
+          <label>Ordenar</label>
+          <select id="debtSort" onchange="setDebtSort(this.value)">
+            <option value="priority">Prioridade</option>
+            <option value="installment-desc">Maior Parcela</option>
+            <option value="installment-asc">Menor Parcela</option>
+            <option value="balance-desc">Maior Saldo Devedor</option>
+            <option value="balance-asc">Menor Saldo Devedor</option>
+            <option value="progress-desc">Maior Progresso</option>
+            <option value="progress-asc">Menor Progresso</option>
+            <option value="next-due">Próxima Parcela</option>
+          </select>
+        </div>
         <section id="debtForm" class="form-card">
           <h2 class="panel-title" id="debtFormTitle">Nova dívida</h2>
           <div class="form-grid">
@@ -114,6 +127,19 @@
         </div>
         <div id="waitingCreditorFilters" class="filter-row"></div>
         <div id="waitingDebtMetrics" class="debt-metrics"></div>
+        <div class="sort-bar">
+          <label>Ordenar</label>
+          <select id="waitingDebtSort" onchange="setWaitingDebtSort(this.value)">
+            <option value="priority">Prioridade</option>
+            <option value="installment-desc">Maior Parcela</option>
+            <option value="installment-asc">Menor Parcela</option>
+            <option value="balance-desc">Maior Saldo Devedor</option>
+            <option value="balance-asc">Menor Saldo Devedor</option>
+            <option value="progress-desc">Maior Progresso</option>
+            <option value="progress-asc">Menor Progresso</option>
+            <option value="next-due">Próxima Parcela</option>
+          </select>
+        </div>
         <div class="debt-list" id="waitingDebts"></div>
       </section>
 
@@ -149,7 +175,17 @@
             <div class="form-grid" style="grid-template-columns: 1fr;">
               <div><label>Nome do credor</label><input id="creditorName" placeholder="Ex.: Santander" /></div>
               <div><label>Tipo</label><select id="creditorType"><option>Banco</option><option>Cartão</option><option>Financeira</option><option>Loja</option><option>Pessoa física</option><option>Outro</option></select></div>
-              <div><label>URL da logo</label><input id="creditorLogoUrl" placeholder="https://..." /></div>
+              <div>
+                <label>Logo do credor</label>
+                <div class="logo-upload">
+                  <div id="creditorLogoPreview" class="creditor-logo">RF</div>
+                  <div>
+                    <input id="creditorLogoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="handleCreditorLogoUpload(event)" />
+                    <input id="creditorLogoUrl" type="hidden" />
+                    <button class="ghost-btn" type="button" onclick="clearCreditorLogo()">Remover logo</button>
+                  </div>
+                </div>
+              </div>
               <div><label>Observações</label><textarea id="creditorNotes" placeholder="Ex.: costuma oferecer desconto, tem portal próprio..."></textarea></div>
             </div>
             <div class="form-actions"><button class="primary-action" onclick="saveCreditor()">Salvar credor</button><button class="ghost-btn" onclick="resetCreditorForm()">Cancelar edição</button></div>

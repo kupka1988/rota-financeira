@@ -28,6 +28,8 @@
     let selectedCreditorFilter = 'all';
     let selectedPriorityFilter = 'all';
     let selectedWaitingCreditorFilter = 'all';
+    let selectedDebtSort = 'priority';
+    let selectedWaitingDebtSort = 'priority';
     let expandedDebtId = null;
 
     const $ = (id) => document.getElementById(id);
@@ -367,9 +369,11 @@
     function renderDebts() {
       const activeAll = debts.filter(d => d.status === 'Ativa');
       const activeByPriority = selectedPriorityFilter === 'all' ? activeAll : activeAll.filter(d => d.criticality === selectedPriorityFilter);
-      const active = selectedCreditorFilter === 'all' ? activeByPriority : activeByPriority.filter(d => d.creditorId === selectedCreditorFilter);
+      const activeFiltered = selectedCreditorFilter === 'all' ? activeByPriority : activeByPriority.filter(d => d.creditorId === selectedCreditorFilter);
+      const active = sortDebts(activeFiltered, selectedDebtSort);
       const waitingAll = debts.filter(d => d.status === 'Em espera');
-      const waiting = selectedWaitingCreditorFilter === 'all' ? waitingAll : waitingAll.filter(d => d.creditorId === selectedWaitingCreditorFilter);
+      const waitingFiltered = selectedWaitingCreditorFilter === 'all' ? waitingAll : waitingAll.filter(d => d.creditorId === selectedWaitingCreditorFilter);
+      const waiting = sortDebts(waitingFiltered, selectedWaitingDebtSort);
       renderDebtMetrics(activeByPriority);
       renderWaitingCreditorFilters(waitingAll);
       renderWaitingDebtMetrics(waitingAll);
@@ -506,7 +510,29 @@
     function monthLabel(monthKey) {
       if (!monthKey) return '-';
       const [year, month] = monthKey.split('-').map(Number);
-      return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      const label = new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    }
+
+    function priorityScore(debt) {
+      if (debt.criticality === 'Máxima') return 3;
+      if (debt.criticality === 'Alta') return 2;
+      return 1;
+    }
+
+    function sortDebts(items, mode) {
+      return [...items].sort((a, b) => {
+        const nextA = nextInstallment(a);
+        const nextB = nextInstallment(b);
+        if (mode === 'installment-desc') return Number(b.installmentValue || 0) - Number(a.installmentValue || 0);
+        if (mode === 'installment-asc') return Number(a.installmentValue || 0) - Number(b.installmentValue || 0);
+        if (mode === 'balance-desc') return debtBalance(b) - debtBalance(a);
+        if (mode === 'balance-asc') return debtBalance(a) - debtBalance(b);
+        if (mode === 'progress-desc') return debtProgress(b) - debtProgress(a);
+        if (mode === 'progress-asc') return debtProgress(a) - debtProgress(b);
+        if (mode === 'next-due') return String(nextA?.dueDate || '9999-12-31').localeCompare(String(nextB?.dueDate || '9999-12-31'));
+        return (priorityScore(b) - priorityScore(a)) || (debtBalance(b) - debtBalance(a));
+      });
     }
 
     function renderHistory() {
@@ -544,17 +570,22 @@
       metrics.innerHTML =
         debtMetric('Meses com Pagamento', String(rows.length), '↺', 'blue') +
         debtMetric('Total Pago', brl(totalPaid), '✓', 'green') +
-        debtMetric('Descontos Obtidos', brl(totalDiscount), '↓', 'green') +
-        debtMetric('Juros Pagos', brl(totalInterest), '!', 'red');
+        debtMetric('Economia Total', brl(totalDiscount), '↓', 'green') +
+        debtMetric('Custo com Juros', brl(totalInterest), '!', 'red');
 
       list.innerHTML = rows.map(([key, item]) => {
         const paidPct = Math.max(4, Math.round((item.paid / maxPaid) * 100));
-        const netGain = item.discount - item.interest;
+        const netSaving = item.discount - item.interest;
+        const resultTag = netSaving > 0
+          ? tag('Economia ' + brl(netSaving), 'green')
+          : netSaving < 0
+            ? tag('Impacto de Juros ' + brl(Math.abs(netSaving)), 'red')
+            : tag('Equilíbrio', 'gray');
         return '<div class="history-month">' +
-          '<div class="history-month-head"><div><div class="debt-name">' + escapeHtml(monthLabel(key)) + '</div><div class="debt-meta"><span>' + item.count + ' pagamentos</span>' + (netGain >= 0 ? tag('Ganho ' + brl(netGain), 'green') : tag('Custo ' + brl(Math.abs(netGain)), 'red')) + '</div></div><strong>' + brl(item.paid) + '</strong></div>' +
+          '<div class="history-month-head"><div><div class="debt-name">' + escapeHtml(monthLabel(key)) + '</div><div class="debt-meta"><span>' + item.count + ' pagamentos</span>' + resultTag + '</div></div><strong>' + brl(item.paid) + '</strong></div>' +
           '<div class="history-bars">' +
             '<div class="history-bar"><span>Pago</span><div class="bar-track"><div class="bar-fill" style="width:' + paidPct + '%;"></div></div><strong>' + brl(item.paid) + '</strong></div>' +
-            '<div class="history-bar"><span>Desconto</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, Math.round((item.discount / Math.max(item.paid, 1)) * 100)) + '%;"></div></div><strong>' + brl(item.discount) + '</strong></div>' +
+            '<div class="history-bar"><span>Economia</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, Math.round((item.discount / Math.max(item.paid, 1)) * 100)) + '%;"></div></div><strong>' + brl(item.discount) + '</strong></div>' +
             '<div class="history-bar"><span>Juros</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, Math.round((item.interest / Math.max(item.paid, 1)) * 100)) + '%; background: linear-gradient(90deg, var(--amber), var(--danger));"></div></div><strong>' + brl(item.interest) + '</strong></div>' +
           '</div>' +
         '</div>';
@@ -755,6 +786,18 @@
       renderDebts();
     };
 
+    window.setDebtSort = function(mode) {
+      selectedDebtSort = mode;
+      expandedDebtId = null;
+      renderDebts();
+    };
+
+    window.setWaitingDebtSort = function(mode) {
+      selectedWaitingDebtSort = mode;
+      expandedDebtId = null;
+      renderDebts();
+    };
+
     window.saveDebt = async function() {
       if (!creditors.length) return showToast('Cadastre um credor antes da dívida.');
       const creditorId = $('debtCreditorSelect').value;
@@ -915,6 +958,7 @@
       $('creditorName').value = creditor.name || '';
       $('creditorType').value = creditor.type || 'Banco';
       $('creditorLogoUrl').value = creditor.logoUrl || '';
+      renderCreditorLogoPreview(creditor.logoUrl || '', creditor.name || '');
       $('creditorNotes').value = creditor.notes || '';
     };
 
@@ -924,7 +968,44 @@
       $('creditorName').value = '';
       $('creditorType').value = 'Banco';
       $('creditorLogoUrl').value = '';
+      $('creditorLogoFile').value = '';
+      renderCreditorLogoPreview('', 'RF');
       $('creditorNotes').value = '';
+    };
+
+    function renderCreditorLogoPreview(src, fallbackName) {
+      const preview = $('creditorLogoPreview');
+      if (!preview) return;
+      if (src) {
+        preview.innerHTML = '<img alt="Logo" src="' + escapeHtml(src) + '">';
+      } else {
+        preview.textContent = initials(fallbackName || $('creditorName')?.value || 'RF');
+      }
+    }
+
+    window.handleCreditorLogoUpload = function(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        event.target.value = '';
+        return showToast('Selecione um arquivo de imagem.');
+      }
+      if (file.size > 250000) {
+        event.target.value = '';
+        return showToast('Use uma logo menor, até 250 KB.');
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        $('creditorLogoUrl').value = String(reader.result || '');
+        renderCreditorLogoPreview($('creditorLogoUrl').value, $('creditorName').value || 'RF');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.clearCreditorLogo = function() {
+      $('creditorLogoUrl').value = '';
+      $('creditorLogoFile').value = '';
+      renderCreditorLogoPreview('', $('creditorName').value || 'RF');
     };
 
     window.openDeleteModal = function(type, id) {
