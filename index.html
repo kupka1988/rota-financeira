@@ -112,17 +112,29 @@
     .strategy-text { color: var(--soft); margin-top: 8px; font-size: 14px; line-height: 1.45; }
 
     .filter-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
-    .filter-row .is-active { background: var(--green-soft); color: #8ae1b8; border-color: rgba(63,185,133,0.28); }
+    .filter-row .ghost-btn { display: inline-flex; align-items: center; gap: 9px; min-height: 42px; padding: 9px 12px; }
+    .filter-row .creditor-logo { width: 24px; height: 24px; border-radius: 8px; font-size: 10px; }
+    .filter-row .is-active { background: var(--amber-soft); color: #ffd77f; border-color: rgba(216,164,65,0.42); }
+    .filter-count { min-width: 24px; height: 22px; display: inline-grid; place-items: center; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--soft); font-size: 11px; font-weight: 850; }
+    .debt-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--border); box-shadow: var(--shadow); }
+    .debt-metric { display: grid; grid-template-columns: 44px 1fr; gap: 13px; align-items: center; padding: 18px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--panel); }
+    .metric-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 14px; background: var(--amber-soft); color: #ffd77f; font-weight: 900; }
+    .metric-icon.green { background: var(--green-soft); color: #8ae1b8; }
+    .metric-icon.blue { background: var(--blue-soft); color: #a8c3ff; }
+    .metric-icon.red { background: var(--danger-soft); color: #eda2a2; }
 
-    .debt-list { display: grid; gap: 12px; }
-    .debt-card { padding: 13px 14px; }
+    .debt-list { display: grid; gap: 10px; }
+    .debt-card { padding: 0; overflow: visible; }
     .debt-card.max { border-color: rgba(216,164,65,0.44); box-shadow: 0 20px 70px rgba(216,164,65,0.08); }
-    .debt-card.expanded { padding: 18px; }
-    .debt-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+    .debt-card.expanded { border-color: rgba(216,164,65,0.68); }
+    .debt-row { display: grid; grid-template-columns: minmax(260px, 1.35fr) minmax(128px, 0.7fr) minmax(118px, 0.62fr) minmax(150px, 0.8fr) minmax(130px, 0.7fr) 44px; gap: 16px; align-items: center; padding: 16px 18px; }
+    .debt-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; min-width: 0; }
     .debt-title { min-width: 0; flex: 1; }
-    .debt-name { font-weight: 820; font-size: 16px; letter-spacing: -0.01em; }
+    .debt-name { font-weight: 820; font-size: 17px; letter-spacing: -0.01em; }
     .debt-name.clickable { cursor: pointer; }
     .debt-meta { color: var(--muted); font-size: 12px; margin-top: 5px; display: flex; gap: 7px; flex-wrap: wrap; align-items: center; line-height: 1.35; }
+    .creditor-logo { width: 44px; height: 44px; border-radius: 15px; flex: 0 0 auto; display: grid; place-items: center; overflow: hidden; background: linear-gradient(135deg, rgba(77,141,247,0.22), rgba(216,164,65,0.2)); border: 1px solid var(--border-strong); color: var(--text); font-weight: 900; }
+    .creditor-logo img { width: 100%; height: 100%; object-fit: cover; }
     .tag { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
     .tag.green { background: var(--green-soft); color: #8ae1b8; }
     .tag.amber { background: var(--amber-soft); color: #f0c978; }
@@ -143,7 +155,11 @@
     .progress-box { margin-top:16px; max-width:720px; }
     .progress-line { height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; }
     .progress-fill { height:100%; background:linear-gradient(90deg,var(--blue),var(--green)); border-radius:999px; }
-    .debt-actions { margin-top:11px; padding-top:10px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap: 10px; flex-wrap: wrap; align-items:center; }
+    .row-stat .metric-label { margin-bottom: 6px; }
+    .row-stat strong { display: block; color: var(--text); font-size: 18px; letter-spacing: -0.025em; }
+    .row-stat small { display: block; color: var(--muted); margin-top: 4px; font-size: 12px; }
+    .row-toggle { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; }
+    .debt-actions { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap: 10px; flex-wrap: wrap; align-items:center; }
     .action-group { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .more-actions { position: relative; }
     .more-actions summary { list-style: none; }
@@ -151,9 +167,19 @@
     .more-actions[open] summary { background: var(--panel-3); color: var(--text); }
     .more-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 8; min-width: 190px; display: grid; gap: 8px; padding: 10px; background: var(--panel-2); border: 1px solid var(--border-strong); border-radius: 14px; box-shadow: var(--shadow); }
     .more-menu .ghost-btn { width: 100%; text-align: left; }
-    .debt-detail { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px; }
-    .installment-list { margin-top:18px; border-top:1px solid var(--border); padding-top:16px; display:grid; gap:10px; }
-    .installment-row { display:grid; grid-template-columns: minmax(170px, 1fr) minmax(280px, 2fr) auto; gap:12px; align-items:center; background:rgba(255,255,255,0.035); border:1px solid var(--border); border-radius:14px; padding:12px; }
+    .debt-detail { border-top: 1px solid var(--border); padding: 0 18px 16px; }
+    .debt-insights { display: grid; grid-template-columns: 1.15fr 0.85fr 1fr; gap: 12px; margin: 14px 0; }
+    .insight-card { display: grid; grid-template-columns: 42px 1fr; gap: 14px; align-items: center; min-height: 96px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.028); }
+    .insight-card.compact { grid-template-columns: 1fr; }
+    .insight-title { font-size: 13px; font-weight: 850; color: #ffd77f; margin-bottom: 7px; }
+    .mini-list { display: grid; gap: 7px; font-size: 13px; color: var(--soft); }
+    .mini-list div { display: flex; justify-content: space-between; gap: 16px; }
+    .mini-list strong { color: var(--text); }
+    .installment-list { margin-top:12px; border:1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .installment-title { padding: 14px 16px; font-weight: 850; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.025); }
+    .installment-row { display:grid; grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr 0.8fr 1fr; gap:12px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--border); font-size: 13px; }
+    .installment-row:last-child { border-bottom: 0; }
+    .installment-row.header { color: var(--muted); font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.018); }
     .installment-facts { color: var(--muted); font-size: 13px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 
     .form-card { margin-bottom: 18px; display: none; }
@@ -181,7 +207,11 @@
 
     @media (max-width: 1180px) {
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .debt-metrics { grid-template-columns: repeat(2, 1fr); }
+      .debt-row { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(120px, 0.5fr)) 44px; }
+      .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
       .debt-summary { grid-template-columns: 1fr; }
+      .debt-insights { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 980px) {
@@ -191,6 +221,10 @@
       .nav-item { min-width: max-content; }
       .grid-2, .form-grid { grid-template-columns: 1fr; }
       .grid-4 { grid-template-columns: 1fr; }
+      .debt-metrics { grid-template-columns: 1fr; }
+      .debt-row { grid-template-columns: 1fr; gap: 10px; }
+      .debt-row .row-stat.next, .debt-row .row-stat.progress { display: block; }
+      .row-toggle { justify-self: start; }
       .compact-summary { grid-template-columns: 1fr 1fr; }
       .finance-grid { grid-template-columns: 1fr 1fr; }
       .span-2, .span-4 { grid-column: span 1; }
@@ -199,7 +233,8 @@
       h1 { font-size: 28px; }
       .debt-actions { justify-content:flex-start; }
       .more-menu { left: 0; right: auto; }
-      .installment-row { grid-template-columns: 1fr; }
+      .installment-row { grid-template-columns: 1fr 1fr; }
+      .installment-row.header { display: none; }
     }
 
     @media (max-width: 560px) {
@@ -207,6 +242,7 @@
       aside { padding: 22px 18px; }
       .compact-summary { grid-template-columns: 1fr; }
       .finance-grid { grid-template-columns: 1fr; }
+      .installment-row { grid-template-columns: 1fr; }
       .metric-value { font-size: 24px; }
       .toast { left: 18px; right: 18px; bottom: 18px; }
     }
@@ -281,6 +317,7 @@
           <button class="primary-action" onclick="openDebtForm('new')">+ Nova dívida</button>
         </div>
         <div id="creditorFilters" class="filter-row"></div>
+        <div id="debtMetrics" class="debt-metrics"></div>
         <section id="debtForm" class="form-card">
           <h2 class="panel-title" id="debtFormTitle">Nova dívida</h2>
           <div class="form-grid">
@@ -453,6 +490,46 @@
       return '<span class="tag ' + tone + '">' + escapeHtml(label) + '</span>';
     }
 
+    function normalizeText(value) {
+      return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+
+    function creditorDomain(name) {
+      const value = normalizeText(name);
+      const domains = [
+        ['mercado pago', 'mercadopago.com.br'],
+        ['nubank', 'nubank.com.br'],
+        ['itau', 'itau.com.br'],
+        ['santander', 'santander.com.br'],
+        ['inter', 'bancointer.com.br'],
+        ['bradesco', 'bradesco.com.br'],
+        ['caixa', 'caixa.gov.br'],
+        ['banco do brasil', 'bb.com.br'],
+        ['bb', 'bb.com.br'],
+        ['serasa', 'serasa.com.br'],
+        ['picpay', 'picpay.com'],
+        ['c6', 'c6bank.com.br'],
+        ['will', 'willbank.com.br'],
+        ['neon', 'neon.com.br'],
+        ['next', 'next.me'],
+        ['pan', 'bancopan.com.br']
+      ];
+      const found = domains.find(item => value.includes(item[0]));
+      return found ? found[1] : '';
+    }
+
+    function initials(value) {
+      return String(value || '?').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '?';
+    }
+
+    function creditorLogoHtml(creditorId) {
+      const name = getCreditorName(creditorId);
+      const domain = creditorDomain(name);
+      if (!domain) return '<div class="creditor-logo">' + escapeHtml(initials(name)) + '</div>';
+      const src = 'https://www.google.com/s2/favicons?domain_url=https://' + encodeURIComponent(domain) + '&sz=64';
+      return '<div class="creditor-logo"><img alt="' + escapeHtml(name) + '" src="' + src + '" onerror="this.replaceWith(document.createTextNode(\'' + escapeHtml(initials(name)) + '\'))"></div>';
+    }
+
     function tagsForDebt(debt) {
       let critical = tag('Normal', 'gray');
       if (debt.criticality === 'Máxima') critical = tag('Prioridade Máxima', 'amber');
@@ -477,6 +554,23 @@
       return critical + behavior;
     }
 
+    function daysUntil(dateString) {
+      if (!dateString) return null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const due = new Date(dateString + 'T00:00:00');
+      return Math.round((due - today) / 86400000);
+    }
+
+    function dueHint(dateString) {
+      const days = daysUntil(dateString);
+      if (days === null) return '';
+      if (days < 0) return 'Vencida há ' + Math.abs(days) + ' dias';
+      if (days === 0) return 'Vence hoje';
+      if (days === 1) return 'Daqui a 1 dia';
+      return 'Daqui a ' + days + ' dias';
+    }
+
     function paymentForInstallment(installmentId) {
       return paymentByInstallment.get(installmentId) || null;
     }
@@ -489,7 +583,8 @@
       const items = debtInstallments(debt.id).sort(byDueDate);
       if (!items.length) return '<div class="debt-meta" style="margin-top:14px;">Nenhuma parcela gerada para esta dívida.</div>';
 
-      let html = '<div class="installment-list">';
+      let html = '<div class="installment-list"><div class="installment-title">Parcelas (' + items.length + ')</div>' +
+        '<div class="installment-row header"><div>Parcela</div><div>Vencimento</div><div>Valor Previsto</div><div>Valor Pago</div><div>Desconto / Juros</div><div>Status</div><div>Ação</div></div>';
       items.forEach(item => {
         const pay = paymentForInstallment(item.id);
         const paidValue = pay ? Number(pay.paidValue || 0) : 0;
@@ -499,15 +594,18 @@
         const payButton = item.status !== 'Paga'
           ? '<button class="ghost-btn" onclick="window.openPaymentForm(\'' + item.id + '\')">Registrar Pagamento</button>'
           : '';
-        let facts = fact('Vencimento', formatDateBR(item.dueDate)) + fact('Valor Previsto', brl(item.expectedValue));
-        if (pay) facts += fact('Valor Pago', brl(paidValue));
-        if (discount > 0) facts += fact('Desconto', brl(discount));
-        if (interest > 0) facts += fact('Juros', brl(interest));
+        let diffText = '-';
+        if (discount > 0) diffText = 'Desconto ' + brl(discount);
+        if (interest > 0) diffText = 'Juros ' + brl(interest);
 
         html += '<div class="installment-row">' +
-          '<div><div class="debt-name" style="font-size:14px;">Parcela ' + item.number + '/' + item.total + '</div></div>' +
-          '<div class="installment-facts">' + facts + '</div>' +
-          '<div class="action-group"><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span>' + payButton + '</div>' +
+          '<div><strong>' + item.number + '/' + item.total + '</strong></div>' +
+          '<div>' + formatDateBR(item.dueDate) + '</div>' +
+          '<div>' + brl(item.expectedValue) + '</div>' +
+          '<div>' + (pay ? brl(paidValue) : '-') + '</div>' +
+          '<div>' + escapeHtml(diffText) + '</div>' +
+          '<div><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span></div>' +
+          '<div>' + payButton + '</div>' +
         '</div>';
       });
 
@@ -541,25 +639,32 @@
       const balance = debtBalance(debt);
       const discount = debtDiscount(debt);
       const interest = debtInterest(debt);
-      const compactProgress = '<div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div>';
       const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem Parcela';
+      const priorityTitle = debt.criticality === 'Máxima' ? 'Foco total nesta dívida' : debt.criticality === 'Alta' ? 'Acompanhar de perto' : 'Manter na rota';
+      const priorityText = debt.criticality === 'Máxima'
+        ? 'É sua dívida mais sensível. Quitar as próximas parcelas no prazo evita juros e acelera sua liberdade financeira.'
+        : 'Mantenha a parcela em dia e acompanhe qualquer oportunidade de quitação com desconto.';
+      const actionText = next
+        ? 'Pague até ' + formatDateBR(next.dueDate) + ' para manter o controle da rota.'
+        : 'Sem parcela pendente para esta dívida.';
+      const metaHtml = isExpanded
+        ? tagsForDebt(debt)
+        : compactTagsForDebt(debt) + '<span>' + escapeHtml(debt.behavior || '-') + '</span><span>' + escapeHtml(debt.type || '-') + '</span>';
 
       return '<div class="' + cardClass + '">' +
-        '<div class="debt-head">' +
-          '<div class="debt-title">' +
-            '<div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + title + '</div>' +
-            '<div class="debt-meta"><span>' + escapeHtml(debt.status || '-') + '</span><span>' + Number(debt.installmentsQty || 0) + ' Parcelas</span>' + (isExpanded ? tagsForDebt(debt) : compactTagsForDebt(debt)) + '</div>' +
+        '<div class="debt-row">' +
+          '<div class="debt-head">' +
+            creditorLogoHtml(debt.creditorId) +
+            '<div class="debt-title">' +
+              '<div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + title + '</div>' +
+              '<div class="debt-meta">' + metaHtml + '</div>' +
+            '</div>' +
           '</div>' +
-        '</div>' +
-        '<div class="compact-summary">' +
-          compactStat('Saldo Devedor', brl(balance)) +
-          compactStat('Parcela Prevista', brl(debt.installmentValue)) +
-          compactStat('Próxima Parcela', nextLabel) +
-          compactStat('Progresso', progress + '%', compactProgress) +
-        '</div>' +
-        '<div class="debt-actions">' +
-          '<div class="action-group"><button class="ghost-btn" onclick="window.toggleDebt(\'' + debt.id + '\')">' + expandedAction + '</button>' + payAction + '</div>' +
-          '<details class="more-actions"><summary class="ghost-btn">Mais ações</summary><div class="more-menu"><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir</button></div></details>' +
+          '<div class="row-stat"><div class="metric-label">Saldo Devedor</div><strong>' + brl(balance) + '</strong></div>' +
+          '<div class="row-stat"><div class="metric-label">Parcela</div><strong>' + brl(debt.installmentValue) + '</strong></div>' +
+          '<div class="row-stat next"><div class="metric-label">Próxima Parcela</div><strong>' + escapeHtml(nextLabel) + '</strong><small>' + escapeHtml(next ? dueHint(next.dueDate) : '') + '</small></div>' +
+          '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + progress + '%</strong><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
+          '<button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button>' +
         '</div>' +
         (isExpanded ? '<div class="debt-detail"><div class="debt-summary">' +
           financeItem('Parcela Prevista', brl(debt.installmentValue), true) +
@@ -575,7 +680,16 @@
         '<div class="progress-box">' +
           '<div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:7px;"><span>Progresso</span><strong style="color:var(--soft)">' + progress + '%</strong></div>' +
           '<div class="progress-line"><div class="progress-fill" style="width:' + progress + '%;"></div></div>' +
-        '</div>' + installmentRowsForDebt(debt) + '</div>' : '') +
+        '</div>' +
+        '<div class="debt-insights">' +
+          '<div class="insight-card"><div class="metric-icon">◎</div><div><div class="insight-title">' + escapeHtml(priorityTitle) + '</div><div class="strategy-text" style="margin-top:0;">' + escapeHtml(priorityText) + '</div></div></div>' +
+          '<div class="insight-card compact"><div class="insight-title">Resumo desta dívida</div><div class="mini-list"><div><span>Valor Total</span><strong>' + brl(total) + '</strong></div><div><span>Quitação Hoje</span><strong>' + brl(debt.payoffToday) + '</strong></div><div><span>Parcelas em Aberto</span><strong>' + debtInstallments(debt.id).filter(i => i.status !== 'Paga').length + ' de ' + debtInstallments(debt.id).length + '</strong></div></div></div>' +
+          '<div class="insight-card"><div class="metric-icon green">✓</div><div><div class="insight-title">Próxima ação sugerida</div><div class="strategy-text" style="margin-top:0;">' + escapeHtml(actionText) + '</div></div></div>' +
+        '</div>' + installmentRowsForDebt(debt) +
+        '<div class="debt-actions">' +
+          '<div class="action-group"><button class="ghost-btn" onclick="window.toggleDebt(\'' + debt.id + '\')">' + expandedAction + '</button>' + payAction + '</div>' +
+          '<div class="action-group"><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir Dívida</button></div>' +
+        '</div></div>' : '') +
       '</div>';
     }
 
@@ -584,18 +698,48 @@
       const active = selectedCreditorFilter === 'all' ? activeAll : activeAll.filter(d => d.creditorId === selectedCreditorFilter);
       const waiting = debts.filter(d => d.status === 'Em espera');
       renderCreditorFilters(activeAll);
+      renderDebtMetrics(activeAll);
       $('activeDebts').innerHTML = active.length ? active.map(debtCard).join('') : emptyCard('Nenhuma Dívida Encontrada', selectedCreditorFilter === 'all' ? 'Clique em Nova Dívida para iniciar sua frente de pagamento.' : 'Não há dívidas ativas para este credor.');
       $('waitingDebts').innerHTML = waiting.length ? waiting.map(debtCard).join('') : emptyCard('Nenhuma dívida em espera', 'As dívidas fora da frente atual aparecerão aqui.');
       renderDashboard();
+    }
+
+    function debtMetric(label, value, icon, tone) {
+      return '<div class="debt-metric"><div class="metric-icon ' + tone + '">' + escapeHtml(icon) + '</div><div><div class="metric-label">' + escapeHtml(label) + '</div><div class="debt-value">' + escapeHtml(value) + '</div></div></div>';
+    }
+
+    function renderDebtMetrics(activeDebts) {
+      const container = $('debtMetrics');
+      if (!container) return;
+      const activeIds = new Set(activeDebts.map(d => d.id));
+      const openInstallments = installments.filter(i => i.status !== 'Paga' && activeIds.has(i.debtId));
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const limit = new Date(today);
+      limit.setDate(limit.getDate() + 30);
+      const next30 = openInstallments.filter(i => {
+        const due = new Date(i.dueDate + 'T00:00:00');
+        return due >= today && due <= limit;
+      });
+      const totalBalance = activeDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      const next30Value = next30.reduce((sum, item) => sum + Number(item.expectedValue || 0), 0);
+      const avoidInterest = activeDebts.filter(d => d.criticality === 'Máxima' || d.behavior === 'Rolagem').reduce((sum, debt) => sum + Number(debt.installmentValue || 0), 0);
+
+      container.innerHTML =
+        debtMetric('Saldo Devedor Total', brl(totalBalance), '▣', 'blue') +
+        debtMetric('Parcelas em Aberto', String(openInstallments.length), '◷', 'red') +
+        debtMetric('Próximas Parcelas (30 dias)', brl(next30Value), '▤', 'green') +
+        debtMetric('Juros a Evitar', brl(avoidInterest), '⌁', '');
     }
 
     function renderCreditorFilters(activeDebts) {
       const container = $('creditorFilters');
       if (!container) return;
       const creditorIds = [...new Set(activeDebts.map(d => d.creditorId).filter(Boolean))];
-      let html = '<button class="ghost-btn ' + (selectedCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterByCreditor(\'all\')">Todos</button>';
+      let html = '<button class="ghost-btn ' + (selectedCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterByCreditor(\'all\')">⌁ Todos os credores <span class="filter-count">' + activeDebts.length + '</span></button>';
       creditorIds.forEach(id => {
-        html += '<button class="ghost-btn ' + (selectedCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterByCreditor(\'' + id + '\')">' + escapeHtml(getCreditorName(id)) + '</button>';
+        const count = activeDebts.filter(d => d.creditorId === id).length;
+        html += '<button class="ghost-btn ' + (selectedCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterByCreditor(\'' + id + '\')">' + creditorLogoHtml(id) + escapeHtml(getCreditorName(id)) + '<span class="filter-count">' + count + '</span></button>';
       });
       container.innerHTML = html;
     }
