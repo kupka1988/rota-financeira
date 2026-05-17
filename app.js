@@ -33,6 +33,22 @@
     let expandedDebtId = null;
 
     const $ = (id) => document.getElementById(id);
+    const THEME_KEY = 'rotaFinanceiraTheme';
+    const DONUT_COLORS = ['#3fb985', '#4d8df7', '#d8a441', '#d86464', '#8b6ff5', '#35b7c8', '#ef7d4f'];
+
+    function applyTheme(theme) {
+      const nextTheme = theme === 'light' ? 'light' : 'dark';
+      document.body.dataset.theme = nextTheme;
+      const select = $('themeSelect');
+      if (select) select.value = nextTheme;
+      localStorage.setItem(THEME_KEY, nextTheme);
+    }
+
+    window.setThemePreference = function(theme) {
+      applyTheme(theme);
+    };
+
+    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
     function brl(value) { return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     function parseMoney(value) {
@@ -49,6 +65,11 @@
       return date.toISOString().slice(0, 10);
     }
     function currentMonthKey() { return new Date().toISOString().slice(0, 7); }
+    function previousMonthKey(monthKey = currentMonthKey()) {
+      const [year, month] = monthKey.split('-').map(Number);
+      const date = new Date(year, month - 2, 1);
+      return date.toISOString().slice(0, 7);
+    }
     function byDueDate(a, b) { return String(a.dueDate || '').localeCompare(String(b.dueDate || '')); }
 
     function showToast(message) {
@@ -102,6 +123,12 @@
     }
     function nextInstallment(debt) {
       return debtInstallments(debt.id).filter(i => i.status !== 'Paga').sort(byDueDate)[0] || null;
+    }
+
+    function installmentProgress(debt) {
+      const items = debtInstallments(debt.id);
+      const paid = items.filter(item => item.status === 'Paga').length;
+      return { paid, total: items.length || Number(debt.installmentsQty || 0) || 0 };
     }
 
     function escapeHtml(value) {
@@ -304,6 +331,7 @@
     function debtCard(debt) {
       const next = nextInstallment(debt);
       const progress = debtProgress(debt);
+      const installmentCount = installmentProgress(debt);
       const isExpanded = expandedDebtId === debt.id;
       const title = escapeHtml(getCreditorName(debt.creditorId)) + ' · ' + escapeHtml(debt.name);
       const statusAction = debt.status === 'Em espera'
@@ -344,7 +372,7 @@
           '<div class="row-stat"><div class="metric-label">Saldo Devedor</div><strong>' + brl(balance) + '</strong></div>' +
           '<div class="row-stat"><div class="metric-label">Parcela</div><strong>' + brl(debt.installmentValue) + '</strong></div>' +
           '<div class="row-stat next"><div class="metric-label">Próxima Parcela</div><strong>' + escapeHtml(nextLabel) + '</strong><small>' + escapeHtml(next ? dueHint(next.dueDate) : '') + '</small></div>' +
-          '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + progress + '%</strong><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
+          '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + installmentCount.paid + '/' + installmentCount.total + '</strong><small>' + progress + '% do valor</small><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
           '<button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button>' +
         '</div>' +
         (isExpanded ? '<div class="debt-detail"><div class="debt-summary">' +
@@ -369,7 +397,7 @@
         '</div>' + installmentRowsForDebt(debt) +
         '<div class="debt-actions">' +
           '<div class="action-group"><button class="ghost-btn" onclick="window.toggleDebt(\'' + debt.id + '\')">' + expandedAction + '</button>' + payAction + '</div>' +
-          '<div class="action-group"><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">Subir na Trilha</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">Descer na Trilha</button><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir Dívida</button></div>' +
+          '<div class="action-group"><button class="ghost-btn" onclick="window.rollDebt(\'' + debt.id + '\')">Criar Rolagem</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">Subir na Trilha</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">Descer na Trilha</button><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir Dívida</button></div>' +
         '</div></div>' : '') +
       '</div>';
     }
@@ -477,10 +505,14 @@
 
     function renderPayments() {
       renderPaymentMetrics();
+      renderPaymentWeeks();
       renderHistory();
-      const sorted = [...payments].sort((a, b) => String(b.paymentDate || '').localeCompare(String(a.paymentDate || '')));
+      const visibleMonths = new Set([currentMonthKey(), previousMonthKey()]);
+      const sorted = payments
+        .filter(item => visibleMonths.has(String(item.paymentDate || item.expectedDate || '').slice(0, 7)))
+        .sort((a, b) => String(b.paymentDate || '').localeCompare(String(a.paymentDate || '')));
       if (!sorted.length) {
-        $('paymentsList').innerHTML = emptyCard('Nenhum pagamento registrado', 'Os pagamentos baixados aparecerão aqui.');
+        $('paymentsList').innerHTML = emptyCard('Nenhum lançamento recente', 'Esta tela mostra apenas o mês atual e o mês anterior. Meses antigos ficam no Histórico.');
         return;
       }
 
@@ -497,6 +529,35 @@
           '<div><div class="metric-label">Valor Previsto</div><strong>' + brl(item.expectedValue) + '</strong></div>' +
           '<div>' + adjustment + '</div>' +
         '</div>';
+      }).join('');
+    }
+
+    function renderPaymentWeeks() {
+      const container = $('paymentWeeks');
+      if (!container) return;
+      const [year, month] = currentMonthKey().split('-').map(Number);
+      const first = new Date(year, month - 1, 1);
+      const last = new Date(year, month, 0);
+      const mondayOffset = (first.getDay() + 6) % 7;
+      let cursor = new Date(first);
+      cursor.setDate(first.getDate() - mondayOffset);
+      const weeks = [];
+      while (cursor <= last) {
+        const start = new Date(cursor);
+        const end = new Date(cursor);
+        end.setDate(start.getDate() + 6);
+        const visualStart = new Date(Math.max(start, first));
+        const visualEnd = new Date(Math.min(end, last));
+        weeks.push({ start, end, visualStart, visualEnd });
+        cursor.setDate(cursor.getDate() + 7);
+      }
+      container.innerHTML = weeks.map((week, index) => {
+        const days = Array.from({ length: 7 }, (_, day) => {
+          const date = new Date(week.start);
+          date.setDate(week.start.getDate() + day);
+          return '<span class="week-day ' + (date.getMonth() === month - 1 ? '' : 'out') + '"></span>';
+        }).join('');
+        return '<div class="week-card"><div class="metric-label">S' + (index + 1) + '</div><div class="debt-name">' + week.visualStart.getDate() + '–' + week.visualEnd.getDate() + ' ' + week.visualEnd.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') + '</div><div class="week-days">' + days + '</div></div>';
       }).join('');
     }
 
@@ -552,7 +613,7 @@
     }
 
     function orderedTrailDebts() {
-      return [...debts].sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+      return debts.filter(debt => debt.status === 'Ativa').sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
     }
 
     function nextPayoffOrder() {
@@ -601,13 +662,14 @@
       list.innerHTML = rows.map(([key, item]) => {
         const paidPct = Math.max(4, Math.round((item.paid / maxPaid) * 100));
         const netSaving = item.discount - item.interest;
+        const status = key === currentMonthKey() ? tag('Em andamento', 'blue') : tag('Fechado', 'green');
         const resultTag = netSaving > 0
           ? tag('Economia ' + brl(netSaving), 'green')
           : netSaving < 0
             ? tag('Impacto de Juros ' + brl(Math.abs(netSaving)), 'red')
             : tag('Equilíbrio', 'gray');
         return '<div class="history-month">' +
-          '<div class="history-month-head"><div><div class="debt-name">' + escapeHtml(monthLabel(key)) + '</div><div class="debt-meta"><span>' + item.count + ' pagamentos</span>' + resultTag + '</div></div><strong>' + brl(item.paid) + '</strong></div>' +
+          '<div class="history-month-head"><div><div class="debt-name">' + escapeHtml(monthLabel(key)) + '</div><div class="debt-meta"><span>' + item.count + ' pagamentos</span>' + status + resultTag + '</div></div><strong>' + brl(item.paid) + '</strong></div>' +
           '<div class="history-bars">' +
             '<div class="history-bar"><span>Pago</span><div class="bar-track"><div class="bar-fill" style="width:' + paidPct + '%;"></div></div><strong>' + brl(item.paid) + '</strong></div>' +
             '<div class="history-bar"><span>Economia</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, Math.round((item.discount / Math.max(item.paid, 1)) * 100)) + '%;"></div></div><strong>' + brl(item.discount) + '</strong></div>' +
@@ -692,6 +754,7 @@
         const stepClass = 'trail-step' + (done ? ' done' : '') + (current ? ' current' : '');
         const order = Number(debt.payoffOrder || 0) || index + 1;
         const nextItem = nextInstallment(debt);
+        const stepProgress = installmentProgress(debt);
         return '<div class="' + stepClass + '">' +
           '<div class="trail-marker">' + (done ? '✓' : order) + '</div>' +
           '<div class="trail-card">' +
@@ -703,6 +766,7 @@
             '<div class="trail-facts">' +
               '<div><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
               '<div><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
+              '<div><span>Progresso</span><strong>' + stepProgress.paid + '/' + stepProgress.total + '</strong></div>' +
               '<div><span>Próximo passo</span><strong>' + escapeHtml(nextItem ? formatDateBR(nextItem.dueDate) : 'Sem Parcela') + '</strong></div>' +
             '</div>' +
             '<div class="trail-actions">' +
@@ -736,6 +800,76 @@
       $('monthReading').textContent = monthCommitment > 0 ? 'Há parcelas no mês atual' : 'Sem pressão registrada no mês';
       $('monthReadingText').textContent = monthCommitment > 0 ? 'Compromisso pendente do mês atual: ' + brl(monthCommitment) + '.' : 'Nenhuma parcela pendente encontrada para o mês atual.';
       renderDashboardDecision(active);
+      renderDashboardPerformance(active, monthCommitment);
+      renderCreditorDonut(active);
+    }
+
+    function renderDashboardPerformance(activeDebts, monthCommitment) {
+      const month = currentMonthKey();
+      const monthPayments = payments.filter(p => String(p.paymentDate || '').startsWith(month));
+      const paidMonth = monthPayments.reduce((sum, item) => sum + Number(item.paidValue || 0), 0);
+      const minimum = Math.max(monthCommitment, 1);
+      const consistent = Math.max(minimum * 1.25, minimum + 300);
+      const ideal = Math.max(minimum * 1.5, consistent + 300);
+      const projected = paidMonth + installments
+        .filter(i => i.status !== 'Paga' && String(i.dueDate || '').startsWith(month) && activeDebts.some(d => d.id === i.debtId))
+        .reduce((sum, item) => sum + Number(item.expectedValue || 0), 0);
+      const projectedPct = Math.min(999, Math.round((projected / ideal) * 100));
+      $('dashProjectedPercent').textContent = projectedPct + '%';
+      $('dashCurrentMonthPaid').textContent = brl(paidMonth);
+      $('dashMinimumGap').textContent = brl(Math.max(0, minimum - projected));
+      $('dashHeroText').textContent = 'Projeção baseada nos pagamentos feitos e parcelas pendentes do mês.';
+
+      const marker = (label, value, cls = '') => {
+        const left = Math.max(0, Math.min(100, Math.round((value / ideal) * 100)));
+        return '<div class="performance-marker ' + cls + '" style="left:' + left + '%"><strong>' + escapeHtml(label) + '</strong><span>' + brl(value) + '</span></div>';
+      };
+      $('performanceTrack').innerHTML =
+        marker('Início', 0) +
+        marker('Atual', paidMonth, 'current') +
+        marker('Mínima', minimum) +
+        marker('Consistente', consistent) +
+        marker('Ideal', ideal);
+
+      const goalCard = (title, value) => {
+        const projectedGoalPct = Math.round((projected / value) * 100);
+        const executedPct = Math.round((paidMonth / value) * 100);
+        return '<div class="goal-card"><span>' + escapeHtml(title) + '</span><strong>' + projectedGoalPct + '%</strong><small>Executado: ' + executedPct + '%<br>' + brl(value) + '</small></div>';
+      };
+      $('goalCards').innerHTML =
+        goalCard('Projeção mínima', minimum) +
+        goalCard('Projeção consistente', consistent) +
+        goalCard('Projeção ideal', ideal);
+    }
+
+    function renderCreditorDonut(activeDebts) {
+      const donut = $('creditorDonut');
+      const legend = $('creditorDonutLegend');
+      if (!donut || !legend) return;
+      const total = activeDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      if (!total) {
+        donut.style.background = 'conic-gradient(var(--border) 0 100%)';
+        legend.innerHTML = emptyCard('Sem dívida ativa', 'A divisão por credor aparecerá quando houver saldo ativo.');
+        return;
+      }
+      const rows = [...new Set(activeDebts.map(debt => debt.creditorId).filter(Boolean))]
+        .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)))
+        .map((id, index) => {
+          const value = activeDebts.filter(debt => debt.creditorId === id).reduce((sum, debt) => sum + debtBalance(debt), 0);
+          return { id, value, color: DONUT_COLORS[index % DONUT_COLORS.length] };
+        });
+      let cursor = 0;
+      const stops = rows.map(row => {
+        const start = cursor;
+        const end = cursor + (row.value / total) * 100;
+        cursor = end;
+        return row.color + ' ' + start.toFixed(2) + '% ' + end.toFixed(2) + '%';
+      });
+      donut.style.background = 'conic-gradient(' + stops.join(',') + ')';
+      legend.innerHTML = rows.map(row => {
+        const pct = Math.round((row.value / total) * 100);
+        return '<div class="donut-item"><span class="donut-dot" style="background:' + row.color + '"></span><span>' + escapeHtml(getCreditorName(row.id)) + '</span><strong>' + pct + '% · ' + brl(row.value) + '</strong></div>';
+      }).join('');
     }
 
     function renderDashboardDecision(activeDebts) {
@@ -1173,6 +1307,26 @@
       renderDebts();
       const target = debt?.status === 'Em espera' ? $('waitingDebts') : $('activeDebts');
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.rollDebt = function(id) {
+      const debt = debts.find(item => item.id === id);
+      if (!debt) return;
+      window.openDebtForm('new', null, debt.status || 'Ativa');
+      $('debtCreditorSelect').value = debt.creditorId || '';
+      $('debtName').value = (debt.name || '') + ' - rolagem';
+      $('debtType').value = debt.type || 'Cartão';
+      $('debtPaymentMethod').value = debt.paymentMethod || 'Boleto';
+      $('debtFirstDue').value = addMonths(debt.firstDue || new Date().toISOString().slice(0, 10), 1);
+      $('debtInstallmentsQty').value = debt.installmentsQty || '';
+      $('debtInstallmentValue').value = brl(debt.installmentValue || 0);
+      $('debtStatus').value = debt.status || 'Ativa';
+      $('debtCriticality').value = debt.criticality || 'Normal';
+      $('debtBehavior').value = 'Rolagem';
+      $('debtPayoffToday').value = brl(debt.payoffToday || 0);
+      $('debtPayoffOrder').value = nextPayoffOrder();
+      $('debtNotes').value = debt.notes ? debt.notes + '\nRolagem criada a partir da dívida anterior.' : 'Rolagem criada a partir da dívida anterior.';
+      showToast('Rolagem preparada para edição.');
     };
 
     window.moveDebtInTrail = async function(id, direction) {
