@@ -431,22 +431,22 @@
         <div class="grid-4">
           <div class="metric-card priority">
             <div class="metric-label">Prioridade máxima</div>
-            <div class="metric-value">R$ 18.420,00</div>
+            <div class="metric-value">R$ 0,00</div>
             <div class="metric-note">Dívidas sensíveis no topo da rota atual.</div>
           </div>
           <div class="metric-card">
             <div class="metric-label">Dívida sob gestão</div>
-            <div class="metric-value">R$ 42.760,00</div>
+            <div class="metric-value">R$ 0,00</div>
             <div class="metric-note">Total ativo, sem incluir itens em espera.</div>
           </div>
           <div class="metric-card">
             <div class="metric-label">Compromisso mensal</div>
-            <div class="metric-value">R$ 3.240,00</div>
+            <div class="metric-value">R$ 0,00</div>
             <div class="metric-note">Parcelas previstas dentro da frente atual.</div>
           </div>
           <div class="metric-card">
             <div class="metric-label">Dívida total reconhecida</div>
-            <div class="metric-value">R$ 96.300,00</div>
+            <div class="metric-value">R$ 0,00</div>
             <div class="metric-note">Inclui ativas e em espera.</div>
           </div>
         </div>
@@ -456,8 +456,8 @@
             <h2 class="panel-title">Rota de quitação</h2>
             <div class="strategy-box">
               <div class="strategy-title">Próxima melhor ação</div>
-              <div class="strategy-main">Atacar prioridades máximas</div>
-              <div class="strategy-text">O painel recomenda manter foco nas dívidas sensíveis antes de acelerar as demais. Isso reduz risco e organiza a frente principal.</div>
+              <div class="strategy-main">Cadastre a primeira dívida</div>
+              <div class="strategy-text">A rota de quitação será calculada a partir das dívidas ativas, criticidade, parcelas e pagamentos registrados.</div>
             </div>
             <div class="performance-track">
               <div class="marker" style="left: 20%">Crítico<br>R$ 0</div>
@@ -473,8 +473,8 @@
             <h2 class="panel-title">Leitura do mês</h2>
             <div class="strategy-box" style="background: var(--amber-soft); border-color: rgba(216,164,65,0.28)">
               <div class="strategy-title" style="color:#f0c978">Atenção</div>
-              <div class="strategy-main">Pressão alta</div>
-              <div class="strategy-text">Há concentração de vencimentos no curto prazo. O sistema deve priorizar clareza e evitar que o dashboard vire uma lista esmagadora.</div>
+              <div class="strategy-main">Sem dados ainda</div>
+              <div class="strategy-text">Depois dos primeiros cadastros, esta área indicará risco mensal, próximos vencimentos e pressão financeira.</div>
             </div>
           </div>
         </div>
@@ -513,10 +513,7 @@
         </div>
         <div class="panel">
           <h2 class="panel-title">Próximas parcelas</h2>
-          <div class="debt-list">
-            <div class="debt-card"><div><div class="debt-name">Santander Acordo · 10/36</div><div class="debt-meta">Vence em 10/06/2026 · R$ 620,00</div></div><span class="tag amber">pendente</span></div>
-            <div class="debt-card"><div><div class="debt-name">Nubank Cartão · 4/12</div><div class="debt-meta">Vence em 18/06/2026 · R$ 410,00</div></div><span class="tag green">paga</span></div>
-          </div>
+          <div class="debt-list" id="installmentsList"></div>
         </div>
       </section>
 
@@ -530,10 +527,7 @@
         </div>
         <div class="panel">
           <h2 class="panel-title">Pagamentos recentes</h2>
-          <div class="debt-list">
-            <div class="debt-card"><div><div class="debt-name">Santander · Acordo Cartão</div><div class="debt-meta">Pago em 05/05/2026 · previsto R$ 620,00 · desconto R$ 30,00</div></div><span class="tag green">R$ 590,00</span></div>
-            <div class="debt-card"><div><div class="debt-name">Itaú · Empréstimo pessoal</div><div class="debt-meta">Pago em 27/04/2026 · previsto R$ 890,00 · juros R$ 12,00</div></div><span class="tag amber">R$ 902,00</span></div>
-          </div>
+          <div class="debt-list" id="paymentsList"></div>
         </div>
       </section>
 
@@ -656,13 +650,10 @@
   <script>
     let debtToDeleteIndex = null;
 
-    let debts = [
-      { creditor: 'Santander', name: 'Acordo Cartão', status: 'Ativa', criticality: 'Máxima', behavior: 'Parcelada', balance: 18420, total: 22320, paid: 3900, installment: 620, nextDue: '2026-06-10', parcels: '10/36', discount: 186, payoffToday: 17180 },
-      { creditor: 'Nubank', name: 'Cartão parcelado', status: 'Ativa', criticality: 'Alta', behavior: 'Rolagem', balance: 9360, total: 12300, paid: 2940, installment: 410, nextDue: '2026-06-18', parcels: '4/12', discount: 0, payoffToday: 9360 },
-      { creditor: 'Itaú', name: 'Empréstimo pessoal', status: 'Ativa', criticality: 'Normal', behavior: 'Parcelada', balance: 14980, total: 21360, paid: 6380, installment: 890, nextDue: '2026-06-25', parcels: '7/24', discount: 422, payoffToday: 13990 },
-      { creditor: 'Banco X', name: 'Contrato antigo', status: 'Em espera', criticality: 'Normal', behavior: 'Quitação única', balance: 22400, total: 22400, paid: 0, installment: 0, nextDue: '2026-09-15', parcels: '-', discount: 0, payoffToday: 18400 },
-      { creditor: 'Cartão Y', name: 'Saldo em atraso', status: 'Em espera', criticality: 'Alta', behavior: 'Rolagem', balance: 31140, total: 31140, paid: 0, installment: 0, nextDue: '2026-07-08', parcels: '-', discount: 0, payoffToday: 31140 }
-    ];
+    let debts = [];
+
+    let payments = [];
+    let installments = [];
 
     function brl(value) {
       return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -744,9 +735,40 @@
       `;
     }
 
+    function emptyCard(title, text) {
+      return `
+        <div class="debt-card">
+          <div>
+            <div class="debt-name">${title}</div>
+            <div class="debt-meta">${text}</div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderDebts() {
-      document.getElementById('activeDebts').innerHTML = debts.filter(d => d.status === 'Ativa').map(debtCard).join('');
-      document.getElementById('waitingDebts').innerHTML = debts.filter(d => d.status === 'Em espera').map(debtCard).join('');
+      const active = debts.filter(d => d.status === 'Ativa');
+      const waiting = debts.filter(d => d.status === 'Em espera');
+
+      document.getElementById('activeDebts').innerHTML = active.length
+        ? active.map(debtCard).join('')
+        : emptyCard('Nenhuma dívida ativa cadastrada', 'Cadastre uma dívida para iniciar sua frente de pagamento.');
+
+      document.getElementById('waitingDebts').innerHTML = waiting.length
+        ? waiting.map(debtCard).join('')
+        : emptyCard('Nenhuma dívida em espera', 'As dívidas fora da frente atual aparecerão aqui.');
+    }
+
+    function renderInstallments() {
+      document.getElementById('installmentsList').innerHTML = installments.length
+        ? installments.map(item => emptyCard(item.title, item.text)).join('')
+        : emptyCard('Nenhuma parcela gerada', 'As parcelas aparecerão aqui depois do cadastro das dívidas.');
+    }
+
+    function renderPayments() {
+      document.getElementById('paymentsList').innerHTML = payments.length
+        ? payments.map(item => emptyCard(item.title, item.text)).join('')
+        : emptyCard('Nenhum pagamento registrado', 'Os pagamentos baixados aparecerão aqui.');
     }
 
     function openDebtForm() {
@@ -793,6 +815,8 @@
       debts.splice(debtToDeleteIndex, 1);
       closeDeleteModal();
       renderDebts();
+    renderInstallments();
+    renderPayments();
       showToast('Dívida removida com sucesso.');
     }
 
