@@ -579,6 +579,7 @@
             <div class="debt-actions">
               <button class="ghost-btn" onclick="openDebtForm()">Editar</button>
               <button class="ghost-btn" onclick="openDebtForm()">Renegociar</button>
+              <button class="ghost-btn" onclick="deleteDebt('${debt.creditor}', '${debt.name}')">Excluir</button>
               <button class="ghost-btn" onclick="openPaymentForm('${debt.creditor}', '${debt.name}', '${debt.nextDue}', ${debt.installment || 0})">Registrar pagamento</button>
               ${debt.status === 'Em espera' ? '<button class="ghost-btn">Ativar</button>' : '<button class="ghost-btn">Mover para espera</button>'}
             </div>
@@ -621,6 +622,14 @@
 
     function closePaymentForm() {
       document.getElementById('paymentForm').classList.remove('show');
+    }
+    }
+
+    function deleteDebt(creditor, name) {
+      const confirmDelete = confirm(`Excluir definitivamente ${creditor} · ${name}? Esta ação não poderá ser desfeita.`);
+      if (confirmDelete) {
+        alert('Futuramente isso removerá a dívida e pagamentos vinculados do Firestore.');
+      }
     }
 
     document.querySelectorAll('.nav-item').forEach(button => {
