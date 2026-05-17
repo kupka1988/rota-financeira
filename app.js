@@ -49,7 +49,7 @@
       applyTheme(theme);
     };
 
-    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+    applyTheme(localStorage.getItem(THEME_KEY) || 'light');
 
     function brl(value) { return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     function parseMoney(value) {

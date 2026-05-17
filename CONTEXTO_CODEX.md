@@ -6,7 +6,7 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 - Nome: Rota Financeira.
 - Objetivo: sistema web pessoal para gestao estrategica de dividas, pagamentos, prioridades e rota de quitacao.
 - Foco de UX: experiencia premium no notebook, com versao mobile muito boa para iPhone.
-- Visual: financeiro, executivo, sobrio; tema escuro como base e tema claro opcional em Configuracoes.
+- Visual: financeiro, executivo, sobrio; tema claro como padrao e tema escuro opcional em Configuracoes.
 
 ## Stack Atual
 - HTML, CSS e JavaScript puro.
@@ -41,7 +41,7 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 - Dividas possuem acao `Criar Rolagem`, que abre uma nova divida pre-preenchida, com data avancada em 1 mes e tudo editavel antes de salvar.
 - Parcelas podem ser editadas individualmente por modal proprio.
 - Configuracoes deve ser uma tela geral de parametros; credores sao apenas uma secao dentro dela.
-- Tema Escuro/Claro fica em Configuracoes e deve afetar o sistema inteiro.
+- Tema Claro/Escuro fica em Configuracoes e deve afetar o sistema inteiro. Claro e o padrao quando nao houver preferencia salva no navegador.
 - Logo e favicon estao em `assets`.
 
 ## Comandos Relevantes
@@ -72,3 +72,4 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 
 ## Historico Recente
 - 2026-05-17: criado este arquivo de contexto como regra permanente do projeto.
+- 2026-05-17: tema claro definido como padrao; filtros selecionados ajustados para contraste; cards de dividas ganharam cor de fundo por prioridade.
