@@ -115,19 +115,25 @@
     .filter-row .is-active { background: var(--green-soft); color: #8ae1b8; border-color: rgba(63,185,133,0.28); }
 
     .debt-list { display: grid; gap: 12px; }
-    .debt-card { padding: 18px; }
+    .debt-card { padding: 13px 14px; }
     .debt-card.max { border-color: rgba(216,164,65,0.44); box-shadow: 0 20px 70px rgba(216,164,65,0.08); }
-    .debt-head { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+    .debt-card.expanded { padding: 18px; }
+    .debt-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
     .debt-title { min-width: 0; flex: 1; }
-    .debt-name { font-weight: 820; font-size: 18px; letter-spacing: -0.01em; }
+    .debt-name { font-weight: 820; font-size: 16px; letter-spacing: -0.01em; }
     .debt-name.clickable { cursor: pointer; }
-    .debt-meta { color: var(--muted); font-size: 13px; margin-top: 7px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; line-height: 1.5; }
-    .tag { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
+    .debt-meta { color: var(--muted); font-size: 12px; margin-top: 5px; display: flex; gap: 7px; flex-wrap: wrap; align-items: center; line-height: 1.35; }
+    .tag { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
     .tag.green { background: var(--green-soft); color: #8ae1b8; }
     .tag.amber { background: var(--amber-soft); color: #f0c978; }
     .tag.blue { background: var(--blue-soft); color: #a8c3ff; }
     .tag.gray { background: rgba(255,255,255,0.08); color: var(--soft); }
     .tag.red { background: var(--danger-soft); color: #eda2a2; }
+    .compact-summary { margin-top: 11px; display: grid; grid-template-columns: 1.15fr 1fr 1fr 0.85fr; gap: 8px; align-items: stretch; }
+    .compact-stat { background: rgba(255,255,255,0.028); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; min-height: 52px; }
+    .compact-stat strong { display: block; color: var(--text); font-size: 15px; line-height: 1.1; letter-spacing: -0.02em; margin-top: 4px; }
+    .compact-stat .metric-label { margin-bottom: 0; }
+    .compact-progress { margin-top: 6px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
     .debt-summary { margin-top: 18px; display: grid; grid-template-columns: 220px 1fr; gap: 10px; align-items: stretch; }
     .finance-grid { display:grid; grid-template-columns: repeat(3, minmax(118px, 1fr)); gap: 10px; }
     .finance-item { background: rgba(255,255,255,0.032); border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-height: 78px; }
@@ -137,7 +143,7 @@
     .progress-box { margin-top:16px; max-width:720px; }
     .progress-line { height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; }
     .progress-fill { height:100%; background:linear-gradient(90deg,var(--blue),var(--green)); border-radius:999px; }
-    .debt-actions { margin-top:18px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap: 12px; flex-wrap: wrap; align-items:center; }
+    .debt-actions { margin-top:11px; padding-top:10px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap: 10px; flex-wrap: wrap; align-items:center; }
     .action-group { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .more-actions { position: relative; }
     .more-actions summary { list-style: none; }
@@ -145,6 +151,7 @@
     .more-actions[open] summary { background: var(--panel-3); color: var(--text); }
     .more-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 8; min-width: 190px; display: grid; gap: 8px; padding: 10px; background: var(--panel-2); border: 1px solid var(--border-strong); border-radius: 14px; box-shadow: var(--shadow); }
     .more-menu .ghost-btn { width: 100%; text-align: left; }
+    .debt-detail { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px; }
     .installment-list { margin-top:18px; border-top:1px solid var(--border); padding-top:16px; display:grid; gap:10px; }
     .installment-row { display:grid; grid-template-columns: minmax(170px, 1fr) minmax(280px, 2fr) auto; gap:12px; align-items:center; background:rgba(255,255,255,0.035); border:1px solid var(--border); border-radius:14px; padding:12px; }
     .installment-facts { color: var(--muted); font-size: 13px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -184,6 +191,7 @@
       .nav-item { min-width: max-content; }
       .grid-2, .form-grid { grid-template-columns: 1fr; }
       .grid-4 { grid-template-columns: 1fr; }
+      .compact-summary { grid-template-columns: 1fr 1fr; }
       .finance-grid { grid-template-columns: 1fr 1fr; }
       .span-2, .span-4 { grid-column: span 1; }
       .topbar { align-items: flex-start; flex-direction: column; }
@@ -197,6 +205,7 @@
     @media (max-width: 560px) {
       main { padding: 18px; }
       aside { padding: 22px 18px; }
+      .compact-summary { grid-template-columns: 1fr; }
       .finance-grid { grid-template-columns: 1fr; }
       .metric-value { font-size: 24px; }
       .toast { left: 18px; right: 18px; bottom: 18px; }
@@ -456,6 +465,18 @@
       return critical + behavior + tag(debt.type || '-', 'gray') + tag(debt.paymentMethod || '-', 'gray');
     }
 
+    function compactTagsForDebt(debt) {
+      let critical = tag('Normal', 'gray');
+      if (debt.criticality === 'Máxima') critical = tag('Prioridade Máxima', 'amber');
+      if (debt.criticality === 'Alta') critical = tag('Alta', 'blue');
+
+      let behavior = tag('Parcelada', 'green');
+      if (debt.behavior === 'Rolagem') behavior = tag('Rolagem', 'amber');
+      if (debt.behavior === 'Quitação única') behavior = tag('Quitação', 'blue');
+
+      return critical + behavior;
+    }
+
     function paymentForInstallment(installmentId) {
       return paymentByInstallment.get(installmentId) || null;
     }
@@ -498,6 +519,10 @@
       return '<div class="finance-item ' + (isPrimary ? 'primary' : '') + '"><div class="metric-label">' + escapeHtml(label) + '</div><div class="debt-value">' + escapeHtml(value) + '</div></div>';
     }
 
+    function compactStat(label, value, extraHtml = '') {
+      return '<div class="compact-stat"><div class="metric-label">' + escapeHtml(label) + '</div><strong>' + escapeHtml(value) + '</strong>' + extraHtml + '</div>';
+    }
+
     function debtCard(debt) {
       const next = nextInstallment(debt);
       const progress = debtProgress(debt);
@@ -510,21 +535,33 @@
         ? '<button class="ghost-btn" onclick="window.openPaymentForm(\'' + next.id + '\')">Registrar Pagamento</button>'
         : '';
       const expandedAction = isExpanded ? 'Ocultar Parcelas' : 'Ver Parcelas';
-      const cardClass = debt.criticality === 'Máxima' ? 'debt-card max' : 'debt-card';
+      const cardClass = (debt.criticality === 'Máxima' ? 'debt-card max' : 'debt-card') + (isExpanded ? ' expanded' : '');
       const total = debtTotal(debt);
       const paid = debtPaid(debt);
       const balance = debtBalance(debt);
       const discount = debtDiscount(debt);
       const interest = debtInterest(debt);
+      const compactProgress = '<div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div>';
+      const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem Parcela';
 
       return '<div class="' + cardClass + '">' +
         '<div class="debt-head">' +
           '<div class="debt-title">' +
             '<div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + title + '</div>' +
-            '<div class="debt-meta"><span>' + escapeHtml(debt.status || '-') + '</span><span>Próxima: ' + (next ? formatDateBR(next.dueDate) : 'Sem Parcela Pendente') + '</span><span>' + Number(debt.installmentsQty || 0) + ' Parcelas</span>' + tagsForDebt(debt) + '</div>' +
+            '<div class="debt-meta"><span>' + escapeHtml(debt.status || '-') + '</span><span>' + Number(debt.installmentsQty || 0) + ' Parcelas</span>' + (isExpanded ? tagsForDebt(debt) : compactTagsForDebt(debt)) + '</div>' +
           '</div>' +
         '</div>' +
-        '<div class="debt-summary">' +
+        '<div class="compact-summary">' +
+          compactStat('Saldo Devedor', brl(balance)) +
+          compactStat('Parcela Prevista', brl(debt.installmentValue)) +
+          compactStat('Próxima Parcela', nextLabel) +
+          compactStat('Progresso', progress + '%', compactProgress) +
+        '</div>' +
+        '<div class="debt-actions">' +
+          '<div class="action-group"><button class="ghost-btn" onclick="window.toggleDebt(\'' + debt.id + '\')">' + expandedAction + '</button>' + payAction + '</div>' +
+          '<details class="more-actions"><summary class="ghost-btn">Mais ações</summary><div class="more-menu"><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir</button></div></details>' +
+        '</div>' +
+        (isExpanded ? '<div class="debt-detail"><div class="debt-summary">' +
           financeItem('Parcela Prevista', brl(debt.installmentValue), true) +
           '<div class="finance-grid">' +
             financeItem('Saldo Devedor', brl(balance), false) +
@@ -538,12 +575,7 @@
         '<div class="progress-box">' +
           '<div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:7px;"><span>Progresso</span><strong style="color:var(--soft)">' + progress + '%</strong></div>' +
           '<div class="progress-line"><div class="progress-fill" style="width:' + progress + '%;"></div></div>' +
-        '</div>' +
-        '<div class="debt-actions">' +
-          '<div class="action-group"><button class="ghost-btn" onclick="window.toggleDebt(\'' + debt.id + '\')">' + expandedAction + '</button>' + payAction + '<button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button></div>' +
-          '<details class="more-actions"><summary class="ghost-btn">Mais ações</summary><div class="more-menu">' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir</button></div></details>' +
-        '</div>' +
-        (isExpanded ? installmentRowsForDebt(debt) : '') +
+        '</div>' + installmentRowsForDebt(debt) + '</div>' : '') +
       '</div>';
     }
 
