@@ -207,9 +207,10 @@
 
     .form-card { margin-bottom: 18px; display: none; }
     .form-card.show { display: block; }
+    .form-actions { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; }
     .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 7px; font-weight: 700; }
-    input, select, textarea { width: 100%; background: #111720; color: var(--text); border: 1px solid var(--border); border-radius: 13px; padding: 12px; outline: none; font-size: 14px; }
+    input, select, textarea { width: 100%; background: #111720; color: var(--text); border: 1px solid var(--border); border-radius: 13px; padding: 12px; outline: none; font-size: 16px; }
     textarea { min-height: 92px; resize: vertical; }
     .span-2 { grid-column: span 2; }
     .span-4 { grid-column: span 4; }
@@ -267,11 +268,39 @@
     }
 
     @media (max-width: 560px) {
-      main { padding: 18px; }
+      main { padding: 14px; }
       aside { padding: 22px 18px; }
+      .topbar { gap: 12px; margin-bottom: 16px; }
+      h1 { font-size: 25px; }
+      .page-desc { font-size: 13px; }
+      .primary-action, .secondary-action { width: 100%; justify-content: center; padding: 13px 14px; }
+      .filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; }
+      .filter-row .ghost-btn { flex: 0 0 auto; }
+      .debt-metrics { gap: 8px; border: 0; background: transparent; box-shadow: none; }
+      .debt-metric { border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+      .debt-row { padding: 14px; }
+      .debt-head { align-items: flex-start; }
+      .creditor-logo { width: 40px; height: 40px; border-radius: 13px; }
+      .row-stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 9px 0; border-top: 1px solid var(--border); }
+      .row-stat .metric-label { margin-bottom: 0; }
+      .row-stat strong { font-size: 16px; text-align: right; }
+      .row-toggle { width: 100%; }
+      .debt-detail { padding: 0 14px 14px; }
+      .debt-insights { gap: 10px; }
+      .insight-card { grid-template-columns: 1fr; min-height: 0; padding: 14px; }
+      .form-card { padding: 16px; border-radius: 16px; }
+      .form-grid { gap: 12px; }
+      .form-actions { position: sticky; bottom: 0; z-index: 6; margin: 16px -16px -16px; padding: 12px 16px; background: rgba(21,27,36,0.94); border-top: 1px solid var(--border); backdrop-filter: blur(14px); }
+      .form-card .primary-action, .form-card .ghost-btn { min-height: 46px; }
       .compact-summary { grid-template-columns: 1fr; }
       .finance-grid { grid-template-columns: 1fr; }
-      .installment-row { grid-template-columns: 1fr; }
+      .installment-list { border: 0; display: grid; gap: 10px; }
+      .installment-title { border: 1px solid var(--border); border-radius: 14px; }
+      .installment-row { grid-template-columns: 1fr; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.025); gap: 8px; padding: 12px; }
+      .installment-row > div { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+      .installment-row > div::before { content: attr(data-label); color: var(--muted); font-size: 12px; font-weight: 800; }
+      .installment-row > div:empty { display: none; }
+      .installment-row .ghost-btn { width: 100%; }
       .payment-row { grid-template-columns: 1fr; }
       .history-bar { grid-template-columns: 1fr; }
       .metric-value { font-size: 24px; }
@@ -376,7 +405,7 @@
             <div><label>Valor de quitação hoje</label><input id="debtPayoffToday" inputmode="decimal" placeholder="R$ 0,00" /></div>
             <div class="span-4"><label>Observações</label><textarea id="debtNotes" placeholder="Condição atual, possibilidade de renegociação, contexto interno..."></textarea></div>
           </div>
-          <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;"><button class="primary-action" onclick="saveDebt()">Salvar dívida</button><button class="ghost-btn" onclick="closeDebtForm()">Cancelar</button></div>
+          <div class="form-actions"><button class="primary-action" onclick="saveDebt()">Salvar dívida</button><button class="ghost-btn" onclick="closeDebtForm()">Cancelar</button></div>
         </section>
         <div class="debt-list" id="activeDebts"></div>
       </section>
@@ -402,7 +431,7 @@
             <div><label>Data do pagamento</label><input id="payDate" type="date" /></div>
             <div><label>Valor pago</label><input id="payValue" inputmode="decimal" /></div>
           </div>
-          <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;"><button class="primary-action" onclick="savePayment()">Salvar pagamento</button><button class="ghost-btn" onclick="closePaymentForm()">Cancelar</button></div>
+          <div class="form-actions"><button class="primary-action" onclick="savePayment()">Salvar pagamento</button><button class="ghost-btn" onclick="closePaymentForm()">Cancelar</button></div>
         </section>
         <div class="panel"><h2 class="panel-title">Pagamentos recentes</h2><div class="payment-ledger" id="paymentsList"></div></div>
       </section>
@@ -425,7 +454,7 @@
               <div><label>Tipo</label><select id="creditorType"><option>Banco</option><option>Cartão</option><option>Financeira</option><option>Loja</option><option>Pessoa física</option><option>Outro</option></select></div>
               <div><label>Observações</label><textarea id="creditorNotes" placeholder="Ex.: costuma oferecer desconto, tem portal próprio..."></textarea></div>
             </div>
-            <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;"><button class="primary-action" onclick="saveCreditor()">Salvar credor</button><button class="ghost-btn" onclick="resetCreditorForm()">Cancelar edição</button></div>
+            <div class="form-actions"><button class="primary-action" onclick="saveCreditor()">Salvar credor</button><button class="ghost-btn" onclick="resetCreditorForm()">Cancelar edição</button></div>
           </div>
         </div>
       </section>
@@ -650,13 +679,13 @@
         if (interest > 0) diffText = 'Juros ' + brl(interest);
 
         html += '<div class="installment-row">' +
-          '<div><strong>' + item.number + '/' + item.total + '</strong></div>' +
-          '<div>' + formatDateBR(item.dueDate) + '</div>' +
-          '<div>' + brl(item.expectedValue) + '</div>' +
-          '<div>' + (pay ? brl(paidValue) : '-') + '</div>' +
-          '<div>' + escapeHtml(diffText) + '</div>' +
-          '<div><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span></div>' +
-          '<div>' + payButton + '</div>' +
+          '<div data-label="Parcela"><strong>' + item.number + '/' + item.total + '</strong></div>' +
+          '<div data-label="Vencimento">' + formatDateBR(item.dueDate) + '</div>' +
+          '<div data-label="Valor Previsto">' + brl(item.expectedValue) + '</div>' +
+          '<div data-label="Valor Pago">' + (pay ? brl(paidValue) : '-') + '</div>' +
+          '<div data-label="Desconto / Juros">' + escapeHtml(diffText) + '</div>' +
+          '<div data-label="Status"><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span></div>' +
+          '<div data-label="Ação">' + payButton + '</div>' +
         '</div>';
       });
 
