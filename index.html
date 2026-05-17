@@ -9,7 +9,6 @@
       --bg: #0f141b;
       --panel: #151b24;
       --panel-2: #1b2330;
-      --card: #202a38;
       --text: #f3f6f8;
       --muted: #9aa7b7;
       --soft: #d8dee6;
@@ -20,10 +19,8 @@
       --amber: #d8a441;
       --amber-soft: rgba(216, 164, 65, 0.18);
       --danger: #d86464;
-      --danger-soft: rgba(216, 100, 100, 0.16);
       --border: rgba(255,255,255,0.08);
       --shadow: 0 24px 70px rgba(0,0,0,0.28);
-      --radius-xl: 28px;
       --radius-lg: 22px;
       --radius-md: 16px;
     }
@@ -76,6 +73,7 @@
     .brand-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
     nav { display: flex; flex-direction: column; gap: 8px; }
+
     .nav-item {
       border: 1px solid transparent;
       background: transparent;
@@ -89,12 +87,12 @@
       font-size: 14px;
       text-align: left;
     }
+
     .nav-item.active, .nav-item:hover {
       background: var(--panel-2);
       color: var(--text);
       border-color: var(--border);
     }
-    .nav-icon { width: 18px; opacity: 0.85; }
 
     main { padding: 30px; }
 
@@ -106,9 +104,16 @@
       margin-bottom: 28px;
     }
 
-    .eyebrow { color: var(--green); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .eyebrow {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
     h1 { margin: 6px 0 0; font-size: 34px; letter-spacing: -0.04em; }
-    .page-desc { color: var(--muted); margin-top: 7px; max-width: 680px; }
+    .page-desc { color: var(--muted); margin-top: 7px; max-width: 760px; }
 
     .primary-action {
       background: linear-gradient(135deg, var(--green), #68d3a4);
@@ -132,7 +137,7 @@
     }
 
     .metric-card { padding: 20px; min-height: 142px; }
-    .metric-label { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+    .metric-label { color: var(--muted); font-size: 12px; margin-bottom: 7px; font-weight: 700; }
     .metric-value { font-size: 28px; font-weight: 820; letter-spacing: -0.04em; }
     .metric-note { color: var(--muted); font-size: 12px; margin-top: 10px; line-height: 1.35; }
     .metric-card.priority { border-color: rgba(216,164,65,0.35); background: linear-gradient(180deg, var(--amber-soft), transparent), var(--panel); }
@@ -147,6 +152,7 @@
       border: 1px solid rgba(77,141,247,0.26);
       margin-bottom: 14px;
     }
+
     .strategy-title { font-size: 13px; color: #b7ccff; margin-bottom: 6px; font-weight: 700; }
     .strategy-main { font-size: 22px; font-weight: 820; letter-spacing: -0.03em; }
     .strategy-text { color: var(--soft); margin-top: 8px; font-size: 14px; line-height: 1.45; }
@@ -158,6 +164,7 @@
       border-radius: 999px;
       margin: 34px 6px 22px;
     }
+
     .marker {
       position: absolute;
       top: -26px;
@@ -167,6 +174,7 @@
       text-align: center;
       white-space: nowrap;
     }
+
     .marker::after {
       content: "";
       display: block;
@@ -175,6 +183,7 @@
       background: rgba(255,255,255,0.52);
       margin: 5px auto 0;
     }
+
     .progress-dot {
       position: absolute;
       top: 50%;
@@ -189,6 +198,7 @@
     }
 
     .debt-list { display: grid; gap: 12px; }
+
     .debt-card {
       padding: 18px;
       display: grid;
@@ -196,9 +206,15 @@
       gap: 18px;
       align-items: start;
     }
-    .debt-card.max { border-color: rgba(216,164,65,0.44); box-shadow: 0 20px 70px rgba(216,164,65,0.08); }
+
+    .debt-card.max {
+      border-color: rgba(216,164,65,0.44);
+      box-shadow: 0 20px 70px rgba(216,164,65,0.08);
+    }
+
     .debt-name { font-weight: 800; font-size: 16px; }
-    .debt-meta { color: var(--muted); font-size: 13px; margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .debt-meta { color: var(--muted); font-size: 13px; margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
     .tag {
       display: inline-flex;
       align-items: center;
@@ -209,14 +225,18 @@
       letter-spacing: 0.02em;
       text-transform: uppercase;
     }
+
     .tag.green { background: var(--green-soft); color: #8ae1b8; }
     .tag.amber { background: var(--amber-soft); color: #f0c978; }
     .tag.blue { background: var(--blue-soft); color: #a8c3ff; }
     .tag.gray { background: rgba(255,255,255,0.08); color: var(--soft); }
-    .debt-values { text-align: right; }
+    .tag.red { background: rgba(216, 100, 100, 0.16); color: #eda2a2; }
+
+    .debt-values { text-align: right; min-width: 210px; }
     .debt-value { font-size: 18px; font-weight: 820; }
     .debt-subvalue { color: var(--muted); font-size: 12px; margin-top: 4px; }
-    .debt-actions { margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px; }
+    .debt-actions { margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
     .ghost-btn {
       background: rgba(255,255,255,0.06);
       color: var(--soft);
@@ -228,10 +248,14 @@
       font-size: 12px;
     }
 
+    .danger-btn { color: #eda2a2; border-color: rgba(216,100,100,0.28); }
+
     .form-card { padding: 22px; margin-top: 18px; display: none; }
     .form-card.show { display: block; }
     .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
     label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 7px; font-weight: 700; }
+
     input, select, textarea {
       width: 100%;
       background: #111720;
@@ -242,10 +266,10 @@
       outline: none;
       font-size: 14px;
     }
+
     textarea { min-height: 92px; resize: vertical; }
     .span-2 { grid-column: span 2; }
     .span-4 { grid-column: span 4; }
-
     .page { display: none; }
     .page.active { display: block; }
 
@@ -275,13 +299,14 @@
           <div class="brand-subtitle">Estratégia de quitação</div>
         </div>
       </div>
+
       <nav>
-        <button class="nav-item active" data-page="dashboard"><span class="nav-icon">⌁</span> Dashboard</button>
-        <button class="nav-item" data-page="dividas"><span class="nav-icon">▣</span> Dívidas</button>
-        <button class="nav-item" data-page="espera"><span class="nav-icon">◌</span> Em espera</button>
-        <button class="nav-item" data-page="parcelas"><span class="nav-icon">□</span> Parcelas</button>
-        <button class="nav-item" data-page="pagamentos"><span class="nav-icon">✓</span> Pagamentos</button>
-        <button class="nav-item" data-page="historico"><span class="nav-icon">↺</span> Histórico</button>
+        <button class="nav-item active" data-page="dashboard"><span>⌁</span> Dashboard</button>
+        <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas</button>
+        <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
+        <button class="nav-item" data-page="parcelas"><span>□</span> Parcelas</button>
+        <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
+        <button class="nav-item" data-page="historico"><span>↺</span> Histórico</button>
       </nav>
     </aside>
 
@@ -315,7 +340,7 @@
           <div class="metric-card">
             <div class="metric-label">Dívida total reconhecida</div>
             <div class="metric-value">R$ 96.300,00</div>
-            <div class="metric-note">Inclui ativas, em espera e quitadas no histórico.</div>
+            <div class="metric-note">Inclui ativas e em espera.</div>
           </div>
         </div>
 
@@ -375,15 +400,15 @@
         <div class="topbar">
           <div>
             <div class="eyebrow">Operação</div>
-            <h1>Parcelas e pagamentos</h1>
-            <div class="page-desc">Nesta etapa ainda é uma visão conceitual. Depois ela receberá baixa de pagamentos, descontos e vencimentos.</div>
+            <h1>Parcelas e vencimentos</h1>
+            <div class="page-desc">Consulta das próximas parcelas previstas.</div>
           </div>
         </div>
         <div class="panel">
           <h2 class="panel-title">Próximas parcelas</h2>
           <div class="debt-list">
-            <div class="debt-card"><div><div class="debt-name">Santander Acordo · 10/36</div><div class="debt-meta">Vence dia 10 · R$ 620,00</div></div><span class="tag amber">pendente</span></div>
-            <div class="debt-card"><div><div class="debt-name">Nubank Cartão · 4/12</div><div class="debt-meta">Vence dia 18 · R$ 410,00</div></div><span class="tag green">paga</span></div>
+            <div class="debt-card"><div><div class="debt-name">Santander Acordo · 10/36</div><div class="debt-meta">Vence em 10/06/2026 · R$ 620,00</div></div><span class="tag amber">pendente</span></div>
+            <div class="debt-card"><div><div class="debt-name">Nubank Cartão · 4/12</div><div class="debt-meta">Vence em 18/06/2026 · R$ 410,00</div></div><span class="tag green">paga</span></div>
           </div>
         </div>
       </section>
@@ -393,12 +418,12 @@
           <div>
             <div class="eyebrow">Baixa operacional</div>
             <h1>Registrar pagamentos</h1>
-            <div class="page-desc">Aqui ficam os lançamentos realizados. A baixa também pode ser aberta diretamente pelo card da dívida.</div>
+            <div class="page-desc">A baixa pode ser aberta diretamente pelo card da dívida.</div>
           </div>
         </div>
         <div class="panel">
           <h2 class="panel-title">Pagamentos recentes</h2>
-          <div class="debt-list" id="paymentsList">
+          <div class="debt-list">
             <div class="debt-card"><div><div class="debt-name">Santander · Acordo Cartão</div><div class="debt-meta">Pago em 05/05/2026 · previsto R$ 620,00 · desconto R$ 30,00</div></div><span class="tag green">R$ 590,00</span></div>
             <div class="debt-card"><div><div class="debt-name">Itaú · Empréstimo pessoal</div><div class="debt-meta">Pago em 27/04/2026 · previsto R$ 890,00 · juros R$ 12,00</div></div><span class="tag amber">R$ 902,00</span></div>
           </div>
@@ -531,13 +556,11 @@
     ];
 
     function brl(value) {
-      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    function tagFor(debt) {
-      const critical = debt.criticality === 'Máxima' ? '<span class="tag amber">prioridade máxima</span>' : debt.criticality === 'Alta' ? '<span class="tag blue">criticidade alta</span>' : '<span class="tag gray">normal</span>';
-      const behavior = debt.behavior === 'Rolagem' ? '<span class="tag amber">rolagem</span>' : debt.behavior === 'Quitação única' ? '<span class="tag blue">quitação</span>' : '<span class="tag green">parcelada</span>';
-      return critical + behavior;
+    function moneyInput(value) {
+      return brl(value);
     }
 
     function formatDateBR(dateString) {
@@ -549,8 +572,25 @@
       return Math.min(100, Math.round((debt.paid / debt.total) * 100));
     }
 
+    function tagFor(debt) {
+      const critical = debt.criticality === 'Máxima'
+        ? '<span class="tag amber">prioridade máxima</span>'
+        : debt.criticality === 'Alta'
+          ? '<span class="tag blue">criticidade alta</span>'
+          : '<span class="tag gray">normal</span>';
+
+      const behavior = debt.behavior === 'Rolagem'
+        ? '<span class="tag amber">rolagem</span>'
+        : debt.behavior === 'Quitação única'
+          ? '<span class="tag blue">quitação</span>'
+          : '<span class="tag green">parcelada</span>';
+
+      return critical + behavior;
+    }
+
     function debtCard(debt) {
       const progress = progressPercent(debt);
+
       return `
         <div class="debt-card ${debt.criticality === 'Máxima' ? 'max' : ''}">
           <div>
@@ -561,6 +601,7 @@
               <span>Parcela ${debt.parcels}</span>
               ${tagFor(debt)}
             </div>
+
             <div style="margin-top:14px; display:grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap:10px;">
               <div><div class="metric-label">Valor total</div><div class="debt-value">${brl(debt.total)}</div></div>
               <div><div class="metric-label">Valor pago</div><div class="debt-value">${brl(debt.paid)}</div></div>
@@ -568,20 +609,26 @@
               <div><div class="metric-label">Quitação hoje</div><div class="debt-value">${brl(debt.payoffToday)}</div></div>
               <div><div class="metric-label">Desconto acumulado</div><div class="debt-value">${brl(debt.discount)}</div></div>
             </div>
+
             <div style="margin-top:14px; max-width:620px;">
-              <div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:7px;"><span>Progresso</span><strong style="color:var(--soft)">${progress}%</strong></div>
-              <div style="height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden;"><div style="height:100%; width:${progress}%; background:linear-gradient(90deg,var(--blue),var(--green)); border-radius:999px;"></div></div>
+              <div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:7px;">
+                <span>Progresso</span><strong style="color:var(--soft)">${progress}%</strong>
+              </div>
+              <div style="height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden;">
+                <div style="height:100%; width:${progress}%; background:linear-gradient(90deg,var(--blue),var(--green)); border-radius:999px;"></div>
+              </div>
             </div>
           </div>
+
           <div class="debt-values">
             <div class="debt-value">${debt.installment ? brl(debt.installment) : 'Sem parcela'}</div>
             <div class="debt-subvalue">parcela atual</div>
             <div class="debt-actions">
               <button class="ghost-btn" onclick="openDebtForm()">Editar</button>
               <button class="ghost-btn" onclick="openDebtForm()">Renegociar</button>
-              <button class="ghost-btn" onclick="deleteDebt('${debt.creditor}', '${debt.name}')">Excluir</button>
               <button class="ghost-btn" onclick="openPaymentForm('${debt.creditor}', '${debt.name}', '${debt.nextDue}', ${debt.installment || 0})">Registrar pagamento</button>
               ${debt.status === 'Em espera' ? '<button class="ghost-btn">Ativar</button>' : '<button class="ghost-btn">Mover para espera</button>'}
+              <button class="ghost-btn danger-btn" onclick="deleteDebt('${debt.creditor}', '${debt.name}')">Excluir</button>
             </div>
           </div>
         </div>
@@ -603,10 +650,6 @@
       document.getElementById('debtForm').classList.remove('show');
     }
 
-    function moneyInput(value) {
-      return brl(value).replace('R$', 'R$').trim();
-    }
-
     function openPaymentForm(creditor, name, expectedDate, expectedValue) {
       closeDebtForm();
       document.getElementById('payDebtName').value = creditor + ' · ' + name;
@@ -623,12 +666,11 @@
     function closePaymentForm() {
       document.getElementById('paymentForm').classList.remove('show');
     }
-    }
 
     function deleteDebt(creditor, name) {
       const confirmDelete = confirm(`Excluir definitivamente ${creditor} · ${name}? Esta ação não poderá ser desfeita.`);
       if (confirmDelete) {
-        alert('Futuramente isso removerá a dívida e pagamentos vinculados do Firestore.');
+        alert('Exclusão visual confirmada. Na próxima etapa isso removerá a dívida do Firestore.');
       }
     }
 
@@ -644,7 +686,7 @@
     });
 
     renderDebts();
-    </script>
+  </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -663,6 +705,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    window.rotaFirebase = { app, db };
     console.log('Firebase conectado', db);
   </script>
 </body>
