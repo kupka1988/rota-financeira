@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rota Financeira</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -27,7 +25,7 @@
   <div class="app">
     <aside>
       <div class="brand">
-        <div class="brand-mark"><img src="assets/favicon.png" alt="Rota Financeira" /></div>
+        <div class="brand-mark">RF</div>
         <div>
           <div class="brand-title">Rota Financeira</div>
           <div class="brand-subtitle">Estratégia de quitação</div>
@@ -54,25 +52,6 @@
           </div>
           <button class="primary-action" onclick="goToDebtsAndNew()">+ Nova dívida</button>
         </div>
-        <div class="dashboard-hero">
-          <div>
-            <div class="metric-label">Projeção do mês</div>
-            <div class="hero-percent" id="dashProjectedPercent">0%</div>
-            <div class="metric-note" id="dashHeroText">A projeção aparece após os primeiros pagamentos do mês.</div>
-          </div>
-          <div class="hero-side">
-            <div><span>Atual do mês</span><strong id="dashCurrentMonthPaid">R$ 0,00</strong></div>
-            <div><span>Sobra projetada pela meta mínima</span><strong id="dashMinimumGap">R$ 0,00</strong></div>
-          </div>
-        </div>
-        <div class="performance-panel">
-          <div class="performance-head">
-            <h2 class="panel-title">Faixa de performance</h2>
-            <div class="metric-note">Escala proporcional entre R$ 0 e a meta ideal do mês.</div>
-          </div>
-          <div class="performance-track" id="performanceTrack"></div>
-          <div class="goal-cards" id="goalCards"></div>
-        </div>
         <div class="grid-4">
           <div class="metric-card priority"><div class="metric-label">Prioridade Máxima</div><div class="metric-value" id="dashPriority">R$ 0,00</div><div class="metric-note">Dívidas sensíveis no topo da rota atual.</div></div>
           <div class="metric-card"><div class="metric-label">Dívida Sob Gestão</div><div class="metric-value" id="dashActiveDebt">R$ 0,00</div><div class="metric-note">Total ativo, sem incluir itens em espera.</div></div>
@@ -98,13 +77,6 @@
           <div class="panel">
             <h2 class="panel-title">Leitura do mês</h2>
             <div class="strategy-box" style="background: var(--amber-soft); border-color: rgba(216,164,65,0.28)"><div class="strategy-title" style="color:#f0c978">Atenção</div><div class="strategy-main" id="monthReading">Sem dados ainda</div><div class="strategy-text" id="monthReadingText">Depois dos primeiros cadastros, esta área indicará risco mensal e próximos vencimentos.</div></div>
-          </div>
-        </div>
-        <div class="panel">
-          <h2 class="panel-title">Dívida por credor</h2>
-          <div class="donut-panel">
-            <div class="donut-chart" id="creditorDonut"></div>
-            <div class="donut-legend" id="creditorDonutLegend"></div>
           </div>
         </div>
       </section>
@@ -200,10 +172,6 @@
       <section id="pagamentos" class="page">
         <div class="topbar"><div><div class="eyebrow">Baixa operacional</div><h1>Pagamentos</h1><div class="page-desc">Pagamentos registrados a partir das parcelas das dívidas.</div></div></div>
         <div id="paymentMetrics" class="debt-metrics"></div>
-        <div class="panel">
-          <h2 class="panel-title">Semanas do mês</h2>
-          <div class="week-grid" id="paymentWeeks"></div>
-        </div>
         <section id="paymentForm" class="form-card">
           <h2 class="panel-title">Registrar pagamento</h2>
           <div class="form-grid">
@@ -214,7 +182,7 @@
           </div>
           <div class="form-actions"><button class="primary-action" onclick="savePayment()">Salvar pagamento</button><button class="ghost-btn" onclick="closePaymentForm()">Cancelar</button></div>
         </section>
-        <div class="panel"><h2 class="panel-title">Lançamentos recentes</h2><div class="payment-ledger" id="paymentsList"></div></div>
+        <div class="panel"><h2 class="panel-title">Pagamentos recentes</h2><div class="payment-ledger" id="paymentsList"></div></div>
       </section>
 
       <section id="historico" class="page">
@@ -231,7 +199,6 @@
           <div class="panel">
             <h2 class="panel-title" id="creditorFormTitle">Novo credor</h2>
             <div class="form-grid" style="grid-template-columns: 1fr;">
-              <div><label>Tema do sistema</label><select id="themeSelect" onchange="setThemePreference(this.value)"><option value="dark">Escuro</option><option value="light">Claro</option></select></div>
               <div><label>Nome do credor</label><input id="creditorName" placeholder="Ex.: Santander" /></div>
               <div><label>Tipo</label><select id="creditorType"><option>Banco</option><option>Cartão</option><option>Financeira</option><option>Loja</option><option>Outro</option><option>Pessoa física</option></select></div>
               <div>
