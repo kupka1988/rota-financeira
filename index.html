@@ -131,6 +131,10 @@
     .decision-row:last-child { border-bottom: 0; }
     .decision-row strong { color: var(--text); }
     .decision-row small { display: block; color: var(--muted); margin-top: 3px; }
+    .payment-ledger { display: grid; gap: 10px; }
+    .payment-row { display: grid; grid-template-columns: minmax(260px, 1.4fr) 0.7fr 0.8fr 0.8fr 0.8fr; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--border); border-radius: 16px; background: rgba(255,255,255,0.025); }
+    .payment-row strong { color: var(--text); }
+    .payment-row small { display: block; color: var(--muted); margin-top: 4px; }
     .risk-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
     .risk-item { padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.028); }
     .risk-item strong { display: block; font-size: 18px; margin-top: 5px; }
@@ -250,6 +254,7 @@
       .debt-actions { justify-content:flex-start; }
       .more-menu { left: 0; right: auto; }
       .installment-row { grid-template-columns: 1fr 1fr; }
+      .payment-row { grid-template-columns: 1fr 1fr; }
       .installment-row.header { display: none; }
     }
 
@@ -259,6 +264,7 @@
       .compact-summary { grid-template-columns: 1fr; }
       .finance-grid { grid-template-columns: 1fr; }
       .installment-row { grid-template-columns: 1fr; }
+      .payment-row { grid-template-columns: 1fr; }
       .metric-value { font-size: 24px; }
       .toast { left: 18px; right: 18px; bottom: 18px; }
     }
@@ -378,6 +384,7 @@
 
       <section id="pagamentos" class="page">
         <div class="topbar"><div><div class="eyebrow">Baixa operacional</div><h1>Pagamentos</h1><div class="page-desc">Pagamentos registrados a partir das parcelas das dívidas.</div></div></div>
+        <div id="paymentMetrics" class="debt-metrics"></div>
         <section id="paymentForm" class="form-card">
           <h2 class="panel-title">Registrar pagamento</h2>
           <div class="form-grid">
@@ -388,7 +395,7 @@
           </div>
           <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;"><button class="primary-action" onclick="savePayment()">Salvar pagamento</button><button class="ghost-btn" onclick="closePaymentForm()">Cancelar</button></div>
         </section>
-        <div class="panel"><h2 class="panel-title">Pagamentos recentes</h2><div class="debt-list" id="paymentsList"></div></div>
+        <div class="panel"><h2 class="panel-title">Pagamentos recentes</h2><div class="payment-ledger" id="paymentsList"></div></div>
       </section>
 
       <section id="historico" class="page">
@@ -811,6 +818,7 @@
     }
 
     function renderPayments() {
+      renderPaymentMetrics();
       const sorted = [...payments].sort((a, b) => String(b.paymentDate || '').localeCompare(String(a.paymentDate || '')));
       if (!sorted.length) {
         $('paymentsList').innerHTML = emptyCard('Nenhum pagamento registrado', 'Os pagamentos baixados aparecerão aqui.');
@@ -820,11 +828,34 @@
       $('paymentsList').innerHTML = sorted.map(item => {
         const debt = debts.find(d => d.id === item.debtId);
         const title = debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida removida';
-        let details = fact('Pago Em', formatDateBR(item.paymentDate)) + fact('Prestação', String(item.installmentNumber || '-')) + fact('Valor Pago', brl(item.paidValue));
-        if (Number(item.discount || 0) > 0) details += fact('Desconto', brl(item.discount));
-        if (Number(item.interest || 0) > 0) details += fact('Juros', brl(item.interest));
-        return '<div class="debt-card"><div class="debt-name">' + escapeHtml(title) + '</div><div class="debt-meta">' + details + '</div></div>';
+        const discount = Number(item.discount || 0);
+        const interest = Number(item.interest || 0);
+        const adjustment = discount > 0 ? tag('Desconto ' + brl(discount), 'green') : interest > 0 ? tag('Juros ' + brl(interest), 'red') : tag('Sem Ajuste', 'gray');
+        return '<div class="payment-row">' +
+          '<div><strong>' + escapeHtml(title) + '</strong><small>Prestação ' + escapeHtml(item.installmentNumber || '-') + '</small></div>' +
+          '<div><div class="metric-label">Pago Em</div><strong>' + formatDateBR(item.paymentDate) + '</strong></div>' +
+          '<div><div class="metric-label">Valor Pago</div><strong>' + brl(item.paidValue) + '</strong></div>' +
+          '<div><div class="metric-label">Valor Previsto</div><strong>' + brl(item.expectedValue) + '</strong></div>' +
+          '<div>' + adjustment + '</div>' +
+        '</div>';
       }).join('');
+    }
+
+    function renderPaymentMetrics() {
+      const container = $('paymentMetrics');
+      if (!container) return;
+      const month = currentMonthKey();
+      const monthPayments = payments.filter(p => String(p.paymentDate || '').startsWith(month));
+      const paidMonth = monthPayments.reduce((sum, item) => sum + Number(item.paidValue || 0), 0);
+      const discountMonth = monthPayments.reduce((sum, item) => sum + Number(item.discount || 0), 0);
+      const interestMonth = monthPayments.reduce((sum, item) => sum + Number(item.interest || 0), 0);
+      const totalPaid = payments.reduce((sum, item) => sum + Number(item.paidValue || 0), 0);
+
+      container.innerHTML =
+        debtMetric('Pago no Mês', brl(paidMonth), '✓', 'green') +
+        debtMetric('Desconto no Mês', brl(discountMonth), '↓', 'green') +
+        debtMetric('Juros no Mês', brl(interestMonth), '!', 'red') +
+        debtMetric('Total Já Pago', brl(totalPaid), '▣', 'blue');
     }
 
     function renderCreditors() {
