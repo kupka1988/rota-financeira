@@ -109,8 +109,20 @@
     .filter-row .creditor-logo { width: 24px; height: 24px; border-radius: 8px; font-size: 10px; }
     .filter-row .is-active { background: var(--amber-soft); color: #ffd77f; border-color: rgba(216,164,65,0.42); }
     .filter-count { min-width: 24px; height: 22px; display: inline-grid; place-items: center; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--soft); font-size: 11px; font-weight: 850; }
-    .debt-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--border); box-shadow: var(--shadow); }
+    .debt-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--border); box-shadow: var(--shadow); }
     .debt-metric { display: grid; grid-template-columns: 44px 1fr; gap: 13px; align-items: center; padding: 18px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--panel); }
+    .debt-metric.filter-panel { grid-template-columns: 1fr; align-items: start; }
+    .debt-metric.creditor-panel { grid-column: span 2; grid-template-columns: 1fr; align-items: start; }
+    .panel-filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mini-filter { display: inline-flex; align-items: center; justify-content: space-between; gap: 9px; min-height: 36px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--soft); cursor: pointer; font-size: 12px; font-weight: 850; }
+    .mini-filter span { min-width: 24px; height: 22px; display: grid; place-items: center; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--text); font-size: 11px; }
+    .mini-filter.is-active { color: #ffd77f; border-color: rgba(216,164,65,0.48); background: rgba(216,164,65,0.13); }
+    .creditor-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+    .creditor-summary { display: grid; grid-template-columns: 34px 1fr; gap: 3px 9px; align-items: center; min-height: 58px; padding: 9px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.035); color: var(--text); cursor: pointer; text-align: left; }
+    .creditor-summary .creditor-logo { width: 34px; height: 34px; border-radius: 11px; grid-row: span 2; font-size: 12px; }
+    .creditor-summary strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+    .creditor-summary small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 11px; }
+    .creditor-summary.is-active { border-color: rgba(216,164,65,0.54); background: rgba(216,164,65,0.13); }
     .metric-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 14px; background: var(--amber-soft); color: #ffd77f; font-weight: 900; }
     .metric-icon.green { background: var(--green-soft); color: #8ae1b8; }
     .metric-icon.blue { background: var(--blue-soft); color: #a8c3ff; }
@@ -141,8 +153,12 @@
 
     .debt-list { display: grid; gap: 10px; }
     .debt-card { padding: 0; overflow: visible; }
-    .debt-card.max { border-color: rgba(216,164,65,0.44); box-shadow: 0 20px 70px rgba(216,164,65,0.08); }
-    .debt-card.expanded { border-color: rgba(216,164,65,0.68); }
+    .debt-card.priority-max { border-color: rgba(216,164,65,0.56); background: linear-gradient(90deg, rgba(216,164,65,0.18), rgba(216,164,65,0.055) 38%, rgba(255,255,255,0.018)), var(--panel); box-shadow: 0 20px 70px rgba(216,164,65,0.10); }
+    .debt-card.priority-high { border-color: rgba(77,141,247,0.42); background: linear-gradient(90deg, rgba(77,141,247,0.14), rgba(77,141,247,0.05) 38%, rgba(255,255,255,0.018)), var(--panel); box-shadow: 0 20px 70px rgba(77,141,247,0.08); }
+    .debt-card.priority-normal { border-color: rgba(63,185,133,0.28); background: linear-gradient(90deg, rgba(63,185,133,0.10), rgba(63,185,133,0.035) 38%, rgba(255,255,255,0.018)), var(--panel); }
+    .debt-card.expanded.priority-max { border-color: rgba(216,164,65,0.76); }
+    .debt-card.expanded.priority-high { border-color: rgba(77,141,247,0.62); }
+    .debt-card.expanded.priority-normal { border-color: rgba(63,185,133,0.48); }
     .debt-row { display: grid; grid-template-columns: minmax(260px, 1.35fr) minmax(128px, 0.7fr) minmax(118px, 0.62fr) minmax(150px, 0.8fr) minmax(130px, 0.7fr) 44px; gap: 16px; align-items: center; padding: 16px 18px; }
     .debt-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; min-width: 0; }
     .debt-title { min-width: 0; flex: 1; }
@@ -225,6 +241,7 @@
     @media (max-width: 1180px) {
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
       .debt-metrics { grid-template-columns: repeat(2, 1fr); }
+      .debt-metric.creditor-panel { grid-column: 1 / -1; }
       .decision-grid { grid-template-columns: 1fr; }
       .debt-row { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(120px, 0.5fr)) 44px; }
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
@@ -271,6 +288,10 @@
       .filter-row .ghost-btn { flex: 0 0 auto; }
       .debt-metrics { gap: 8px; border: 0; background: transparent; box-shadow: none; }
       .debt-metric { border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+      .debt-metric.creditor-panel { grid-column: auto; }
+      .panel-filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; }
+      .mini-filter { flex: 0 0 auto; }
+      .creditor-summary-grid { grid-template-columns: 1fr; }
       .debt-row { padding: 14px; }
       .debt-head { align-items: flex-start; }
       .creditor-logo { width: 40px; height: 40px; border-radius: 13px; }
