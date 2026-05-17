@@ -415,6 +415,7 @@
 
       <section id="configuracoes" class="page">
         <div class="topbar"><div><div class="eyebrow">Parâmetros</div><h1>Configurações</h1><div class="page-desc">Cadastre e edite credores. Eles alimentam a lista suspensa das dívidas.</div></div></div>
+        <div id="creditorMetrics" class="debt-metrics"></div>
         <div class="grid-2">
           <div class="panel"><h2 class="panel-title">Credores cadastrados</h2><div class="debt-list" id="creditorsList"></div></div>
           <div class="panel">
@@ -928,18 +929,44 @@
     }
 
     function renderCreditors() {
+      renderCreditorMetrics();
       if (!creditors.length) {
         $('creditorsList').innerHTML = emptyCard('Nenhum credor cadastrado', 'Cadastre credores para usar na criação das dívidas.');
       } else {
         $('creditorsList').innerHTML = creditors.map(creditor => {
           const notes = creditor.notes ? '<span>' + escapeHtml(creditor.notes) + '</span>' : '';
-          return '<div class="debt-card"><div class="debt-head"><div><div class="debt-name">' + escapeHtml(creditor.name) + '</div><div class="debt-meta"><span>' + escapeHtml(creditor.type) + '</span>' + notes + '</div></div><div class="action-group"><button class="ghost-btn" onclick="window.editCreditor(\'' + creditor.id + '\')">Editar</button><button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'creditor\', \'' + creditor.id + '\')">Excluir</button></div></div></div>';
+          const linkedDebts = debts.filter(d => d.creditorId === creditor.id);
+          const linkedBalance = linkedDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
+          const deleteButton = linkedDebts.length
+            ? '<button class="ghost-btn danger-btn" onclick="showToast(\'Este credor está vinculado a dívidas.\')">Exclusão bloqueada</button>'
+            : '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'creditor\', \'' + creditor.id + '\')">Excluir</button>';
+          return '<div class="debt-card"><div class="debt-row" style="grid-template-columns:minmax(260px,1.2fr) 0.7fr 0.7fr auto;">' +
+            '<div class="debt-head">' + creditorLogoHtml(creditor.id) + '<div><div class="debt-name">' + escapeHtml(creditor.name) + '</div><div class="debt-meta"><span>' + escapeHtml(creditor.type) + '</span>' + notes + '</div></div></div>' +
+            '<div class="row-stat"><div class="metric-label">Dívidas</div><strong>' + linkedDebts.length + '</strong></div>' +
+            '<div class="row-stat"><div class="metric-label">Saldo Vinculado</div><strong>' + brl(linkedBalance) + '</strong></div>' +
+            '<div class="action-group"><button class="ghost-btn" onclick="window.editCreditor(\'' + creditor.id + '\')">Editar</button>' + deleteButton + '</div>' +
+          '</div></div>';
         }).join('');
       }
 
       $('debtCreditorSelect').innerHTML = creditors.length
         ? creditors.map(c => '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>').join('')
         : '<option value="">Cadastre um credor primeiro</option>';
+    }
+
+    function renderCreditorMetrics() {
+      const container = $('creditorMetrics');
+      if (!container) return;
+      const linkedIds = new Set(debts.map(d => d.creditorId).filter(Boolean));
+      const linkedCreditors = creditors.filter(c => linkedIds.has(c.id)).length;
+      const freeCreditors = creditors.length - linkedCreditors;
+      const activeCreditors = new Set(debts.filter(d => d.status === 'Ativa').map(d => d.creditorId).filter(Boolean)).size;
+      const waitingCreditors = new Set(debts.filter(d => d.status === 'Em espera').map(d => d.creditorId).filter(Boolean)).size;
+      container.innerHTML =
+        debtMetric('Credores Cadastrados', String(creditors.length), '▣', 'blue') +
+        debtMetric('Com Dívidas', String(linkedCreditors), '⌁', 'red') +
+        debtMetric('Na Frente Ativa', String(activeCreditors), '✓', 'green') +
+        debtMetric('Livres Para Excluir', String(freeCreditors), '◌', waitingCreditors ? '' : 'green');
     }
 
     function renderDashboard() {
