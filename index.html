@@ -33,6 +33,7 @@
       </div>
       <nav>
         <button class="nav-item active" data-page="dashboard"><span>⌁</span> Dashboard</button>
+        <button class="nav-item" data-page="trilha"><span>◇</span> Trilha</button>
         <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas</button>
         <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
         <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
@@ -80,6 +81,28 @@
         </div>
       </section>
 
+      <section id="trilha" class="page">
+        <div class="topbar">
+          <div>
+            <div class="eyebrow">Jornada de quitação</div>
+            <h1>Sua trilha até zerar as dívidas</h1>
+            <div class="page-desc">Defina a ordem em que deseja quitar as dívidas e acompanhe sua posição até a linha de chegada.</div>
+          </div>
+          <button class="primary-action" onclick="goToDebtsAndNew()">+ Nova dívida</button>
+        </div>
+        <div id="trailMetrics" class="debt-metrics"></div>
+        <div class="trail-stage">
+          <div class="trail-avatar">
+            <div class="trail-person">RF</div>
+            <div>
+              <div class="metric-label">Você está aqui</div>
+              <div class="debt-name" id="trailPositionTitle">Preparando a rota</div>
+            </div>
+          </div>
+          <div class="trail-road" id="trailRoad"></div>
+        </div>
+      </section>
+
       <section id="dividas" class="page">
         <div class="topbar">
           <div><div class="eyebrow">Carteira ativa</div><h1>Dívidas em gestão</h1><div class="page-desc">Aqui ficam as dívidas que entram no plano atual e aparecem no dashboard principal.</div></div>
@@ -90,6 +113,7 @@
           <label>Ordenar</label>
           <select id="debtSort" onchange="setDebtSort(this.value)">
             <option value="priority">Prioridade</option>
+            <option value="trail">Ordem da Trilha</option>
             <option value="installment-desc">Maior Parcela</option>
             <option value="installment-asc">Menor Parcela</option>
             <option value="balance-desc">Maior Saldo Devedor</option>
@@ -113,6 +137,7 @@
             <div><label>Criticidade</label><select id="debtCriticality"><option>Normal</option><option>Alta</option><option>Máxima</option></select></div>
             <div><label>Comportamento</label><select id="debtBehavior"><option>Parcelada</option><option>Rolagem</option><option>Quitação única</option></select></div>
             <div><label>Valor de quitação hoje</label><input id="debtPayoffToday" inputmode="decimal" placeholder="R$ 0,00" /></div>
+            <div><label>Ordem na trilha</label><input id="debtPayoffOrder" inputmode="numeric" placeholder="Ex.: 1" /></div>
             <div class="span-4"><label>Observações</label><textarea id="debtNotes" placeholder="Condição atual, possibilidade de renegociação, contexto interno..."></textarea></div>
           </div>
           <div class="form-actions"><button class="primary-action" onclick="saveDebt()">Salvar dívida</button><button class="ghost-btn" onclick="closeDebtForm()">Cancelar</button></div>
@@ -131,6 +156,7 @@
           <label>Ordenar</label>
           <select id="waitingDebtSort" onchange="setWaitingDebtSort(this.value)">
             <option value="priority">Prioridade</option>
+            <option value="trail">Ordem da Trilha</option>
             <option value="installment-desc">Maior Parcela</option>
             <option value="installment-asc">Menor Parcela</option>
             <option value="balance-desc">Maior Saldo Devedor</option>

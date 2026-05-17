@@ -153,6 +153,23 @@
     .risk-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
     .risk-item { padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.028); }
     .risk-item strong { display: block; font-size: 18px; margin-top: 5px; }
+    .trail-stage { display: grid; grid-template-columns: 260px 1fr; gap: 18px; align-items: start; }
+    .trail-avatar { position: sticky; top: 24px; display: grid; gap: 14px; padding: 18px; border: 1px solid rgba(63,185,133,0.28); border-radius: var(--radius-lg); background: linear-gradient(180deg, rgba(63,185,133,0.12), rgba(255,255,255,0.02)), var(--panel); box-shadow: var(--shadow); }
+    .trail-person { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 24px; background: linear-gradient(135deg, var(--green), var(--blue)); color: #071018; font-size: 22px; font-weight: 950; box-shadow: 0 20px 50px rgba(63,185,133,0.18); }
+    .trail-road { position: relative; display: grid; gap: 14px; }
+    .trail-road::before { content: ""; position: absolute; left: 24px; top: 18px; bottom: 18px; width: 2px; background: linear-gradient(180deg, var(--green), var(--amber), var(--blue)); opacity: 0.55; }
+    .trail-step { position: relative; display: grid; grid-template-columns: 50px 1fr; gap: 14px; align-items: start; }
+    .trail-marker { position: relative; z-index: 1; width: 50px; height: 50px; display: grid; place-items: center; border-radius: 18px; border: 1px solid var(--border-strong); background: var(--panel-2); color: #ffd77f; font-weight: 950; box-shadow: var(--shadow); }
+    .trail-step.current .trail-marker { background: linear-gradient(135deg, var(--amber), #f4cc78); color: #191007; }
+    .trail-step.done .trail-marker { background: linear-gradient(135deg, var(--green), #7addad); color: #071018; }
+    .trail-card { padding: 16px; border: 1px solid var(--border); border-radius: 18px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018)), var(--panel); box-shadow: var(--shadow); }
+    .trail-step.current .trail-card { border-color: rgba(216,164,65,0.52); background: linear-gradient(90deg, rgba(216,164,65,0.14), rgba(255,255,255,0.018)), var(--panel); }
+    .trail-card-head { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+    .trail-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .trail-facts div { padding: 10px; border-radius: 13px; border: 1px solid var(--border); background: rgba(255,255,255,0.026); }
+    .trail-facts span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; margin-bottom: 5px; }
+    .trail-facts strong { color: var(--text); font-size: 14px; }
+    .trail-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 
     .debt-list { display: grid; gap: 10px; }
     .debt-card { padding: 0; overflow: visible; }
@@ -253,6 +270,8 @@
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
       .debt-summary { grid-template-columns: 1fr; }
       .debt-insights { grid-template-columns: 1fr; }
+      .trail-stage { grid-template-columns: 1fr; }
+      .trail-avatar { position: relative; top: auto; grid-template-columns: 72px 1fr; align-items: center; }
     }
 
     @media (max-width: 980px) {
@@ -289,8 +308,8 @@
       main { padding: 14px 12px 96px; }
       aside { position: fixed; left: 0; right: 0; bottom: 0; top: auto; height: 76px; z-index: 40; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border-strong); border-bottom: 0; background: rgba(13,18,24,0.94); backdrop-filter: blur(18px); }
       .brand { display: none; }
-      nav { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; overflow: visible; padding: 0; }
-      .nav-item { min-width: 0; justify-content: center; flex-direction: column; gap: 3px; padding: 7px 4px; border-radius: 13px; font-size: 10px; line-height: 1.1; white-space: nowrap; }
+      nav { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; overflow: visible; padding: 0; }
+      .nav-item { min-width: 0; justify-content: center; flex-direction: column; gap: 3px; padding: 7px 2px; border-radius: 13px; font-size: 9px; line-height: 1.1; white-space: nowrap; }
       .nav-item span { font-size: 15px; line-height: 1; }
       .topbar { gap: 12px; margin-bottom: 16px; }
       h1 { font-size: 25px; }
@@ -323,6 +342,16 @@
       .panel, .decision-panel { padding: 16px; border-radius: 16px; }
       .grid-4, .grid-2, .decision-grid { gap: 10px; }
       .metric-card { min-height: 0; padding: 16px; border-radius: 16px; }
+      .trail-avatar { grid-template-columns: 52px 1fr; padding: 14px; border-radius: 18px; }
+      .trail-person { width: 52px; height: 52px; border-radius: 18px; font-size: 16px; }
+      .trail-road { gap: 12px; }
+      .trail-road::before { left: 18px; }
+      .trail-step { grid-template-columns: 38px 1fr; gap: 10px; }
+      .trail-marker { width: 38px; height: 38px; border-radius: 14px; font-size: 12px; }
+      .trail-card { padding: 13px; border-radius: 16px; }
+      .trail-card-head { align-items: flex-start; }
+      .trail-facts { grid-template-columns: 1fr; gap: 8px; }
+      .trail-actions .ghost-btn { flex: 1 1 92px; }
       .form-card { padding: 16px; border-radius: 16px; }
       .form-grid { gap: 12px; }
       .logo-upload { grid-template-columns: 48px 1fr; padding: 10px; }

@@ -361,7 +361,7 @@
         '</div>' + installmentRowsForDebt(debt) +
         '<div class="debt-actions">' +
           '<div class="action-group"><button class="ghost-btn" onclick="window.toggleDebt(\'' + debt.id + '\')">' + expandedAction + '</button>' + payAction + '</div>' +
-          '<div class="action-group"><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir Dívida</button></div>' +
+          '<div class="action-group"><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">Subir na Trilha</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">Descer na Trilha</button><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir Dívida</button></div>' +
         '</div></div>' : '') +
       '</div>';
     }
@@ -531,8 +531,23 @@
         if (mode === 'progress-desc') return debtProgress(b) - debtProgress(a);
         if (mode === 'progress-asc') return debtProgress(a) - debtProgress(b);
         if (mode === 'next-due') return String(nextA?.dueDate || '9999-12-31').localeCompare(String(nextB?.dueDate || '9999-12-31'));
+        if (mode === 'trail') return trailOrderValue(a) - trailOrderValue(b);
         return (priorityScore(b) - priorityScore(a)) || (debtBalance(b) - debtBalance(a));
       });
+    }
+
+    function trailOrderValue(debt) {
+      const order = Number(debt.payoffOrder || 0);
+      return order > 0 ? order : 9000 + (3 - priorityScore(debt)) * 100 + debtBalance(debt) / 1000000;
+    }
+
+    function orderedTrailDebts() {
+      return [...debts].sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+    }
+
+    function nextPayoffOrder() {
+      const max = debts.reduce((value, debt) => Math.max(value, Number(debt.payoffOrder || 0)), 0);
+      return max + 1;
     }
 
     function renderHistory() {
@@ -633,6 +648,63 @@
         debtMetric('Livres Para Excluir', String(freeCreditors), '◌', waitingCreditors ? '' : 'green');
     }
 
+    function renderTrail() {
+      const metrics = $('trailMetrics');
+      const road = $('trailRoad');
+      const position = $('trailPositionTitle');
+      if (!metrics || !road || !position) return;
+
+      const route = orderedTrailDebts();
+      const totalBalance = route.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      const completed = route.filter(debt => debt.status === 'Quitada' || debtBalance(debt) === 0).length;
+      const next = route.find(debt => debt.status !== 'Quitada' && debtBalance(debt) > 0) || null;
+      const progress = route.length ? Math.round((completed / route.length) * 100) : 0;
+
+      metrics.innerHTML =
+        debtMetric('Marcos na Trilha', String(route.length), '◇', 'blue') +
+        debtMetric('Marcos Concluídos', String(completed), '✓', 'green') +
+        debtMetric('Saldo da Jornada', brl(totalBalance), '▣', 'red') +
+        debtMetric('Progresso Geral', progress + '%', '⌁', progress >= 50 ? 'green' : '');
+
+      position.textContent = next
+        ? 'Próximo marco: ' + getCreditorName(next.creditorId) + ' · ' + next.name
+        : route.length ? 'Todas as dívidas da trilha foram vencidas' : 'Defina sua primeira dívida na trilha';
+
+      if (!route.length) {
+        road.innerHTML = emptyCard('Trilha vazia', 'Cadastre dívidas e defina a ordem de quitação para montar seu caminho.');
+        return;
+      }
+
+      road.innerHTML = route.map((debt, index) => {
+        const balance = debtBalance(debt);
+        const done = debt.status === 'Quitada' || balance === 0;
+        const current = !done && debt.id === next?.id;
+        const stepClass = 'trail-step' + (done ? ' done' : '') + (current ? ' current' : '');
+        const order = Number(debt.payoffOrder || 0) || index + 1;
+        const nextItem = nextInstallment(debt);
+        return '<div class="' + stepClass + '">' +
+          '<div class="trail-marker">' + (done ? '✓' : order) + '</div>' +
+          '<div class="trail-card">' +
+            '<div class="trail-card-head">' +
+              creditorLogoHtml(debt.creditorId) +
+              '<div><div class="debt-name">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div>' +
+              '<div class="debt-meta">' + compactTagsForDebt(debt) + '<span>' + escapeHtml(debt.status || '-') + '</span></div></div>' +
+            '</div>' +
+            '<div class="trail-facts">' +
+              '<div><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
+              '<div><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
+              '<div><span>Próximo passo</span><strong>' + escapeHtml(nextItem ? formatDateBR(nextItem.dueDate) : 'Sem Parcela') + '</strong></div>' +
+            '</div>' +
+            '<div class="trail-actions">' +
+              '<button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">Subir</button>' +
+              '<button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">Descer</button>' +
+              '<button class="ghost-btn" onclick="window.openDebtFromTrail(\'' + debt.id + '\')">Abrir dívida</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
     function renderDashboard() {
       const active = debts.filter(d => d.status === 'Ativa');
       const totalActive = active.reduce((sum, d) => sum + debtBalance(d), 0);
@@ -716,6 +788,7 @@
       rebuildIndexes();
       renderCreditors();
       renderDebts();
+      renderTrail();
       renderPayments();
     }
 
@@ -738,6 +811,7 @@
         $('debtCriticality').value = debt.criticality || 'Normal';
         $('debtBehavior').value = debt.behavior || 'Parcelada';
         $('debtPayoffToday').value = brl(debt.payoffToday || 0);
+        $('debtPayoffOrder').value = debt.payoffOrder || '';
         $('debtNotes').value = debt.notes || '';
       } else {
         $('debtCreditorSelect').value = creditors[0]?.id || '';
@@ -751,6 +825,7 @@
         $('debtCriticality').value = 'Normal';
         $('debtBehavior').value = 'Parcelada';
         $('debtPayoffToday').value = '';
+        $('debtPayoffOrder').value = nextPayoffOrder();
         $('debtNotes').value = '';
       }
       $('debtForm').classList.add('show');
@@ -814,6 +889,7 @@
         criticality: $('debtCriticality').value,
         behavior: $('debtBehavior').value,
         payoffToday: parseMoney($('debtPayoffToday').value),
+        payoffOrder: Number($('debtPayoffOrder').value || 0),
         notes: $('debtNotes').value.trim(),
         updatedAt: serverTimestamp()
       };
@@ -874,7 +950,7 @@
       const debt = debts.find(d => d.id === id);
       if (debt) debt.status = status;
       if (status !== 'Ativa' && selectedCreditorFilter !== 'all') selectedCreditorFilter = 'all';
-      renderDebts();
+      renderAll();
       showToast(status === 'Ativa' ? 'Dívida ativada com sucesso.' : 'Dívida movida para espera.');
     };
 
@@ -1078,6 +1154,38 @@
       expandedDebtId = id;
       renderDebts();
       $('activeDebts').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.openDebtFromTrail = function(id) {
+      const debt = debts.find(item => item.id === id);
+      showPage(debt?.status === 'Em espera' ? 'espera' : 'dividas');
+      expandedDebtId = id;
+      renderDebts();
+      const target = debt?.status === 'Em espera' ? $('waitingDebts') : $('activeDebts');
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.moveDebtInTrail = async function(id, direction) {
+      const route = orderedTrailDebts();
+      const currentIndex = route.findIndex(debt => debt.id === id);
+      const nextIndex = currentIndex + direction;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= route.length) return;
+
+      const normalized = route.map((debt, index) => ({ ...debt, payoffOrder: index + 1 }));
+      const current = normalized[currentIndex];
+      normalized[currentIndex] = normalized[nextIndex];
+      normalized[nextIndex] = current;
+
+      const batch = writeBatch(db);
+      normalized.forEach((debt, index) => {
+        const payoffOrder = index + 1;
+        batch.update(doc(db, 'debts', debt.id), { payoffOrder, updatedAt: serverTimestamp() });
+        const local = debts.find(item => item.id === debt.id);
+        if (local) local.payoffOrder = payoffOrder;
+      });
+      await batch.commit();
+      renderAll();
+      showToast('Ordem da trilha atualizada.');
     };
 
     document.querySelectorAll('.nav-item').forEach(button => {
