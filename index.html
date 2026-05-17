@@ -41,6 +41,31 @@
     </div>
   </div>
 
+  <div id="renegotiationModal" class="modal-overlay">
+    <div class="modal-card wide-modal">
+      <div class="modal-brand">Rota Financeira</div>
+      <div class="modal-title">Novo acordo</div>
+      <div class="modal-text">Cadastre a nova dívida renegociada. As dívidas selecionadas serão preservadas no histórico como renegociadas.</div>
+      <div id="renegotiationSummary" class="renegotiation-summary"></div>
+      <div class="form-grid">
+        <div><label>Credor do acordo</label><select id="renCreditorSelect"></select></div>
+        <div><label>Nome do acordo</label><input id="renDebtName" placeholder="Ex.: Acordo consolidado" /></div>
+        <div><label>Tipo</label><select id="renDebtType"><option>Cartão</option><option>Conta corrente</option><option>Empréstimo</option><option>Financiamento</option><option>Outro</option><option>Pix parcelado</option></select></div>
+        <div><label>Forma de pagamento</label><select id="renPaymentMethod"><option>Boleto</option><option>Débito automático</option><option>Fatura do cartão</option><option>Outro</option><option>PIX</option><option>Transferência</option></select></div>
+        <div><label>Data da primeira parcela</label><input id="renFirstDue" type="date" /></div>
+        <div><label>Quantidade de parcelas</label><input id="renInstallmentsQty" inputmode="numeric" /></div>
+        <div><label>Valor da parcela</label><input id="renInstallmentValue" inputmode="decimal" /></div>
+        <div><label>Criticidade</label><select id="renCriticality"><option>Alta</option><option>Máxima</option><option>Normal</option></select></div>
+        <div><label>Valor de quitação hoje</label><input id="renPayoffToday" inputmode="decimal" /></div>
+        <div class="span-4"><label>Observações</label><textarea id="renNotes" placeholder="Condições do acordo, desconto negociado, origem da unificação..."></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-btn" onclick="closeRenegotiationModal()">Cancelar</button>
+        <button class="primary-action" onclick="saveRenegotiation()">Salvar acordo</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app">
     <aside>
       <div class="brand">
@@ -55,6 +80,7 @@
         <button class="nav-item" data-page="trilha"><span>◇</span> Trilha</button>
         <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas</button>
         <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
+        <button class="nav-item" data-page="renegociacao"><span>⇄</span> Renegociação</button>
         <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
         <button class="nav-item" data-page="historico"><span>↺</span> Histórico</button>
         <button class="nav-item" data-page="configuracoes"><span>⚙</span> Configurações</button>
@@ -195,6 +221,24 @@
         <div class="debt-list" id="waitingDebts"></div>
       </section>
 
+      <section id="renegociacao" class="page">
+        <div class="topbar">
+          <div><div class="eyebrow">Acordos</div><h1>Renegociação</h1><div class="page-desc">Selecione uma ou mais dívidas para transformar em um novo acordo. As dívidas antigas saem da frente atual e ficam preservadas no histórico.</div></div>
+          <button class="primary-action" onclick="openRenegotiationModal()">Renegociar</button>
+        </div>
+        <div id="renegotiationMetrics" class="debt-metrics"></div>
+        <div class="panel">
+          <div class="renegotiation-toolbar">
+            <div>
+              <h2 class="panel-title">Dívidas disponíveis</h2>
+              <div class="metric-note" id="renegotiationSelectionText">Nenhuma dívida selecionada.</div>
+            </div>
+            <button class="ghost-btn" onclick="clearRenegotiationSelection()">Limpar seleção</button>
+          </div>
+          <div class="renegotiation-list" id="renegotiationList"></div>
+        </div>
+      </section>
+
       <section id="pagamentos" class="page">
         <div class="topbar"><div><div class="eyebrow">Baixa operacional</div><h1>Pagamentos</h1><div class="page-desc">Pagamentos registrados a partir das parcelas das dívidas.</div></div></div>
         <div id="paymentMetrics" class="debt-metrics"></div>
@@ -215,6 +259,7 @@
         <div class="topbar"><div><div class="eyebrow">Fechamentos</div><h1>Histórico mensal</h1><div class="page-desc">Evolução, quitações, redução real da dívida e comparativo mês a mês.</div></div></div>
         <div id="historyMetrics" class="debt-metrics"></div>
         <div class="panel"><h2 class="panel-title">Evolução mensal</h2><div class="history-grid" id="historyList"></div></div>
+        <div class="panel"><h2 class="panel-title">Dívidas renegociadas</h2><div class="debt-list" id="renegotiatedHistoryList"></div></div>
       </section>
 
       <section id="configuracoes" class="page">

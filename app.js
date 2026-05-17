@@ -30,6 +30,7 @@
     let selectedWaitingCreditorFilter = 'all';
     let selectedDebtSort = 'priority';
     let selectedWaitingDebtSort = 'priority';
+    let selectedRenegotiationDebtIds = new Set();
     let expandedDebtId = null;
     let editingInstallmentId = null;
 
@@ -580,6 +581,14 @@
       return debts.filter(debt => debt.status === 'Ativa').sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
     }
 
+    function eligibleRenegotiationDebts() {
+      return sortDebts(debts.filter(debt => debt.status === 'Ativa' || debt.status === 'Em espera'), 'priority');
+    }
+
+    function selectedRenegotiationDebts() {
+      return eligibleRenegotiationDebts().filter(debt => selectedRenegotiationDebtIds.has(debt.id));
+    }
+
     function nextPayoffOrder() {
       const max = debts.reduce((value, debt) => Math.max(value, Number(debt.payoffOrder || 0)), 0);
       return max + 1;
@@ -683,6 +692,45 @@
         debtMetric('Livres Para Excluir', String(freeCreditors), '◌', waitingCreditors ? '' : 'green');
     }
 
+    function renderRenegotiation() {
+      const metrics = $('renegotiationMetrics');
+      const list = $('renegotiationList');
+      const selectionText = $('renegotiationSelectionText');
+      if (!metrics || !list || !selectionText) return;
+
+      const eligible = eligibleRenegotiationDebts();
+      const selected = selectedRenegotiationDebts();
+      const totalSelected = selected.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      const openInstallments = selected.reduce((sum, debt) => sum + debtInstallments(debt.id).filter(item => item.status !== 'Paga').length, 0);
+
+      metrics.innerHTML =
+        debtMetric('Elegíveis', String(eligible.length), '⇄', 'blue') +
+        debtMetric('Selecionadas', String(selected.length), '✓', selected.length ? 'green' : '') +
+        debtMetric('Saldo Selecionado', brl(totalSelected), '▣', totalSelected ? 'red' : '') +
+        debtMetric('Parcelas em Aberto', String(openInstallments), '◌', 'amber');
+
+      selectionText.textContent = selected.length
+        ? selected.length + ' dívida(s) selecionada(s), somando ' + brl(totalSelected) + '.'
+        : 'Nenhuma dívida selecionada.';
+
+      if (!eligible.length) {
+        list.innerHTML = emptyCard('Nenhuma dívida disponível', 'Apenas dívidas ativas ou em espera podem entrar em uma renegociação.');
+        return;
+      }
+
+      list.innerHTML = eligible.map(debt => {
+        const checked = selectedRenegotiationDebtIds.has(debt.id) ? 'checked' : '';
+        const next = nextInstallment(debt);
+        return '<label class="renegotiation-row">' +
+          '<input type="checkbox" ' + checked + ' onchange="window.toggleRenegotiationDebt(\'' + debt.id + '\')" />' +
+          '<div class="debt-head">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + '<span>' + escapeHtml(debt.status) + '</span></div></div></div>' +
+          '<div><div class="metric-label">Saldo</div><strong>' + brl(debtBalance(debt)) + '</strong></div>' +
+          '<div><div class="metric-label">Parcela</div><strong>' + brl(debt.installmentValue) + '</strong></div>' +
+          '<div><div class="metric-label">Próxima</div><strong>' + escapeHtml(next ? formatDateBR(next.dueDate) : 'Sem Parcela') + '</strong></div>' +
+        '</label>';
+      }).join('');
+    }
+
     function renderTrail() {
       const metrics = $('trailMetrics');
       const road = $('trailRoad');
@@ -745,7 +793,7 @@
     function renderDashboard() {
       const active = debts.filter(d => d.status === 'Ativa');
       const totalActive = active.reduce((sum, d) => sum + debtBalance(d), 0);
-      const totalRecognized = debts.reduce((sum, d) => sum + debtBalance(d), 0);
+      const totalRecognized = debts.filter(d => d.status !== 'Renegociada').reduce((sum, d) => sum + debtBalance(d), 0);
       const priority = active.filter(d => d.criticality === 'Máxima').reduce((sum, d) => sum + debtBalance(d), 0);
       const month = currentMonthKey();
       const activeIds = new Set(active.map(d => d.id));
@@ -793,6 +841,31 @@
       legend.innerHTML = rows.map(row => {
         const pct = Math.round((row.value / total) * 100);
         return '<div class="donut-item"><span class="donut-dot" style="background:' + row.color + '"></span><span>' + escapeHtml(getCreditorName(row.id)) + '</span><strong>' + pct + '% · ' + brl(row.value) + '</strong></div>';
+      }).join('');
+    }
+
+    function renderRenegotiatedHistory() {
+      const container = $('renegotiatedHistoryList');
+      if (!container) return;
+      const renegotiated = debts
+        .filter(debt => debt.status === 'Renegociada')
+        .sort((a, b) => String(b.renegotiatedAt || b.updatedAt || '').localeCompare(String(a.renegotiatedAt || a.updatedAt || '')));
+
+      if (!renegotiated.length) {
+        container.innerHTML = emptyCard('Nenhuma dívida renegociada', 'Quando um acordo for salvo, as dívidas originais aparecerão aqui.');
+        return;
+      }
+
+      container.innerHTML = renegotiated.map(debt => {
+        const paid = debtPaid(debt);
+        const balance = debtBalance(debt);
+        const sourceInfo = debt.renegotiatedIntoDebtId ? '<span>Novo acordo vinculado</span>' : '';
+        return '<div class="debt-card history-debt"><div class="debt-row">' +
+          '<div class="debt-head">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + tag('Renegociada', 'blue') + sourceInfo + '</div></div></div>' +
+          '<div class="row-stat"><div class="metric-label">Saldo Anterior</div><strong>' + brl(balance) + '</strong></div>' +
+          '<div class="row-stat"><div class="metric-label">Valor Pago</div><strong>' + brl(paid) + '</strong></div>' +
+          '<div class="row-stat"><div class="metric-label">Parcelas</div><strong>' + installmentProgress(debt).paid + '/' + installmentProgress(debt).total + '</strong></div>' +
+        '</div></div>';
       }).join('');
     }
 
@@ -856,8 +929,11 @@
       rebuildIndexes();
       renderCreditors();
       renderDebts();
+      renderRenegotiation();
       renderTrail();
       renderPayments();
+      renderHistory();
+      renderRenegotiatedHistory();
     }
 
     window.openDebtForm = function(mode = 'new', id = null, defaultStatus = 'Ativa') {
@@ -939,6 +1015,114 @@
       selectedWaitingDebtSort = mode;
       expandedDebtId = null;
       renderDebts();
+    };
+
+    window.toggleRenegotiationDebt = function(id) {
+      if (selectedRenegotiationDebtIds.has(id)) selectedRenegotiationDebtIds.delete(id);
+      else selectedRenegotiationDebtIds.add(id);
+      renderRenegotiation();
+    };
+
+    window.clearRenegotiationSelection = function() {
+      selectedRenegotiationDebtIds.clear();
+      renderRenegotiation();
+    };
+
+    window.openRenegotiationModal = function() {
+      const selected = selectedRenegotiationDebts();
+      if (!selected.length) return showToast('Selecione ao menos uma dívida para renegociar.');
+      closeDebtForm();
+      closePaymentForm();
+      closeInstallmentModal();
+
+      const total = selected.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      const creditorIds = [...new Set(selected.map(debt => debt.creditorId).filter(Boolean))];
+      $('renCreditorSelect').innerHTML = sortedCreditors().map(c => '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>').join('');
+      $('renCreditorSelect').value = creditorIds.length === 1 ? creditorIds[0] : (sortedCreditors()[0]?.id || '');
+      $('renDebtName').value = selected.length === 1 ? 'Acordo - ' + selected[0].name : 'Acordo consolidado';
+      $('renDebtType').value = 'Empréstimo';
+      $('renPaymentMethod').value = 'Boleto';
+      $('renFirstDue').value = '';
+      $('renInstallmentsQty').value = '';
+      $('renInstallmentValue').value = '';
+      $('renCriticality').value = selected.some(debt => debt.criticality === 'Máxima') ? 'Máxima' : selected.some(debt => debt.criticality === 'Alta') ? 'Alta' : 'Normal';
+      $('renPayoffToday').value = brl(total);
+      $('renNotes').value = 'Renegociação de: ' + selected.map(debt => getCreditorName(debt.creditorId) + ' · ' + debt.name).join('; ');
+      $('renegotiationSummary').innerHTML =
+        '<div class="mini-list">' +
+          '<div><span>Dívidas selecionadas</span><strong>' + selected.length + '</strong></div>' +
+          '<div><span>Saldo anterior</span><strong>' + brl(total) + '</strong></div>' +
+          '<div><span>Credores envolvidos</span><strong>' + creditorIds.length + '</strong></div>' +
+        '</div>';
+      $('renegotiationModal').classList.add('show');
+    };
+
+    window.closeRenegotiationModal = function() {
+      $('renegotiationModal').classList.remove('show');
+    };
+
+    window.saveRenegotiation = async function() {
+      const selected = selectedRenegotiationDebts();
+      if (!selected.length) return showToast('Selecione ao menos uma dívida para renegociar.');
+      const creditorId = $('renCreditorSelect').value;
+      const name = $('renDebtName').value.trim();
+      const firstDue = $('renFirstDue').value;
+      const installmentsQty = Number($('renInstallmentsQty').value || 0);
+      const installmentValue = parseMoney($('renInstallmentValue').value);
+      if (!creditorId || !name || !firstDue || !installmentsQty || !installmentValue) return showToast('Preencha credor, nome, primeira parcela, quantidade e valor.');
+
+      const sourceDebtIds = selected.map(debt => debt.id);
+      const previousBalance = selected.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      const payload = {
+        creditorId,
+        name,
+        firstDue,
+        installmentsQty,
+        installmentValue,
+        type: $('renDebtType').value,
+        paymentMethod: $('renPaymentMethod').value,
+        status: 'Ativa',
+        criticality: $('renCriticality').value,
+        behavior: 'Parcelada',
+        payoffToday: parseMoney($('renPayoffToday').value),
+        payoffOrder: nextPayoffOrder(),
+        notes: $('renNotes').value.trim(),
+        sourceDebtIds,
+        renegotiationSource: true,
+        updatedAt: serverTimestamp()
+      };
+
+      const created = await addDoc(collection(db, 'debts'), { ...payload, createdAt: serverTimestamp() });
+      await generateInstallments(created.id, installmentsQty, installmentValue, firstDue);
+
+      const batch = writeBatch(db);
+      sourceDebtIds.forEach(id => {
+        batch.update(doc(db, 'debts', id), {
+          status: 'Renegociada',
+          renegotiatedAt: serverTimestamp(),
+          renegotiatedIntoDebtId: created.id,
+          updatedAt: serverTimestamp()
+        });
+      });
+      installments
+        .filter(item => sourceDebtIds.includes(item.debtId) && item.status !== 'Paga')
+        .forEach(item => batch.update(doc(db, 'installments', item.id), { status: 'Renegociada', updatedAt: serverTimestamp() }));
+      await batch.commit();
+
+      await addDoc(collection(db, 'renegotiations'), {
+        type: sourceDebtIds.length > 1 ? 'consolidation' : 'single',
+        sourceDebtIds,
+        newDebtId: created.id,
+        previousBalance,
+        newTotal: installmentsQty * installmentValue,
+        notes: $('renNotes').value.trim(),
+        createdAt: serverTimestamp()
+      });
+
+      selectedRenegotiationDebtIds.clear();
+      closeRenegotiationModal();
+      await loadAll();
+      showToast('Acordo salvo com sucesso.');
     };
 
     window.saveDebt = async function() {
@@ -1323,6 +1507,7 @@
         closeDebtForm();
         closePaymentForm();
         closeInstallmentModal();
+        closeRenegotiationModal();
         closeDeleteModal();
       });
     });

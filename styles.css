@@ -242,6 +242,11 @@
     .tag.blue { background: var(--blue-soft); color: #a8c3ff; }
     .tag.gray { background: rgba(255,255,255,0.08); color: var(--soft); }
     .tag.red { background: var(--danger-soft); color: #eda2a2; }
+    body[data-theme="light"] .tag.green { background: #dff7ea; color: #16643f; }
+    body[data-theme="light"] .tag.amber { background: #fff0c9; color: #8a5a08; }
+    body[data-theme="light"] .tag.blue { background: #e2edff; color: #2459a4; }
+    body[data-theme="light"] .tag.gray { background: rgba(13,32,56,0.075); color: #46586d; }
+    body[data-theme="light"] .tag.red { background: #ffe3e3; color: #9b2f2f; }
     .compact-summary { margin-top: 11px; display: grid; grid-template-columns: 1.15fr 1fr 1fr 0.85fr; gap: 8px; align-items: stretch; }
     .compact-stat { background: rgba(255,255,255,0.028); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; min-height: 52px; }
     .compact-stat strong { display: block; color: var(--text); font-size: 15px; line-height: 1.1; letter-spacing: -0.02em; margin-top: 4px; }
@@ -282,6 +287,14 @@
     .installment-row:last-child { border-bottom: 0; }
     .installment-row.header { color: var(--muted); font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.018); }
     .installment-facts { color: var(--muted); font-size: 13px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .renegotiation-toolbar { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom: 14px; }
+    .renegotiation-list { display:grid; gap:10px; }
+    .renegotiation-row { display:grid; grid-template-columns: 22px minmax(280px, 1.4fr) repeat(3, minmax(120px, 0.55fr)); gap:14px; align-items:center; padding:14px 16px; border:1px solid var(--border); border-radius:16px; background: rgba(255,255,255,0.025); cursor:pointer; }
+    .renegotiation-row:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+    .renegotiation-row input { width:18px; height:18px; accent-color: var(--green); }
+    .renegotiation-row strong { color: var(--text); }
+    .renegotiation-summary { margin: 12px 0 16px; padding: 14px; border-radius: 14px; border: 1px solid var(--border); background: rgba(255,255,255,0.026); }
+    .history-debt { background: linear-gradient(90deg, rgba(77,141,247,0.12), rgba(255,255,255,0.02)), var(--panel); }
 
     .form-card { margin-bottom: 18px; display: none; }
     .form-card.show { display: block; }
@@ -308,6 +321,7 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(3, 7, 12, 0.72); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 50; padding: 22px; }
     .modal-overlay.show { display: flex; }
     .modal-card { width: min(460px, 100%); background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)), var(--panel); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 35px 90px rgba(0,0,0,0.44); padding: 24px; }
+    .modal-card.wide-modal { width: min(920px, 100%); max-height: min(86vh, 820px); overflow:auto; }
     .modal-brand { color: var(--green); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
     .modal-title { font-size: 22px; font-weight: 850; letter-spacing: -0.03em; margin-bottom: 10px; }
     .modal-text { color: var(--soft); line-height: 1.45; font-size: 14px; margin-bottom: 10px; }
@@ -356,6 +370,9 @@
       .debt-actions { justify-content:flex-start; }
       .more-menu { left: 0; right: auto; }
       .installment-row { grid-template-columns: 1fr 1fr; }
+      .renegotiation-toolbar { flex-direction: column; }
+      .renegotiation-row { grid-template-columns: 22px 1fr; }
+      .renegotiation-row > div:not(.debt-head) { grid-column: 2; }
       .payment-row { grid-template-columns: 1fr 1fr; }
       .history-grid { grid-template-columns: 1fr; }
       .installment-row.header { display: none; }
