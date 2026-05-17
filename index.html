@@ -287,9 +287,116 @@
       .debt-values { text-align: left; }
       .debt-actions { justify-content: flex-start; }
     }
+  
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 12, 0.72);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 22px;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal-card {
+      width: min(460px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 35px 90px rgba(0,0,0,0.44);
+      padding: 24px;
+    }
+
+    .modal-brand {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 850;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+
+    .modal-text {
+      color: var(--soft);
+      line-height: 1.45;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .modal-warning {
+      color: #eda2a2;
+      background: rgba(216,100,100,0.12);
+      border: 1px solid rgba(216,100,100,0.22);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .danger-action {
+      background: linear-gradient(135deg, #d86464, #ec8b8b);
+      color: #210909;
+      border: 0;
+      padding: 12px 15px;
+      border-radius: 14px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)), var(--panel);
+      border: 1px solid rgba(63,185,133,0.28);
+      color: var(--text);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.36);
+      display: none;
+      z-index: 60;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .toast.show { display: block; }
   </style>
 </head>
 <body>
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-brand">Rota Financeira</div>
+      <div class="modal-title">Excluir dívida</div>
+      <div class="modal-text" id="deleteModalText">Deseja excluir esta dívida?</div>
+      <div class="modal-warning">Essa ação removerá também parcelas, pagamentos e registros vinculados a esta dívida.</div>
+      <div class="modal-actions">
+        <button class="ghost-btn" onclick="closeDeleteModal()">Cancelar</button>
+        <button class="danger-action" onclick="confirmDeleteDebt()">Excluir dívida</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Dívida removida com sucesso.</div>
   <div class="app">
     <aside>
       <div class="brand">
@@ -547,7 +654,9 @@
   </div>
 
   <script>
-    const debts = [
+    let debtToDeleteIndex = null;
+
+    let debts = [
       { creditor: 'Santander', name: 'Acordo Cartão', status: 'Ativa', criticality: 'Máxima', behavior: 'Parcelada', balance: 18420, total: 22320, paid: 3900, installment: 620, nextDue: '2026-06-10', parcels: '10/36', discount: 186, payoffToday: 17180 },
       { creditor: 'Nubank', name: 'Cartão parcelado', status: 'Ativa', criticality: 'Alta', behavior: 'Rolagem', balance: 9360, total: 12300, paid: 2940, installment: 410, nextDue: '2026-06-18', parcels: '4/12', discount: 0, payoffToday: 9360 },
       { creditor: 'Itaú', name: 'Empréstimo pessoal', status: 'Ativa', criticality: 'Normal', behavior: 'Parcelada', balance: 14980, total: 21360, paid: 6380, installment: 890, nextDue: '2026-06-25', parcels: '7/24', discount: 422, payoffToday: 13990 },
@@ -628,7 +737,7 @@
               <button class="ghost-btn" onclick="openDebtForm()">Renegociar</button>
               <button class="ghost-btn" onclick="openPaymentForm('${debt.creditor}', '${debt.name}', '${debt.nextDue}', ${debt.installment || 0})">Registrar pagamento</button>
               ${debt.status === 'Em espera' ? '<button class="ghost-btn">Ativar</button>' : '<button class="ghost-btn">Mover para espera</button>'}
-              <button class="ghost-btn danger-btn" onclick="deleteDebt('${debt.creditor}', '${debt.name}')">Excluir</button>
+              <button class="ghost-btn danger-btn" onclick="openDeleteModal(${debts.indexOf(debt)})">Excluir</button>
             </div>
           </div>
         </div>
@@ -667,11 +776,31 @@
       document.getElementById('paymentForm').classList.remove('show');
     }
 
-    function deleteDebt(creditor, name) {
-      const confirmDelete = confirm(`Excluir definitivamente ${creditor} · ${name}? Esta ação não poderá ser desfeita.`);
-      if (confirmDelete) {
-        alert('Exclusão visual confirmada. Na próxima etapa isso removerá a dívida do Firestore.');
-      }
+    function openDeleteModal(index) {
+      debtToDeleteIndex = index;
+      const debt = debts[index];
+      document.getElementById('deleteModalText').textContent = `Deseja excluir definitivamente ${debt.creditor} · ${debt.name}?`;
+      document.getElementById('deleteModal').classList.add('show');
+    }
+
+    function closeDeleteModal() {
+      debtToDeleteIndex = null;
+      document.getElementById('deleteModal').classList.remove('show');
+    }
+
+    function confirmDeleteDebt() {
+      if (debtToDeleteIndex === null) return;
+      debts.splice(debtToDeleteIndex, 1);
+      closeDeleteModal();
+      renderDebts();
+      showToast('Dívida removida com sucesso.');
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
     }
 
     document.querySelectorAll('.nav-item').forEach(button => {
@@ -682,6 +811,7 @@
         document.getElementById(button.dataset.page).classList.add('active');
         closeDebtForm();
         closePaymentForm();
+        closeDeleteModal();
       });
     });
 
