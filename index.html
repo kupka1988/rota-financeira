@@ -340,7 +340,12 @@
       </section>
 
       <section id="espera" class="page">
-        <div class="topbar"><div><div class="eyebrow">Fora da frente atual</div><h1>Dívidas em espera</h1><div class="page-desc">Dívidas reconhecidas, mas que não entram no dashboard principal até serem ativadas.</div></div></div>
+        <div class="topbar">
+          <div><div class="eyebrow">Fora da frente atual</div><h1>Dívidas em espera</h1><div class="page-desc">Acompanhe compromissos reconhecidos que ainda não entraram na frente de pagamento principal.</div></div>
+          <button class="secondary-action" onclick="goToDebtsAndNew()">+ Registrar dívida</button>
+        </div>
+        <div id="waitingCreditorFilters" class="filter-row"></div>
+        <div id="waitingDebtMetrics" class="debt-metrics"></div>
         <div class="debt-list" id="waitingDebts"></div>
       </section>
 
@@ -411,6 +416,7 @@
     let paymentInstallmentId = null;
     let deleteContext = null;
     let selectedCreditorFilter = 'all';
+    let selectedWaitingCreditorFilter = 'all';
     let expandedDebtId = null;
 
     const $ = (id) => document.getElementById(id);
@@ -696,11 +702,14 @@
     function renderDebts() {
       const activeAll = debts.filter(d => d.status === 'Ativa');
       const active = selectedCreditorFilter === 'all' ? activeAll : activeAll.filter(d => d.creditorId === selectedCreditorFilter);
-      const waiting = debts.filter(d => d.status === 'Em espera');
+      const waitingAll = debts.filter(d => d.status === 'Em espera');
+      const waiting = selectedWaitingCreditorFilter === 'all' ? waitingAll : waitingAll.filter(d => d.creditorId === selectedWaitingCreditorFilter);
       renderCreditorFilters(activeAll);
       renderDebtMetrics(activeAll);
+      renderWaitingCreditorFilters(waitingAll);
+      renderWaitingDebtMetrics(waitingAll);
       $('activeDebts').innerHTML = active.length ? active.map(debtCard).join('') : emptyCard('Nenhuma Dívida Encontrada', selectedCreditorFilter === 'all' ? 'Clique em Nova Dívida para iniciar sua frente de pagamento.' : 'Não há dívidas ativas para este credor.');
-      $('waitingDebts').innerHTML = waiting.length ? waiting.map(debtCard).join('') : emptyCard('Nenhuma dívida em espera', 'As dívidas fora da frente atual aparecerão aqui.');
+      $('waitingDebts').innerHTML = waiting.length ? waiting.map(debtCard).join('') : emptyCard('Nenhuma dívida em espera', selectedWaitingCreditorFilter === 'all' ? 'As dívidas fora da frente atual aparecerão aqui.' : 'Não há dívidas em espera para este credor.');
       renderDashboard();
     }
 
@@ -732,6 +741,24 @@
         debtMetric('Juros a Evitar', brl(avoidInterest), '⌁', '');
     }
 
+    function renderWaitingDebtMetrics(waitingDebts) {
+      const container = $('waitingDebtMetrics');
+      if (!container) return;
+      const waitingIds = new Set(waitingDebts.map(d => d.id));
+      const waitingInstallments = installments.filter(i => i.status !== 'Paga' && waitingIds.has(i.debtId));
+      const totalBalance = waitingDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      const monthlyPressure = waitingInstallments
+        .filter(i => String(i.dueDate || '').startsWith(currentMonthKey()))
+        .reduce((sum, item) => sum + Number(item.expectedValue || 0), 0);
+      const maxPriority = waitingDebts.filter(d => d.criticality === 'Máxima').length;
+
+      container.innerHTML =
+        debtMetric('Saldo em Espera', brl(totalBalance), '◌', 'blue') +
+        debtMetric('Dívidas em Espera', String(waitingDebts.length), '▥', '') +
+        debtMetric('Parcelas Pendentes', String(waitingInstallments.length), '◷', 'red') +
+        debtMetric('Pressão no Mês', brl(monthlyPressure), maxPriority ? '!' : '▤', maxPriority ? 'red' : 'green');
+    }
+
     function renderCreditorFilters(activeDebts) {
       const container = $('creditorFilters');
       if (!container) return;
@@ -740,6 +767,18 @@
       creditorIds.forEach(id => {
         const count = activeDebts.filter(d => d.creditorId === id).length;
         html += '<button class="ghost-btn ' + (selectedCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterByCreditor(\'' + id + '\')">' + creditorLogoHtml(id) + escapeHtml(getCreditorName(id)) + '<span class="filter-count">' + count + '</span></button>';
+      });
+      container.innerHTML = html;
+    }
+
+    function renderWaitingCreditorFilters(waitingDebts) {
+      const container = $('waitingCreditorFilters');
+      if (!container) return;
+      const creditorIds = [...new Set(waitingDebts.map(d => d.creditorId).filter(Boolean))];
+      let html = '<button class="ghost-btn ' + (selectedWaitingCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterWaitingByCreditor(\'all\')">◌ Todos em espera <span class="filter-count">' + waitingDebts.length + '</span></button>';
+      creditorIds.forEach(id => {
+        const count = waitingDebts.filter(d => d.creditorId === id).length;
+        html += '<button class="ghost-btn ' + (selectedWaitingCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterWaitingByCreditor(\'' + id + '\')">' + creditorLogoHtml(id) + escapeHtml(getCreditorName(id)) + '<span class="filter-count">' + count + '</span></button>';
       });
       container.innerHTML = html;
     }
@@ -862,6 +901,12 @@
 
     window.filterByCreditor = function(id) {
       selectedCreditorFilter = id;
+      expandedDebtId = null;
+      renderDebts();
+    };
+
+    window.filterWaitingByCreditor = function(id) {
+      selectedWaitingCreditorFilter = id;
       expandedDebtId = null;
       renderDebts();
     };
