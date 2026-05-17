@@ -34,10 +34,12 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 ## Estado Atual Importante
 - Commit remoto mais recente conhecido: `22f9aed` (`Corrige rota financeira sem projecoes`).
 - Antes dele houve rollback do commit ruim: `a54ae5e` (`Revert "Evolui branding dashboard e trilha financeira"`).
-- O sistema possui abas: Dashboard, Trilha, Dividas, Em espera, Renegociacao, Pagamentos, Historico, Configuracoes.
+- O sistema possui abas: Dashboard, Trilha, Dividas, Em espera, Fora do radar, Renegociacao, Pagamentos, Historico, Configuracoes.
 - Trilha deve mostrar apenas dividas ativas, sem dividas em espera.
 - Dividas e Em espera mostram progresso tambem em quantidade de parcelas, ex.: `2/12`.
 - Dashboard tem grafico donut de percentual da divida ativa por credor.
+- Dashboard tem bloco complementar `Pressao financeira estrutural`, calculado apenas com dividas ativas por quantidade de parcelas restantes: curto prazo menor que 6, medio prazo de 6 a 11, longo prazo 12 ou mais.
+- Status `Fora do radar` serve para dividas reconhecidas que nao devem entrar no Dashboard nem na divida total reconhecida. A aba propria possui totalizadores.
 - Dividas possuem acao `Criar Rolagem`, que abre uma nova divida pre-preenchida, com data avancada em 1 mes e tudo editavel antes de salvar.
 - Aba Renegociacao lista dividas ativas/em espera com checkbox. Ao salvar um novo acordo, cria uma nova divida ativa e muda as antigas para status `Renegociada`, preservando pagamentos e movendo a leitura para Historico.
 - Parcelas podem ser editadas individualmente por modal proprio.
@@ -75,3 +77,4 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 - 2026-05-17: criado este arquivo de contexto como regra permanente do projeto.
 - 2026-05-17: tema claro definido como padrao; filtros selecionados ajustados para contraste; cards de dividas ganharam cor de fundo por prioridade.
 - 2026-05-17: adicionada aba Renegociacao com selecao multipla, modal de novo acordo, status `Renegociada` para dividas antigas e ajustes de contraste das tags no tema claro.
+- 2026-05-17: adicionada aba/status `Fora do radar`, bloco de pressao por prazo no Dashboard, ajustes de tema claro no mobile e reducao de excesso de negrito no layout.

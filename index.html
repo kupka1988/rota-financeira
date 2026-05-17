@@ -80,6 +80,7 @@
         <button class="nav-item" data-page="trilha"><span>◇</span> Trilha</button>
         <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas</button>
         <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
+        <button class="nav-item" data-page="radar"><span>◎</span> Fora do radar</button>
         <button class="nav-item" data-page="renegociacao"><span>⇄</span> Renegociação</button>
         <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
         <button class="nav-item" data-page="historico"><span>↺</span> Histórico</button>
@@ -102,6 +103,10 @@
           <div class="metric-card"><div class="metric-label">Dívida Sob Gestão</div><div class="metric-value" id="dashActiveDebt">R$ 0,00</div><div class="metric-note">Total ativo, sem incluir itens em espera.</div></div>
           <div class="metric-card"><div class="metric-label">Compromisso Mensal</div><div class="metric-value" id="dashMonthCommitment">R$ 0,00</div><div class="metric-note">Parcelas pendentes no mês atual.</div></div>
           <div class="metric-card"><div class="metric-label">Dívida Total Reconhecida</div><div class="metric-value" id="dashTotalDebt">R$ 0,00</div><div class="metric-note">Inclui ativas e em espera.</div></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">Pressão financeira estrutural</h2>
+          <div class="pressure-grid" id="deadlinePressure"></div>
         </div>
         <div class="decision-grid">
           <div class="decision-panel">
@@ -185,7 +190,7 @@
             <div><label>Data da primeira parcela</label><input id="debtFirstDue" type="date" /></div>
             <div><label>Quantidade de parcelas</label><input id="debtInstallmentsQty" inputmode="numeric" placeholder="12" /></div>
             <div><label>Valor da parcela</label><input id="debtInstallmentValue" inputmode="decimal" placeholder="R$ 0,00" /></div>
-            <div><label>Situação</label><select id="debtStatus"><option>Ativa</option><option>Em espera</option><option>Quitada</option></select></div>
+            <div><label>Situação</label><select id="debtStatus"><option>Ativa</option><option>Em espera</option><option>Fora do radar</option><option>Quitada</option></select></div>
             <div><label>Criticidade</label><select id="debtCriticality"><option>Alta</option><option>Máxima</option><option>Normal</option></select></div>
             <div><label>Comportamento</label><select id="debtBehavior"><option>Parcelada</option><option>Quitação única</option><option>Rolagem</option></select></div>
             <div><label>Valor de quitação hoje</label><input id="debtPayoffToday" inputmode="decimal" placeholder="R$ 0,00" /></div>
@@ -219,6 +224,28 @@
           </select>
         </div>
         <div class="debt-list" id="waitingDebts"></div>
+      </section>
+
+      <section id="radar" class="page">
+        <div class="topbar">
+          <div><div class="eyebrow">Arquivo estratégico</div><h1>Fora do radar</h1><div class="page-desc">Dívidas reconhecidas, mas que você decidiu não acompanhar nem no curto nem no longo prazo. Elas não entram no Dashboard nem na dívida total reconhecida.</div></div>
+          <button class="primary-action" onclick="goToDebtsAndNew('Fora do radar')">+ Nova dívida</button>
+        </div>
+        <div id="hiddenDebtMetrics" class="debt-metrics"></div>
+        <div class="sort-bar">
+          <label>Ordenar</label>
+          <select id="hiddenDebtSort" onchange="setHiddenDebtSort(this.value)">
+            <option value="installment-desc">Maior Parcela</option>
+            <option value="progress-desc">Maior Progresso</option>
+            <option value="balance-desc">Maior Saldo Devedor</option>
+            <option value="installment-asc">Menor Parcela</option>
+            <option value="progress-asc">Menor Progresso</option>
+            <option value="balance-asc">Menor Saldo Devedor</option>
+            <option value="priority" selected>Prioridade</option>
+            <option value="next-due">Próxima Parcela</option>
+          </select>
+        </div>
+        <div class="debt-list" id="hiddenDebts"></div>
       </section>
 
       <section id="renegociacao" class="page">

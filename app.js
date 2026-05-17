@@ -30,6 +30,7 @@
     let selectedWaitingCreditorFilter = 'all';
     let selectedDebtSort = 'priority';
     let selectedWaitingDebtSort = 'priority';
+    let selectedHiddenDebtSort = 'priority';
     let selectedRenegotiationDebtIds = new Set();
     let expandedDebtId = null;
     let editingInstallmentId = null;
@@ -120,6 +121,12 @@
     }
     function nextInstallment(debt) {
       return debtInstallments(debt.id).filter(i => i.status !== 'Paga').sort(byDueDate)[0] || null;
+    }
+
+    function remainingInstallmentsCount(debt) {
+      const items = debtInstallments(debt.id);
+      if (!items.length) return Number(debt.installmentsQty || 0) || 0;
+      return items.filter(item => item.status !== 'Paga' && item.status !== 'Renegociada').length;
     }
 
     function installmentProgress(debt) {
@@ -332,9 +339,14 @@
       const installmentCount = installmentProgress(debt);
       const isExpanded = expandedDebtId === debt.id;
       const title = escapeHtml(getCreditorName(debt.creditorId)) + ' · ' + escapeHtml(debt.name);
-      const statusAction = debt.status === 'Em espera'
-        ? '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Ativa\')">Ativar</button>'
-        : '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Em espera\')">Mover Para Espera</button>';
+      let statusAction = '';
+      if (debt.status === 'Ativa') {
+        statusAction = '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Em espera\')">Mover Para Espera</button><button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Fora do radar\')">Mover Para Fora do Radar</button>';
+      } else if (debt.status === 'Em espera') {
+        statusAction = '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Ativa\')">Ativar</button><button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Fora do radar\')">Mover Para Fora do Radar</button>';
+      } else if (debt.status === 'Fora do radar') {
+        statusAction = '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Ativa\')">Ativar</button><button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Em espera\')">Mover Para Espera</button>';
+      }
       const payAction = next
         ? '<button class="ghost-btn" onclick="window.openPaymentForm(\'' + next.id + '\')">Registrar Pagamento</button>'
         : '';
@@ -408,11 +420,15 @@
       const waitingAll = debts.filter(d => d.status === 'Em espera');
       const waitingFiltered = selectedWaitingCreditorFilter === 'all' ? waitingAll : waitingAll.filter(d => d.creditorId === selectedWaitingCreditorFilter);
       const waiting = sortDebts(waitingFiltered, selectedWaitingDebtSort);
+      const hiddenAll = debts.filter(d => d.status === 'Fora do radar');
+      const hidden = sortDebts(hiddenAll, selectedHiddenDebtSort);
       renderDebtMetrics(activeByPriority);
       renderWaitingCreditorFilters(waitingAll);
       renderWaitingDebtMetrics(waitingAll);
+      renderHiddenDebtMetrics(hiddenAll);
       $('activeDebts').innerHTML = active.length ? active.map(debtCard).join('') : emptyCard('Nenhuma Dívida Encontrada', selectedCreditorFilter === 'all' ? 'Não há dívidas ativas para este filtro.' : 'Não há dívidas ativas para este credor neste filtro.');
       $('waitingDebts').innerHTML = waiting.length ? waiting.map(debtCard).join('') : emptyCard('Nenhuma dívida em espera', selectedWaitingCreditorFilter === 'all' ? 'As dívidas fora da frente atual aparecerão aqui.' : 'Não há dívidas em espera para este credor.');
+      $('hiddenDebts').innerHTML = hidden.length ? hidden.map(debtCard).join('') : emptyCard('Nada fora do radar', 'As dívidas que você não quer acompanhar aparecerão aqui.');
       renderDashboard();
     }
 
@@ -499,6 +515,20 @@
         html += '<button class="ghost-btn ' + (selectedWaitingCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterWaitingByCreditor(\'' + id + '\')">' + creditorLogoHtml(id) + escapeHtml(getCreditorName(id)) + '<span class="filter-count">' + count + '</span></button>';
       });
       container.innerHTML = html;
+    }
+
+    function renderHiddenDebtMetrics(hiddenDebts) {
+      const container = $('hiddenDebtMetrics');
+      if (!container) return;
+      const hiddenIds = new Set(hiddenDebts.map(d => d.id));
+      const hiddenInstallments = installments.filter(i => i.status !== 'Paga' && hiddenIds.has(i.debtId));
+      const totalBalance = hiddenDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      const creditorsCount = new Set(hiddenDebts.map(d => d.creditorId).filter(Boolean)).size;
+      container.innerHTML =
+        debtMetric('Saldo Fora do Radar', brl(totalBalance), '◎', 'blue') +
+        debtMetric('Dívidas Arquivadas', String(hiddenDebts.length), '▥', '') +
+        debtMetric('Credores', String(creditorsCount), '◌', 'green') +
+        debtMetric('Parcelas Reconhecidas', String(hiddenInstallments.length), '◷', 'red');
     }
 
     function renderPayments() {
@@ -683,8 +713,9 @@
       const linkedIds = new Set(debts.map(d => d.creditorId).filter(Boolean));
       const linkedCreditors = creditors.filter(c => linkedIds.has(c.id)).length;
       const freeCreditors = creditors.length - linkedCreditors;
-      const activeCreditors = new Set(debts.filter(d => d.status === 'Ativa').map(d => d.creditorId).filter(Boolean)).size;
-      const waitingCreditors = new Set(debts.filter(d => d.status === 'Em espera').map(d => d.creditorId).filter(Boolean)).size;
+      const visibleDebts = debts.filter(d => d.status !== 'Fora do radar');
+      const activeCreditors = new Set(visibleDebts.filter(d => d.status === 'Ativa').map(d => d.creditorId).filter(Boolean)).size;
+      const waitingCreditors = new Set(visibleDebts.filter(d => d.status === 'Em espera').map(d => d.creditorId).filter(Boolean)).size;
       container.innerHTML =
         debtMetric('Credores Cadastrados', String(creditors.length), '▣', 'blue') +
         debtMetric('Com Dívidas', String(linkedCreditors), '⌁', 'red') +
@@ -793,7 +824,7 @@
     function renderDashboard() {
       const active = debts.filter(d => d.status === 'Ativa');
       const totalActive = active.reduce((sum, d) => sum + debtBalance(d), 0);
-      const totalRecognized = debts.filter(d => d.status !== 'Renegociada').reduce((sum, d) => sum + debtBalance(d), 0);
+      const totalRecognized = debts.filter(d => d.status !== 'Renegociada' && d.status !== 'Fora do radar').reduce((sum, d) => sum + debtBalance(d), 0);
       const priority = active.filter(d => d.criticality === 'Máxima').reduce((sum, d) => sum + debtBalance(d), 0);
       const month = currentMonthKey();
       const activeIds = new Set(active.map(d => d.id));
@@ -811,7 +842,30 @@
       $('monthReading').textContent = monthCommitment > 0 ? 'Há parcelas no mês atual' : 'Sem pressão registrada no mês';
       $('monthReadingText').textContent = monthCommitment > 0 ? 'Compromisso pendente do mês atual: ' + brl(monthCommitment) + '.' : 'Nenhuma parcela pendente encontrada para o mês atual.';
       renderDashboardDecision(active);
+      renderDeadlinePressure(active);
       renderCreditorDonut(active);
+    }
+
+    function renderDeadlinePressure(activeDebts) {
+      const container = $('deadlinePressure');
+      if (!container) return;
+      const groups = [
+        { key: 'short', title: 'Curto prazo', hint: '< 6 parcelas', test: count => count < 6 },
+        { key: 'medium', title: 'Médio prazo', hint: '6 a 11 parcelas', test: count => count >= 6 && count <= 11 },
+        { key: 'long', title: 'Longo prazo', hint: '12+ parcelas', test: count => count >= 12 }
+      ].map(group => {
+        const items = activeDebts.filter(debt => group.test(remainingInstallmentsCount(debt)));
+        return { ...group, items, balance: items.reduce((sum, debt) => sum + debtBalance(debt), 0) };
+      });
+
+      container.innerHTML = groups.map(group => {
+        return '<div class="pressure-card ' + group.key + '">' +
+          '<div class="metric-label">' + escapeHtml(group.title) + '</div>' +
+          '<div class="pressure-value">' + brl(group.balance) + '</div>' +
+          '<div class="metric-note">' + escapeHtml(group.hint) + '</div>' +
+          '<div class="pressure-count">' + group.items.length + ' dívida(s)</div>' +
+        '</div>';
+      }).join('');
     }
 
     function renderCreditorDonut(activeDebts) {
@@ -1017,6 +1071,12 @@
       renderDebts();
     };
 
+    window.setHiddenDebtSort = function(mode) {
+      selectedHiddenDebtSort = mode;
+      expandedDebtId = null;
+      renderDebts();
+    };
+
     window.toggleRenegotiationDebt = function(id) {
       if (selectedRenegotiationDebtIds.has(id)) selectedRenegotiationDebtIds.delete(id);
       else selectedRenegotiationDebtIds.add(id);
@@ -1203,7 +1263,12 @@
       if (debt) debt.status = status;
       if (status !== 'Ativa' && selectedCreditorFilter !== 'all') selectedCreditorFilter = 'all';
       renderAll();
-      showToast(status === 'Ativa' ? 'Dívida ativada com sucesso.' : 'Dívida movida para espera.');
+      const messages = {
+        Ativa: 'Dívida ativada com sucesso.',
+        'Em espera': 'Dívida movida para espera.',
+        'Fora do radar': 'Dívida movida para fora do radar.'
+      };
+      showToast(messages[status] || 'Situação atualizada com sucesso.');
     };
 
     window.openPaymentForm = function(installmentId) {
@@ -1450,10 +1515,10 @@
 
     window.openDebtFromTrail = function(id) {
       const debt = debts.find(item => item.id === id);
-      showPage(debt && debt.status === 'Em espera' ? 'espera' : 'dividas');
+      showPage(debt && debt.status === 'Fora do radar' ? 'radar' : debt && debt.status === 'Em espera' ? 'espera' : 'dividas');
       expandedDebtId = id;
       renderDebts();
-      const target = debt && debt.status === 'Em espera' ? $('waitingDebts') : $('activeDebts');
+      const target = debt && debt.status === 'Fora do radar' ? $('hiddenDebts') : debt && debt.status === 'Em espera' ? $('waitingDebts') : $('activeDebts');
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
