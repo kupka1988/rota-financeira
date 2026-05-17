@@ -242,7 +242,13 @@
     .logo-upload .creditor-logo { width: 56px; height: 56px; border-radius: 18px; }
     .logo-upload input[type="file"] { padding: 10px; margin-bottom: 8px; font-size: 13px; }
     label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 7px; font-weight: 700; }
-    input, select, textarea { width: 100%; background: #111720; color: var(--text); border: 1px solid var(--border); border-radius: 13px; padding: 12px; outline: none; font-size: 16px; }
+    input, select, textarea { width: 100%; background: #111720; color: var(--text); border: 1px solid var(--border); border-radius: 13px; padding: 12px; outline: none; font-size: 16px; color-scheme: dark; }
+    select option { background: #111720; color: var(--text); }
+    select optgroup { background: #111720; color: var(--soft); }
+    .creditor-row { grid-template-columns: minmax(260px, 1.2fr) minmax(110px, 0.45fr) minmax(150px, 0.65fr) 260px; }
+    .creditor-actions { justify-content: flex-end; min-width: 260px; }
+    .creditor-actions .ghost-btn { min-width: 118px; text-align: center; }
+    .creditor-actions .danger-btn { min-width: 132px; }
     textarea { min-height: 92px; resize: vertical; }
     .span-2 { grid-column: span 2; }
     .span-4 { grid-column: span 4; }
@@ -267,6 +273,8 @@
       .debt-metric.creditor-panel { grid-column: 1 / -1; }
       .decision-grid { grid-template-columns: 1fr; }
       .debt-row { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(120px, 0.5fr)) 44px; }
+      .creditor-row { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(120px, 0.5fr)); }
+      .creditor-actions { grid-column: 1 / -1; justify-content: flex-start; min-width: 0; }
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
       .debt-summary { grid-template-columns: 1fr; }
       .debt-insights { grid-template-columns: 1fr; }
@@ -336,6 +344,9 @@
       .row-stat strong { font-size: 16px; text-align: right; }
       .row-stat small { grid-column: 1 / -1; text-align: right; margin-top: -3px; }
       .row-toggle { width: 100%; min-height: 42px; }
+      .creditor-row { grid-template-columns: 1fr; }
+      .creditor-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+      .creditor-actions .ghost-btn, .creditor-actions .danger-btn { width: 100%; min-width: 0; }
       .debt-detail { padding: 0 14px 14px; }
       .debt-insights { gap: 10px; }
       .insight-card { grid-template-columns: 1fr; min-height: 0; padding: 14px; }

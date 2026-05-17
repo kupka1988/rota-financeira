@@ -67,6 +67,14 @@
       return creditor ? creditor.name : 'Credor não informado';
     }
 
+    function compareText(a, b) {
+      return String(a || '').localeCompare(String(b || ''), 'pt-BR', { sensitivity: 'base' });
+    }
+
+    function sortedCreditors() {
+      return [...creditors].sort((a, b) => compareText(a.name, b.name));
+    }
+
     function groupBy(items, key) {
       const grouped = new Map();
       items.forEach(item => {
@@ -423,7 +431,8 @@
 
     function creditorDebtPanel(activeDebts) {
       const totalBalance = activeDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
-      const creditorIds = [...new Set(activeDebts.map(d => d.creditorId).filter(Boolean))];
+      const creditorIds = [...new Set(activeDebts.map(d => d.creditorId).filter(Boolean))]
+        .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)));
       let html = '<div class="debt-metric creditor-panel"><div class="metric-label">Credores da Frente</div><div class="creditor-summary-grid">';
       html += '<button class="creditor-summary ' + (selectedCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterByCreditor(\'all\')"><span class="creditor-logo">Σ</span><strong>Todos</strong><small>' + activeDebts.length + ' dívidas · ' + brl(totalBalance) + '</small></button>';
       creditorIds.forEach(id => {
@@ -456,7 +465,8 @@
     function renderWaitingCreditorFilters(waitingDebts) {
       const container = $('waitingCreditorFilters');
       if (!container) return;
-      const creditorIds = [...new Set(waitingDebts.map(d => d.creditorId).filter(Boolean))];
+      const creditorIds = [...new Set(waitingDebts.map(d => d.creditorId).filter(Boolean))]
+        .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)));
       let html = '<button class="ghost-btn ' + (selectedWaitingCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterWaitingByCreditor(\'all\')">◌ Todos em espera <span class="filter-count">' + waitingDebts.length + '</span></button>';
       creditorIds.forEach(id => {
         const count = waitingDebts.filter(d => d.creditorId === id).length;
@@ -612,24 +622,24 @@
       if (!creditors.length) {
         $('creditorsList').innerHTML = emptyCard('Nenhum credor cadastrado', 'Cadastre credores para usar na criação das dívidas.');
       } else {
-        $('creditorsList').innerHTML = creditors.map(creditor => {
+        $('creditorsList').innerHTML = sortedCreditors().map(creditor => {
           const notes = creditor.notes ? '<span>' + escapeHtml(creditor.notes) + '</span>' : '';
           const linkedDebts = debts.filter(d => d.creditorId === creditor.id);
           const linkedBalance = linkedDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
           const deleteButton = linkedDebts.length
             ? '<button class="ghost-btn danger-btn" onclick="showToast(\'Este credor está vinculado a dívidas.\')">Exclusão bloqueada</button>'
             : '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'creditor\', \'' + creditor.id + '\')">Excluir</button>';
-          return '<div class="debt-card"><div class="debt-row" style="grid-template-columns:minmax(260px,1.2fr) 0.7fr 0.7fr auto;">' +
+          return '<div class="debt-card"><div class="debt-row creditor-row">' +
             '<div class="debt-head">' + creditorLogoHtml(creditor.id) + '<div><div class="debt-name">' + escapeHtml(creditor.name) + '</div><div class="debt-meta"><span>' + escapeHtml(creditor.type) + '</span>' + notes + '</div></div></div>' +
             '<div class="row-stat"><div class="metric-label">Dívidas</div><strong>' + linkedDebts.length + '</strong></div>' +
             '<div class="row-stat"><div class="metric-label">Saldo Vinculado</div><strong>' + brl(linkedBalance) + '</strong></div>' +
-            '<div class="action-group"><button class="ghost-btn" onclick="window.editCreditor(\'' + creditor.id + '\')">Editar</button>' + deleteButton + '</div>' +
+            '<div class="action-group creditor-actions"><button class="ghost-btn" onclick="window.editCreditor(\'' + creditor.id + '\')">Editar</button>' + deleteButton + '</div>' +
           '</div></div>';
         }).join('');
       }
 
       $('debtCreditorSelect').innerHTML = creditors.length
-        ? creditors.map(c => '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>').join('')
+        ? sortedCreditors().map(c => '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>').join('')
         : '<option value="">Cadastre um credor primeiro</option>';
     }
 
@@ -814,7 +824,7 @@
         $('debtPayoffOrder').value = debt.payoffOrder || '';
         $('debtNotes').value = debt.notes || '';
       } else {
-        $('debtCreditorSelect').value = creditors[0]?.id || '';
+        $('debtCreditorSelect').value = sortedCreditors()[0]?.id || '';
         $('debtName').value = '';
         $('debtType').value = 'Cartão';
         $('debtPaymentMethod').value = 'Boleto';

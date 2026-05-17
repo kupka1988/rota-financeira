@@ -112,14 +112,14 @@
         <div class="sort-bar">
           <label>Ordenar</label>
           <select id="debtSort" onchange="setDebtSort(this.value)">
-            <option value="priority">Prioridade</option>
-            <option value="trail">Ordem da Trilha</option>
             <option value="installment-desc">Maior Parcela</option>
-            <option value="installment-asc">Menor Parcela</option>
-            <option value="balance-desc">Maior Saldo Devedor</option>
-            <option value="balance-asc">Menor Saldo Devedor</option>
             <option value="progress-desc">Maior Progresso</option>
+            <option value="balance-desc">Maior Saldo Devedor</option>
+            <option value="installment-asc">Menor Parcela</option>
             <option value="progress-asc">Menor Progresso</option>
+            <option value="balance-asc">Menor Saldo Devedor</option>
+            <option value="trail">Ordem da Trilha</option>
+            <option value="priority" selected>Prioridade</option>
             <option value="next-due">Próxima Parcela</option>
           </select>
         </div>
@@ -128,14 +128,14 @@
           <div class="form-grid">
             <div><label>Credor</label><select id="debtCreditorSelect"></select></div>
             <div><label>Nome da dívida</label><input id="debtName" placeholder="Ex.: Pix parcelado, maio/2026" /></div>
-            <div><label>Tipo</label><select id="debtType"><option>Cartão</option><option>Conta corrente</option><option>Empréstimo</option><option>Financiamento</option><option>Pix parcelado</option><option>Outro</option></select></div>
-            <div><label>Forma de pagamento</label><select id="debtPaymentMethod"><option>Boleto</option><option>Débito automático</option><option>PIX</option><option>Fatura do cartão</option><option>Transferência</option><option>Outro</option></select></div>
+            <div><label>Tipo</label><select id="debtType"><option>Cartão</option><option>Conta corrente</option><option>Empréstimo</option><option>Financiamento</option><option>Outro</option><option>Pix parcelado</option></select></div>
+            <div><label>Forma de pagamento</label><select id="debtPaymentMethod"><option>Boleto</option><option>Débito automático</option><option>Fatura do cartão</option><option>Outro</option><option>PIX</option><option>Transferência</option></select></div>
             <div><label>Data da primeira parcela</label><input id="debtFirstDue" type="date" /></div>
             <div><label>Quantidade de parcelas</label><input id="debtInstallmentsQty" inputmode="numeric" placeholder="12" /></div>
             <div><label>Valor da parcela</label><input id="debtInstallmentValue" inputmode="decimal" placeholder="R$ 0,00" /></div>
             <div><label>Situação</label><select id="debtStatus"><option>Ativa</option><option>Em espera</option><option>Quitada</option></select></div>
-            <div><label>Criticidade</label><select id="debtCriticality"><option>Normal</option><option>Alta</option><option>Máxima</option></select></div>
-            <div><label>Comportamento</label><select id="debtBehavior"><option>Parcelada</option><option>Rolagem</option><option>Quitação única</option></select></div>
+            <div><label>Criticidade</label><select id="debtCriticality"><option>Alta</option><option>Máxima</option><option>Normal</option></select></div>
+            <div><label>Comportamento</label><select id="debtBehavior"><option>Parcelada</option><option>Quitação única</option><option>Rolagem</option></select></div>
             <div><label>Valor de quitação hoje</label><input id="debtPayoffToday" inputmode="decimal" placeholder="R$ 0,00" /></div>
             <div><label>Ordem na trilha</label><input id="debtPayoffOrder" inputmode="numeric" placeholder="Ex.: 1" /></div>
             <div class="span-4"><label>Observações</label><textarea id="debtNotes" placeholder="Condição atual, possibilidade de renegociação, contexto interno..."></textarea></div>
@@ -155,14 +155,14 @@
         <div class="sort-bar">
           <label>Ordenar</label>
           <select id="waitingDebtSort" onchange="setWaitingDebtSort(this.value)">
-            <option value="priority">Prioridade</option>
-            <option value="trail">Ordem da Trilha</option>
             <option value="installment-desc">Maior Parcela</option>
-            <option value="installment-asc">Menor Parcela</option>
-            <option value="balance-desc">Maior Saldo Devedor</option>
-            <option value="balance-asc">Menor Saldo Devedor</option>
             <option value="progress-desc">Maior Progresso</option>
+            <option value="balance-desc">Maior Saldo Devedor</option>
+            <option value="installment-asc">Menor Parcela</option>
             <option value="progress-asc">Menor Progresso</option>
+            <option value="balance-asc">Menor Saldo Devedor</option>
+            <option value="trail">Ordem da Trilha</option>
+            <option value="priority" selected>Prioridade</option>
             <option value="next-due">Próxima Parcela</option>
           </select>
         </div>
@@ -200,7 +200,7 @@
             <h2 class="panel-title" id="creditorFormTitle">Novo credor</h2>
             <div class="form-grid" style="grid-template-columns: 1fr;">
               <div><label>Nome do credor</label><input id="creditorName" placeholder="Ex.: Santander" /></div>
-              <div><label>Tipo</label><select id="creditorType"><option>Banco</option><option>Cartão</option><option>Financeira</option><option>Loja</option><option>Pessoa física</option><option>Outro</option></select></div>
+              <div><label>Tipo</label><select id="creditorType"><option>Banco</option><option>Cartão</option><option>Financeira</option><option>Loja</option><option>Outro</option><option>Pessoa física</option></select></div>
               <div>
                 <label>Logo do credor</label>
                 <div class="logo-upload">
