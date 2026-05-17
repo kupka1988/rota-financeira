@@ -135,6 +135,13 @@
     .payment-row { display: grid; grid-template-columns: minmax(260px, 1.4fr) 0.7fr 0.8fr 0.8fr 0.8fr; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--border); border-radius: 16px; background: rgba(255,255,255,0.025); }
     .payment-row strong { color: var(--text); }
     .payment-row small { display: block; color: var(--muted); margin-top: 4px; }
+    .history-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .history-month { padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: rgba(255,255,255,0.025); }
+    .history-month-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+    .history-bars { display: grid; gap: 8px; }
+    .history-bar { display: grid; grid-template-columns: 110px 1fr auto; gap: 10px; align-items: center; color: var(--muted); font-size: 12px; }
+    .bar-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--green)); }
     .risk-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
     .risk-item { padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.028); }
     .risk-item strong { display: block; font-size: 18px; margin-top: 5px; }
@@ -255,6 +262,7 @@
       .more-menu { left: 0; right: auto; }
       .installment-row { grid-template-columns: 1fr 1fr; }
       .payment-row { grid-template-columns: 1fr 1fr; }
+      .history-grid { grid-template-columns: 1fr; }
       .installment-row.header { display: none; }
     }
 
@@ -265,6 +273,7 @@
       .finance-grid { grid-template-columns: 1fr; }
       .installment-row { grid-template-columns: 1fr; }
       .payment-row { grid-template-columns: 1fr; }
+      .history-bar { grid-template-columns: 1fr; }
       .metric-value { font-size: 24px; }
       .toast { left: 18px; right: 18px; bottom: 18px; }
     }
@@ -400,7 +409,8 @@
 
       <section id="historico" class="page">
         <div class="topbar"><div><div class="eyebrow">Fechamentos</div><h1>Histórico mensal</h1><div class="page-desc">Evolução, quitações, redução real da dívida e comparativo mês a mês.</div></div></div>
-        <div class="panel"><h2 class="panel-title">Sem fechamentos ainda</h2><div class="metric-note">O histórico será criado quando houver fechamento mensal.</div></div>
+        <div id="historyMetrics" class="debt-metrics"></div>
+        <div class="panel"><h2 class="panel-title">Evolução mensal</h2><div class="history-grid" id="historyList"></div></div>
       </section>
 
       <section id="configuracoes" class="page">
@@ -819,6 +829,7 @@
 
     function renderPayments() {
       renderPaymentMetrics();
+      renderHistory();
       const sorted = [...payments].sort((a, b) => String(b.paymentDate || '').localeCompare(String(a.paymentDate || '')));
       if (!sorted.length) {
         $('paymentsList').innerHTML = emptyCard('Nenhum pagamento registrado', 'Os pagamentos baixados aparecerão aqui.');
@@ -856,6 +867,64 @@
         debtMetric('Desconto no Mês', brl(discountMonth), '↓', 'green') +
         debtMetric('Juros no Mês', brl(interestMonth), '!', 'red') +
         debtMetric('Total Já Pago', brl(totalPaid), '▣', 'blue');
+    }
+
+    function monthLabel(monthKey) {
+      if (!monthKey) return '-';
+      const [year, month] = monthKey.split('-').map(Number);
+      return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    }
+
+    function renderHistory() {
+      const metrics = $('historyMetrics');
+      const list = $('historyList');
+      if (!metrics || !list) return;
+      if (!payments.length) {
+        metrics.innerHTML =
+          debtMetric('Meses com Pagamento', '0', '↺', 'blue') +
+          debtMetric('Total Pago', brl(0), '✓', 'green') +
+          debtMetric('Descontos', brl(0), '↓', 'green') +
+          debtMetric('Juros', brl(0), '!', 'red');
+        list.innerHTML = emptyCard('Sem histórico ainda', 'Os fechamentos mensais aparecerão conforme os pagamentos forem registrados.');
+        return;
+      }
+
+      const monthly = new Map();
+      payments.forEach(item => {
+        const key = String(item.paymentDate || item.expectedDate || '').slice(0, 7) || 'Sem data';
+        if (!monthly.has(key)) monthly.set(key, { paid: 0, expected: 0, discount: 0, interest: 0, count: 0 });
+        const bucket = monthly.get(key);
+        bucket.paid += Number(item.paidValue || 0);
+        bucket.expected += Number(item.expectedValue || 0);
+        bucket.discount += Number(item.discount || 0);
+        bucket.interest += Number(item.interest || 0);
+        bucket.count += 1;
+      });
+
+      const rows = [...monthly.entries()].sort((a, b) => String(b[0]).localeCompare(String(a[0])));
+      const totalPaid = rows.reduce((sum, [, item]) => sum + item.paid, 0);
+      const totalDiscount = rows.reduce((sum, [, item]) => sum + item.discount, 0);
+      const totalInterest = rows.reduce((sum, [, item]) => sum + item.interest, 0);
+      const maxPaid = Math.max(...rows.map(([, item]) => item.paid), 1);
+
+      metrics.innerHTML =
+        debtMetric('Meses com Pagamento', String(rows.length), '↺', 'blue') +
+        debtMetric('Total Pago', brl(totalPaid), '✓', 'green') +
+        debtMetric('Descontos Obtidos', brl(totalDiscount), '↓', 'green') +
+        debtMetric('Juros Pagos', brl(totalInterest), '!', 'red');
+
+      list.innerHTML = rows.map(([key, item]) => {
+        const paidPct = Math.max(4, Math.round((item.paid / maxPaid) * 100));
+        const netGain = item.discount - item.interest;
+        return '<div class="history-month">' +
+          '<div class="history-month-head"><div><div class="debt-name">' + escapeHtml(monthLabel(key)) + '</div><div class="debt-meta"><span>' + item.count + ' pagamentos</span>' + (netGain >= 0 ? tag('Ganho ' + brl(netGain), 'green') : tag('Custo ' + brl(Math.abs(netGain)), 'red')) + '</div></div><strong>' + brl(item.paid) + '</strong></div>' +
+          '<div class="history-bars">' +
+            '<div class="history-bar"><span>Pago</span><div class="bar-track"><div class="bar-fill" style="width:' + paidPct + '%;"></div></div><strong>' + brl(item.paid) + '</strong></div>' +
+            '<div class="history-bar"><span>Desconto</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, Math.round((item.discount / Math.max(item.paid, 1)) * 100)) + '%;"></div></div><strong>' + brl(item.discount) + '</strong></div>' +
+            '<div class="history-bar"><span>Juros</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, Math.round((item.interest / Math.max(item.paid, 1)) * 100)) + '%; background: linear-gradient(90deg, var(--amber), var(--danger));"></div></div><strong>' + brl(item.interest) + '</strong></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
     }
 
     function renderCreditors() {
