@@ -264,13 +264,10 @@
           <div class="form-grid">
             <div class="span-2"><label>Dívida</label><input id="payDebtName" readonly /></div>
             <div><label>Parcela</label><input id="payInstallmentLabel" readonly /></div>
-            <div><label>Data prevista</label><input id="payExpectedDate" type="date" readonly /></div>
             <div><label>Data do pagamento</label><input id="payDate" type="date" /></div>
-            <div><label>Valor previsto</label><input id="payExpectedValue" inputmode="decimal" readonly /></div>
             <div><label>Valor pago</label><input id="payValue" inputmode="decimal" /></div>
-            <div><label>Desconto</label><input id="payDiscount" inputmode="decimal" placeholder="R$ 0,00" /></div>
-            <div><label>Juros / multa</label><input id="payInterest" inputmode="decimal" placeholder="R$ 0,00" /></div>
-            <div class="span-4"><label>Observações</label><textarea id="payNotes" placeholder="Ex.: paguei antes com desconto, paguei atrasado com juros..."></textarea></div>
+            <div class="span-2"><label>Ajuste automático</label><input id="payAutoAdjustment" readonly value="Desconto ou juros serão calculados automaticamente." /></div>
+            <div class="span-4"><label>Observações</label><textarea id="payNotes" placeholder="Ex.: paguei antes, paguei atrasado, valor diferente da prestação..."></textarea></div>
           </div>
           <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;"><button class="primary-action" onclick="savePayment()">Salvar pagamento</button><button class="ghost-btn" onclick="closePaymentForm()">Cancelar</button></div>
         </section>
@@ -436,7 +433,7 @@
       const sorted = [...payments].sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
       $('paymentsList').innerHTML = sorted.length ? sorted.map(item => {
         const debt = debts.find(d => d.id === item.debtId);
-        return `<div class="debt-card"><div><div class="debt-name">${debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida removida'}</div><div class="debt-meta">Pago em ${formatDateBR(item.paymentDate)} · previsto ${brl(item.expectedValue)} · desconto ${brl(item.discount)} · juros ${brl(item.interest)}</div></div><span class="tag green">${brl(item.paidValue)}</span></div>`;
+        return `<div class="debt-card"><div><div class="debt-name">${debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida removida'}</div><div class="debt-meta">Pago em ${formatDateBR(item.paymentDate)} · prestação ${brl(item.expectedValue)} · desconto automático ${brl(item.discount)} · juros automático ${brl(item.interest)}</div></div><span class="tag green">${brl(item.paidValue)}</span></div>`;
       }).join('') : emptyCard('Nenhum pagamento registrado', 'Os pagamentos baixados aparecerão aqui.');
     }
 
@@ -575,12 +572,9 @@
       paymentInstallmentId = installmentId;
       $('payDebtName').value = debt ? `${getCreditorName(debt.creditorId)} · ${debt.name}` : 'Dívida não encontrada';
       $('payInstallmentLabel').value = `${inst.number}/${inst.total}`;
-      $('payExpectedDate').value = inst.dueDate;
       $('payDate').value = inst.dueDate;
-      $('payExpectedValue').value = brl(inst.expectedValue);
       $('payValue').value = brl(inst.expectedValue);
-      $('payDiscount').value = 'R$ 0,00';
-      $('payInterest').value = 'R$ 0,00';
+      $('payAutoAdjustment').value = 'Desconto ou juros serão calculados automaticamente pelo valor pago.';
       $('payNotes').value = '';
       $('paymentForm').classList.add('show');
       showPage('pagamentos');
@@ -595,16 +589,19 @@
       if (!inst) return showToast('Parcela não encontrada.');
       const paidValue = parseMoney($('payValue').value);
       if (!paidValue) return showToast('Informe o valor pago.');
+      const expectedValue = Number(inst.expectedValue || 0);
+      const discount = Math.max(0, expectedValue - paidValue);
+      const interest = Math.max(0, paidValue - expectedValue);
       await addDoc(collection(db, 'payments'), {
         debtId: inst.debtId,
         installmentId: inst.id,
         installmentNumber: inst.number,
         expectedDate: inst.dueDate,
         paymentDate: $('payDate').value,
-        expectedValue: Number(inst.expectedValue || 0),
+        expectedValue,
         paidValue,
-        discount: parseMoney($('payDiscount').value),
-        interest: parseMoney($('payInterest').value),
+        discount,
+        interest,
         notes: $('payNotes').value.trim(),
         createdAt: serverTimestamp()
       });
