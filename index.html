@@ -122,6 +122,18 @@
     .metric-icon.green { background: var(--green-soft); color: #8ae1b8; }
     .metric-icon.blue { background: var(--blue-soft); color: #a8c3ff; }
     .metric-icon.red { background: var(--danger-soft); color: #eda2a2; }
+    .decision-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; margin-top: 18px; }
+    .decision-panel { padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--panel); box-shadow: var(--shadow); }
+    .focus-card { display: grid; grid-template-columns: 52px 1fr auto; gap: 16px; align-items: center; padding: 16px; border-radius: 16px; border: 1px solid rgba(216,164,65,0.34); background: rgba(216,164,65,0.08); }
+    .focus-card .creditor-logo { width: 52px; height: 52px; border-radius: 17px; }
+    .decision-list { display: grid; gap: 10px; }
+    .decision-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .decision-row:last-child { border-bottom: 0; }
+    .decision-row strong { color: var(--text); }
+    .decision-row small { display: block; color: var(--muted); margin-top: 3px; }
+    .risk-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .risk-item { padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.028); }
+    .risk-item strong { display: block; font-size: 18px; margin-top: 5px; }
 
     .debt-list { display: grid; gap: 10px; }
     .debt-card { padding: 0; overflow: visible; }
@@ -208,6 +220,7 @@
     @media (max-width: 1180px) {
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
       .debt-metrics { grid-template-columns: repeat(2, 1fr); }
+      .decision-grid { grid-template-columns: 1fr; }
       .debt-row { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(120px, 0.5fr)) 44px; }
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
       .debt-summary { grid-template-columns: 1fr; }
@@ -222,6 +235,9 @@
       .grid-2, .form-grid { grid-template-columns: 1fr; }
       .grid-4 { grid-template-columns: 1fr; }
       .debt-metrics { grid-template-columns: 1fr; }
+      .focus-card { grid-template-columns: 44px 1fr; }
+      .focus-card .primary-action { grid-column: 1 / -1; justify-self: start; }
+      .risk-strip { grid-template-columns: 1fr; }
       .debt-row { grid-template-columns: 1fr; gap: 10px; }
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: block; }
       .row-toggle { justify-self: start; }
@@ -298,6 +314,17 @@
           <div class="metric-card"><div class="metric-label">Dívida Sob Gestão</div><div class="metric-value" id="dashActiveDebt">R$ 0,00</div><div class="metric-note">Total ativo, sem incluir itens em espera.</div></div>
           <div class="metric-card"><div class="metric-label">Compromisso Mensal</div><div class="metric-value" id="dashMonthCommitment">R$ 0,00</div><div class="metric-note">Parcelas pendentes no mês atual.</div></div>
           <div class="metric-card"><div class="metric-label">Dívida Total Reconhecida</div><div class="metric-value" id="dashTotalDebt">R$ 0,00</div><div class="metric-note">Inclui ativas e em espera.</div></div>
+        </div>
+        <div class="decision-grid">
+          <div class="decision-panel">
+            <h2 class="panel-title">Foco imediato</h2>
+            <div id="dashboardFocus"></div>
+            <div class="risk-strip" id="dashboardRisk"></div>
+          </div>
+          <div class="decision-panel">
+            <h2 class="panel-title">Próximos vencimentos</h2>
+            <div class="decision-list" id="dashboardUpcoming"></div>
+          </div>
         </div>
         <div class="grid-2">
           <div class="panel">
@@ -835,6 +862,55 @@
       $('strategyText').textContent = next ? 'Próxima prestação em ' + formatDateBR(next.dueDate) + ', no valor de ' + brl(next.expectedValue) + '.' : (active.length ? 'Acompanhe as próximas parcelas, priorize criticidade máxima e registre os pagamentos reais.' : 'A rota de quitação será calculada a partir das dívidas ativas, criticidade, parcelas e pagamentos registrados.');
       $('monthReading').textContent = monthCommitment > 0 ? 'Há parcelas no mês atual' : 'Sem pressão registrada no mês';
       $('monthReadingText').textContent = monthCommitment > 0 ? 'Compromisso pendente do mês atual: ' + brl(monthCommitment) + '.' : 'Nenhuma parcela pendente encontrada para o mês atual.';
+      renderDashboardDecision(active);
+    }
+
+    function renderDashboardDecision(activeDebts) {
+      const focusContainer = $('dashboardFocus');
+      const riskContainer = $('dashboardRisk');
+      const upcomingContainer = $('dashboardUpcoming');
+      if (!focusContainer || !riskContainer || !upcomingContainer) return;
+
+      if (!activeDebts.length) {
+        focusContainer.innerHTML = emptyCard('Nenhuma dívida ativa', 'Cadastre ou ative uma dívida para montar sua frente de quitação.');
+        riskContainer.innerHTML = '';
+        upcomingContainer.innerHTML = emptyCard('Sem vencimentos ativos', 'Os próximos compromissos aparecerão aqui.');
+        return;
+      }
+
+      const ranked = [...activeDebts].sort((a, b) => {
+        const score = debt => (debt.criticality === 'Máxima' ? 3 : debt.criticality === 'Alta' ? 2 : 1) * 100000 + debtBalance(debt);
+        return score(b) - score(a);
+      });
+      const focus = ranked[0];
+      const focusNext = nextInstallment(focus);
+      const openInstallments = installments
+        .filter(i => i.status !== 'Paga' && activeDebts.some(d => d.id === i.debtId))
+        .sort(byDueDate)
+        .slice(0, 5);
+
+      focusContainer.innerHTML =
+        '<div class="focus-card">' +
+          creditorLogoHtml(focus.creditorId) +
+          '<div><div class="debt-name">' + escapeHtml(getCreditorName(focus.creditorId) + ' · ' + focus.name) + '</div>' +
+          '<div class="debt-meta">' + compactTagsForDebt(focus) + '<span>Saldo ' + brl(debtBalance(focus)) + '</span><span>Parcela ' + brl(focus.installmentValue) + '</span></div>' +
+          '<div class="strategy-text">Próxima ação: ' + (focusNext ? 'pagar até ' + formatDateBR(focusNext.dueDate) + ' (' + dueHint(focusNext.dueDate) + ').' : 'sem parcela pendente.') + '</div></div>' +
+          '<button class="primary-action" onclick="window.openDebtFromDashboard(\'' + focus.id + '\')">Abrir dívida</button>' +
+        '</div>';
+
+      const maxCount = activeDebts.filter(d => d.criticality === 'Máxima').length;
+      const highCount = activeDebts.filter(d => d.criticality === 'Alta').length;
+      const rollingCount = activeDebts.filter(d => d.behavior === 'Rolagem').length;
+      riskContainer.innerHTML =
+        '<div class="risk-item"><div class="metric-label">Prioridade Máxima</div><strong>' + maxCount + '</strong></div>' +
+        '<div class="risk-item"><div class="metric-label">Criticidade Alta</div><strong>' + highCount + '</strong></div>' +
+        '<div class="risk-item"><div class="metric-label">Rolagem</div><strong>' + rollingCount + '</strong></div>';
+
+      upcomingContainer.innerHTML = openInstallments.length ? openInstallments.map(item => {
+        const debt = debts.find(d => d.id === item.debtId);
+        const title = debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida não encontrada';
+        return '<div class="decision-row"><div><strong>' + escapeHtml(title) + '</strong><small>' + formatDateBR(item.dueDate) + ' · ' + dueHint(item.dueDate) + '</small></div><strong>' + brl(item.expectedValue) + '</strong></div>';
+      }).join('') : emptyCard('Sem parcelas pendentes', 'Nenhuma parcela ativa encontrada na frente atual.');
     }
 
     async function loadAll() {
@@ -1144,6 +1220,13 @@
     window.goToDebtsAndNew = function() {
       showPage('dividas');
       window.openDebtForm('new');
+    };
+
+    window.openDebtFromDashboard = function(id) {
+      showPage('dividas');
+      expandedDebtId = id;
+      renderDebts();
+      $('activeDebts').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     document.querySelectorAll('.nav-item').forEach(button => {
