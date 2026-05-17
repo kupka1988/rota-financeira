@@ -414,6 +414,7 @@
         <button class="nav-item" data-page="parcelas"><span>□</span> Parcelas</button>
         <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
         <button class="nav-item" data-page="historico"><span>↺</span> Histórico</button>
+        <button class="nav-item" data-page="configuracoes"><span>⚙</span> Configurações</button>
       </nav>
     </aside>
 
@@ -545,6 +546,51 @@
         </div>
       </section>
 
+      <section id="configuracoes" class="page">
+        <div class="topbar">
+          <div>
+            <div class="eyebrow">Parâmetros</div>
+            <h1>Configurações</h1>
+            <div class="page-desc">Cadastre credores e parâmetros estruturais do sistema. Esses dados alimentam as listas de seleção e evitam inconsistências.</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h2 class="panel-title">Credores cadastrados</h2>
+            <div class="debt-list" id="creditorsList"></div>
+          </div>
+
+          <div class="panel">
+            <h2 class="panel-title">Novo credor</h2>
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+              <div>
+                <label>Nome do credor</label>
+                <input id="creditorName" placeholder="Ex.: Santander" />
+              </div>
+              <div>
+                <label>Tipo</label>
+                <select id="creditorType">
+                  <option>Banco</option>
+                  <option>Cartão</option>
+                  <option>Financeira</option>
+                  <option>Loja</option>
+                  <option>Pessoa física</option>
+                  <option>Outro</option>
+                </select>
+              </div>
+              <div>
+                <label>Observações</label>
+                <textarea id="creditorNotes" placeholder="Ex.: costuma oferecer desconto, tem portal próprio, contato de negociação..."></textarea>
+              </div>
+            </div>
+            <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="primary-action" onclick="addCreditor()">Salvar credor</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="paymentForm" class="form-card">
         <h2 class="panel-title">Registrar pagamento</h2>
         <div class="form-grid">
@@ -596,7 +642,7 @@
         <div class="form-grid">
           <div>
             <label>Credor</label>
-            <input placeholder="Ex.: Santander" />
+            <select id="debtCreditorSelect"></select>
           </div>
           <div>
             <label>Nome da dívida</label>
@@ -654,6 +700,7 @@
 
     let payments = [];
     let installments = [];
+    let creditors = [];
 
     function brl(value) {
       return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -771,6 +818,63 @@
         : emptyCard('Nenhum pagamento registrado', 'Os pagamentos baixados aparecerão aqui.');
     }
 
+    function renderCreditors() {
+      const list = document.getElementById('creditorsList');
+      const select = document.getElementById('debtCreditorSelect');
+
+      if (list) {
+        list.innerHTML = creditors.length
+          ? creditors.map((creditor, index) => `
+            <div class="debt-card">
+              <div>
+                <div class="debt-name">${creditor.name}</div>
+                <div class="debt-meta"><span>${creditor.type}</span>${creditor.notes ? `<span>${creditor.notes}</span>` : ''}</div>
+              </div>
+              <div class="debt-actions">
+                <button class="ghost-btn danger-btn" onclick="deleteCreditor(${index})">Excluir</button>
+              </div>
+            </div>
+          `).join('')
+          : emptyCard('Nenhum credor cadastrado', 'Cadastre credores para usar na criação das dívidas.');
+      }
+
+      if (select) {
+        select.innerHTML = creditors.length
+          ? creditors.map(creditor => `<option>${creditor.name}</option>`).join('')
+          : '<option>Nenhum credor cadastrado</option>';
+      }
+    }
+
+    function addCreditor() {
+      const nameInput = document.getElementById('creditorName');
+      const typeInput = document.getElementById('creditorType');
+      const notesInput = document.getElementById('creditorNotes');
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        showToast('Informe o nome do credor.');
+        return;
+      }
+
+      const alreadyExists = creditors.some(c => c.name.toLowerCase() === name.toLowerCase());
+      if (alreadyExists) {
+        showToast('Este credor já está cadastrado.');
+        return;
+      }
+
+      creditors.push({ name, type: typeInput.value, notes: notesInput.value.trim() });
+      nameInput.value = '';
+      notesInput.value = '';
+      renderCreditors();
+      showToast('Credor cadastrado com sucesso.');
+    }
+
+    function deleteCreditor(index) {
+      creditors.splice(index, 1);
+      renderCreditors();
+      showToast('Credor removido com sucesso.');
+    }
+
     function openDebtForm() {
       closePaymentForm();
       document.getElementById('debtForm').classList.add('show');
@@ -817,6 +921,7 @@
       renderDebts();
     renderInstallments();
     renderPayments();
+    renderCreditors();
       showToast('Dívida removida com sucesso.');
     }
 
