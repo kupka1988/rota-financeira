@@ -186,7 +186,6 @@
         <button class="nav-item active" data-page="dashboard"><span>⌁</span> Dashboard</button>
         <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas</button>
         <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
-        <button class="nav-item" data-page="parcelas"><span>□</span> Parcelas</button>
         <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
         <button class="nav-item" data-page="historico"><span>↺</span> Histórico</button>
         <button class="nav-item" data-page="configuracoes"><span>⚙</span> Configurações</button>
@@ -226,6 +225,7 @@
           <div><div class="eyebrow">Carteira ativa</div><h1>Dívidas em gestão</h1><div class="page-desc">Aqui ficam as dívidas que entram no plano atual e aparecem no dashboard principal.</div></div>
           <button class="primary-action" onclick="openDebtForm('new')">+ Nova dívida</button>
         </div>
+        <div id="creditorFilters" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;"></div>
         <section id="debtForm" class="form-card">
           <h2 class="panel-title" id="debtFormTitle">Nova dívida</h2>
           <div class="form-grid">
@@ -252,11 +252,6 @@
         <div class="debt-list" id="waitingDebts"></div>
       </section>
 
-      <section id="parcelas" class="page">
-        <div class="topbar"><div><div class="eyebrow">Operação</div><h1>Parcelas e vencimentos</h1><div class="page-desc">Consulta das parcelas previstas, pagas e pendentes.</div></div></div>
-        <div class="panel"><h2 class="panel-title">Parcelas</h2><div class="debt-list" id="installmentsList"></div></div>
-      </section>
-
       <section id="pagamentos" class="page">
         <div class="topbar"><div><div class="eyebrow">Baixa operacional</div><h1>Pagamentos</h1><div class="page-desc">Pagamentos registrados a partir das parcelas das dívidas.</div></div></div>
         <section id="paymentForm" class="form-card">
@@ -266,8 +261,7 @@
             <div><label>Parcela</label><input id="payInstallmentLabel" readonly /></div>
             <div><label>Data do pagamento</label><input id="payDate" type="date" /></div>
             <div><label>Valor pago</label><input id="payValue" inputmode="decimal" /></div>
-            <div class="span-2"><label>Ajuste automático</label><input id="payAutoAdjustment" readonly value="Desconto ou juros serão calculados automaticamente." /></div>
-            <div class="span-4"><label>Observações</label><textarea id="payNotes" placeholder="Ex.: paguei antes, paguei atrasado, valor diferente da prestação..."></textarea></div>
+            
           </div>
           <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;"><button class="primary-action" onclick="savePayment()">Salvar pagamento</button><button class="ghost-btn" onclick="closePaymentForm()">Cancelar</button></div>
         </section>
@@ -323,6 +317,8 @@
     let editingCreditorId = null;
     let paymentInstallmentId = null;
     let deleteContext = null;
+    let selectedCreditorFilter = 'all';
+    let expandedDebtId = null;
 
     const $ = (id) => document.getElementById(id);
 
@@ -370,43 +366,66 @@
     }
 
     function tagsForDebt(debt) {
-      const critical = debt.criticality === 'Máxima' ? '<span class="tag amber">prioridade máxima</span>' : debt.criticality === 'Alta' ? '<span class="tag blue">criticidade alta</span>' : '<span class="tag gray">normal</span>';
-      const behavior = debt.behavior === 'Rolagem' ? '<span class="tag amber">rolagem</span>' : debt.behavior === 'Quitação única' ? '<span class="tag blue">quitação</span>' : '<span class="tag green">parcelada</span>';
+      const critical = debt.criticality === 'Máxima' ? '<span class="tag amber">Prioridade Máxima</span>' : debt.criticality === 'Alta' ? '<span class="tag blue">Criticidade Alta</span>' : '<span class="tag gray">Normal</span>';
+      const behavior = debt.behavior === 'Rolagem' ? '<span class="tag amber">Rolagem</span>' : debt.behavior === 'Quitação única' ? '<span class="tag blue">Quitação</span>' : '<span class="tag green">Parcelada</span>';
       return `${critical}${behavior}<span class="tag gray">${debt.type}</span><span class="tag gray">${debt.paymentMethod}</span>`;
+    }
+
+    function installmentRowsForDebt(debt) {
+      const items = debtInstallments(debt.id).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      if (!items.length) return '<div class="debt-meta" style="margin-top:14px;">Nenhuma parcela gerada para esta dívida.</div>';
+
+      return `
+        <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:14px; display:grid; gap:10px;">
+          ${items.map(item => `
+            <div style="display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:center; background:rgba(255,255,255,0.035); border:1px solid var(--border); border-radius:14px; padding:12px;">
+              <div>
+                <div class="debt-name" style="font-size:14px;">Parcela ${item.number}/${item.total}</div>
+                <div class="debt-meta">Vence Em ${formatDateBR(item.dueDate)} · Valor ${brl(item.expectedValue)}</div>
+              </div>
+              <div class="debt-actions" style="margin-top:0;">
+                <span class="tag ${item.status === 'Paga' ? 'green' : 'amber'}">${item.status}</span>
+                ${item.status !== 'Paga' ? `<button class="ghost-btn" onclick="window.openPaymentForm('${item.id}')">Registrar Pagamento</button>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>`;
     }
 
     function debtCard(debt) {
       const next = nextInstallment(debt);
       const progress = debtProgress(debt);
+      const isExpanded = expandedDebtId === debt.id;
       return `
         <div class="debt-card ${debt.criticality === 'Máxima' ? 'max' : ''}">
           <div>
-            <div class="debt-name">${getCreditorName(debt.creditorId)} · ${debt.name}</div>
+            <div class="debt-name" style="cursor:pointer;" onclick="window.toggleDebt('${debt.id}')">${getCreditorName(debt.creditorId)} · ${debt.name}</div>
             <div class="debt-meta">
               <span>${debt.status}</span>
-              <span>Próxima: ${next ? formatDateBR(next.dueDate) : 'sem parcela pendente'}</span>
-              <span>${debt.installmentsQty || 0} parcelas</span>
+              <span>Próxima: ${next ? formatDateBR(next.dueDate) : 'Sem Parcela Pendente'}</span>
+              <span>${debt.installmentsQty || 0} Parcelas</span>
               ${tagsForDebt(debt)}
             </div>
             <div style="margin-top:14px; display:grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap:10px;">
-              <div><div class="metric-label">Valor total</div><div class="debt-value">${brl(debtTotal(debt))}</div></div>
-              <div><div class="metric-label">Valor pago</div><div class="debt-value">${brl(debtPaid(debt))}</div></div>
-              <div><div class="metric-label">Saldo devedor</div><div class="debt-value">${brl(debtBalance(debt))}</div></div>
-              <div><div class="metric-label">Quitação hoje</div><div class="debt-value">${brl(debt.payoffToday)}</div></div>
-              <div><div class="metric-label">Desconto acumulado</div><div class="debt-value">${brl(debtDiscount(debt))}</div></div>
+              <div><div class="metric-label">Valor Total</div><div class="debt-value">${brl(debtTotal(debt))}</div></div>
+              <div><div class="metric-label">Valor Pago</div><div class="debt-value">${brl(debtPaid(debt))}</div></div>
+              <div><div class="metric-label">Saldo Devedor</div><div class="debt-value">${brl(debtBalance(debt))}</div></div>
+              <div><div class="metric-label">Quitação Hoje</div><div class="debt-value">${brl(debt.payoffToday)}</div></div>
+              <div><div class="metric-label">Desconto Acumulado</div><div class="debt-value">${brl(debtDiscount(debt))}</div></div>
             </div>
             <div style="margin-top:14px; max-width:620px;">
               <div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:7px;"><span>Progresso</span><strong style="color:var(--soft)">${progress}%</strong></div>
               <div style="height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden;"><div style="height:100%; width:${progress}%; background:linear-gradient(90deg,var(--blue),var(--green)); border-radius:999px;"></div></div>
             </div>
+            ${isExpanded ? installmentRowsForDebt(debt) : ''}
           </div>
           <div class="debt-values">
             <div class="debt-value">${brl(debt.installmentValue)}</div>
-            <div class="debt-subvalue">parcela prevista</div>
+            <div class="debt-subvalue">Parcela Prevista</div>
             <div class="debt-actions">
+              <button class="ghost-btn" onclick="window.toggleDebt('${debt.id}')">${isExpanded ? 'Ocultar Parcelas' : 'Ver Parcelas'}</button>
               <button class="ghost-btn" onclick="window.openDebtForm('edit', '${debt.id}')">Editar</button>
-              ${next ? `<button class="ghost-btn" onclick="window.openPaymentForm('${next.id}')">Registrar pagamento</button>` : ''}
-              ${debt.status === 'Em espera' ? `<button class="ghost-btn" onclick="window.changeDebtStatus('${debt.id}', 'Ativa')">Ativar</button>` : `<button class="ghost-btn" onclick="window.changeDebtStatus('${debt.id}', 'Em espera')">Mover para espera</button>`}
+              ${next ? `<button class="ghost-btn" onclick="window.openPaymentForm('${next.id}')">Registrar Pagamento</button>` : ''}
+              ${debt.status === 'Em espera' ? `<button class="ghost-btn" onclick="window.changeDebtStatus('${debt.id}', 'Ativa')">Ativar</button>` : `<button class="ghost-btn" onclick="window.changeDebtStatus('${debt.id}', 'Em espera')">Mover Para Espera</button>`}
               <button class="ghost-btn danger-btn" onclick="window.openDeleteModal('debt', '${debt.id}')">Excluir</button>
             </div>
           </div>
@@ -414,26 +433,35 @@
     }
 
     function renderDebts() {
-      const active = debts.filter(d => d.status === 'Ativa');
+      const activeAll = debts.filter(d => d.status === 'Ativa');
+      const active = selectedCreditorFilter === 'all' ? activeAll : activeAll.filter(d => d.creditorId === selectedCreditorFilter);
       const waiting = debts.filter(d => d.status === 'Em espera');
-      $('activeDebts').innerHTML = active.length ? active.map(debtCard).join('') : emptyCard('Nenhuma dívida ativa cadastrada', 'Clique em Nova dívida para iniciar sua frente de pagamento.');
+      renderCreditorFilters(activeAll);
+      $('activeDebts').innerHTML = active.length ? active.map(debtCard).join('') : emptyCard('Nenhuma Dívida Encontrada', selectedCreditorFilter === 'all' ? 'Clique em Nova Dívida para iniciar sua frente de pagamento.' : 'Não há dívidas ativas para este credor.');
       $('waitingDebts').innerHTML = waiting.length ? waiting.map(debtCard).join('') : emptyCard('Nenhuma dívida em espera', 'As dívidas fora da frente atual aparecerão aqui.');
       renderDashboard();
     }
 
+    function renderCreditorFilters(activeDebts) {
+      const container = $('creditorFilters');
+      if (!container) return;
+      const creditorIds = [...new Set(activeDebts.map(d => d.creditorId))];
+      const buttons = [
+        `<button class="ghost-btn ${selectedCreditorFilter === 'all' ? 'tag green' : ''}" onclick="window.filterByCreditor('all')">Todos</button>`,
+        ...creditorIds.map(id => `<button class="ghost-btn ${selectedCreditorFilter === id ? 'tag green' : ''}" onclick="window.filterByCreditor('${id}')">${getCreditorName(id)}</button>`)
+      ];
+      container.innerHTML = buttons.join('');
+    }
+
     function renderInstallments() {
-      const sorted = [...installments].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-      $('installmentsList').innerHTML = sorted.length ? sorted.map(item => {
-        const debt = debts.find(d => d.id === item.debtId);
-        return `<div class="debt-card"><div><div class="debt-name">${debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida removida'} · ${item.number}/${item.total}</div><div class="debt-meta">Vence em ${formatDateBR(item.dueDate)} · previsto ${brl(item.expectedValue)}</div></div><span class="tag ${item.status === 'Paga' ? 'green' : 'amber'}">${item.status}</span></div>`;
-      }).join('') : emptyCard('Nenhuma parcela gerada', 'As parcelas aparecerão aqui depois do cadastro das dívidas.');
+      return;
     }
 
     function renderPayments() {
       const sorted = [...payments].sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
       $('paymentsList').innerHTML = sorted.length ? sorted.map(item => {
         const debt = debts.find(d => d.id === item.debtId);
-        return `<div class="debt-card"><div><div class="debt-name">${debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida removida'}</div><div class="debt-meta">Pago em ${formatDateBR(item.paymentDate)} · prestação ${brl(item.expectedValue)} · desconto automático ${brl(item.discount)} · juros automático ${brl(item.interest)}</div></div><span class="tag green">${brl(item.paidValue)}</span></div>`;
+        return `<div class="debt-card"><div><div class="debt-name">${debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida removida'}</div><div class="debt-meta">Pago Em ${formatDateBR(item.paymentDate)} · Prestação ${brl(item.expectedValue)}${Number(item.discount || 0) > 0 ? ` · Desconto ${brl(item.discount)}` : ''}${Number(item.interest || 0) > 0 ? ` · Juros ${brl(item.interest)}` : ''}</div></div><span class="tag green">${brl(item.paidValue)}</span></div>`;
       }).join('') : emptyCard('Nenhum pagamento registrado', 'Os pagamentos baixados aparecerão aqui.');
     }
 
@@ -508,6 +536,17 @@
 
     window.closeDebtForm = function() { editingDebtId = null; $('debtForm').classList.remove('show'); };
 
+    window.toggleDebt = function(id) {
+      expandedDebtId = expandedDebtId === id ? null : id;
+      renderDebts();
+    };
+
+    window.filterByCreditor = function(id) {
+      selectedCreditorFilter = id;
+      expandedDebtId = null;
+      renderDebts();
+    };
+
     window.saveDebt = async function() {
       if (!creditors.length) return showToast('Cadastre um credor antes da dívida.');
       const creditorId = $('debtCreditorSelect').value;
@@ -574,8 +613,7 @@
       $('payInstallmentLabel').value = `${inst.number}/${inst.total}`;
       $('payDate').value = inst.dueDate;
       $('payValue').value = brl(inst.expectedValue);
-      $('payAutoAdjustment').value = 'Desconto ou juros serão calculados automaticamente pelo valor pago.';
-      $('payNotes').value = '';
+      
       $('paymentForm').classList.add('show');
       showPage('pagamentos');
       $('paymentForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -602,7 +640,7 @@
         paidValue,
         discount,
         interest,
-        notes: $('payNotes').value.trim(),
+        notes: '',
         createdAt: serverTimestamp()
       });
       await updateDoc(doc(db, 'installments', inst.id), { status: 'Paga', paidAt: $('payDate').value, updatedAt: serverTimestamp() });
