@@ -31,8 +31,25 @@
     let selectedDebtSort = 'priority';
     let selectedWaitingDebtSort = 'priority';
     let expandedDebtId = null;
+    let editingInstallmentId = null;
 
     const $ = (id) => document.getElementById(id);
+    const THEME_KEY = 'rotaFinanceiraTheme';
+    const DONUT_COLORS = ['#3fb985', '#4d8df7', '#d8a441', '#d86464', '#8b6ff5', '#35b7c8', '#ef7d4f'];
+
+    function applyTheme(theme) {
+      const nextTheme = theme === 'light' ? 'light' : 'dark';
+      document.body.dataset.theme = nextTheme;
+      const select = $('themeSelect');
+      if (select) select.value = nextTheme;
+      localStorage.setItem(THEME_KEY, nextTheme);
+    }
+
+    window.setThemePreference = function(theme) {
+      applyTheme(theme);
+    };
+
+    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
     function brl(value) { return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     function parseMoney(value) {
@@ -102,6 +119,12 @@
     }
     function nextInstallment(debt) {
       return debtInstallments(debt.id).filter(i => i.status !== 'Paga').sort(byDueDate)[0] || null;
+    }
+
+    function installmentProgress(debt) {
+      const items = debtInstallments(debt.id);
+      const paid = items.filter(item => item.status === 'Paga').length;
+      return { paid, total: items.length || Number(debt.installmentsQty || 0) || 0 };
     }
 
     function escapeHtml(value) {
@@ -274,6 +297,7 @@
         const payButton = item.status !== 'Paga'
           ? '<button class="ghost-btn" onclick="window.openPaymentForm(\'' + item.id + '\')">Registrar Pagamento</button>'
           : '';
+        const editButton = '<button class="ghost-btn" onclick="window.openInstallmentModal(\'' + item.id + '\')">Editar Parcela</button>';
         let diffText = '-';
         if (discount > 0) diffText = 'Desconto ' + brl(discount);
         if (interest > 0) diffText = 'Juros ' + brl(interest);
@@ -285,7 +309,7 @@
           '<div data-label="Valor Pago">' + (pay ? brl(paidValue) : '-') + '</div>' +
           '<div data-label="Desconto / Juros">' + escapeHtml(diffText) + '</div>' +
           '<div data-label="Status"><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span></div>' +
-          '<div data-label="Ação">' + payButton + '</div>' +
+          '<div data-label="Ação"><div class="action-group">' + payButton + editButton + '</div></div>' +
         '</div>';
       });
 
@@ -304,6 +328,7 @@
     function debtCard(debt) {
       const next = nextInstallment(debt);
       const progress = debtProgress(debt);
+      const installmentCount = installmentProgress(debt);
       const isExpanded = expandedDebtId === debt.id;
       const title = escapeHtml(getCreditorName(debt.creditorId)) + ' · ' + escapeHtml(debt.name);
       const statusAction = debt.status === 'Em espera'
@@ -344,7 +369,7 @@
           '<div class="row-stat"><div class="metric-label">Saldo Devedor</div><strong>' + brl(balance) + '</strong></div>' +
           '<div class="row-stat"><div class="metric-label">Parcela</div><strong>' + brl(debt.installmentValue) + '</strong></div>' +
           '<div class="row-stat next"><div class="metric-label">Próxima Parcela</div><strong>' + escapeHtml(nextLabel) + '</strong><small>' + escapeHtml(next ? dueHint(next.dueDate) : '') + '</small></div>' +
-          '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + progress + '%</strong><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
+          '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + installmentCount.paid + '/' + installmentCount.total + '</strong><small>' + progress + '% do valor</small><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
           '<button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button>' +
         '</div>' +
         (isExpanded ? '<div class="debt-detail"><div class="debt-summary">' +
@@ -369,7 +394,7 @@
         '</div>' + installmentRowsForDebt(debt) +
         '<div class="debt-actions">' +
           '<div class="action-group"><button class="ghost-btn" onclick="window.toggleDebt(\'' + debt.id + '\')">' + expandedAction + '</button>' + payAction + '</div>' +
-          '<div class="action-group"><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">Subir na Trilha</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">Descer na Trilha</button><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir Dívida</button></div>' +
+          '<div class="action-group"><button class="ghost-btn" onclick="window.rollDebt(\'' + debt.id + '\')">Criar Rolagem</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">Subir na Trilha</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">Descer na Trilha</button><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir Dívida</button></div>' +
         '</div></div>' : '') +
       '</div>';
     }
@@ -552,7 +577,7 @@
     }
 
     function orderedTrailDebts() {
-      return [...debts].sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+      return debts.filter(debt => debt.status === 'Ativa').sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
     }
 
     function nextPayoffOrder() {
@@ -692,6 +717,7 @@
         const stepClass = 'trail-step' + (done ? ' done' : '') + (current ? ' current' : '');
         const order = Number(debt.payoffOrder || 0) || index + 1;
         const nextItem = nextInstallment(debt);
+        const stepProgress = installmentProgress(debt);
         return '<div class="' + stepClass + '">' +
           '<div class="trail-marker">' + (done ? '✓' : order) + '</div>' +
           '<div class="trail-card">' +
@@ -703,7 +729,8 @@
             '<div class="trail-facts">' +
               '<div><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
               '<div><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
-              '<div><span>Próximo passo</span><strong>' + escapeHtml(nextItem ? formatDateBR(nextItem.dueDate) : 'Sem Parcela') + '</strong></div>' +
+              '<div><span>Progresso</span><strong>' + stepProgress.paid + '/' + stepProgress.total + '</strong></div>' +
+              '<div><span>Próximo passo</span><strong>' + escapeHtml(nextItem ? nextItem.number + '/' + nextItem.total : 'Sem Parcela') + '</strong></div>' +
             '</div>' +
             '<div class="trail-actions">' +
               '<button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">Subir</button>' +
@@ -736,6 +763,37 @@
       $('monthReading').textContent = monthCommitment > 0 ? 'Há parcelas no mês atual' : 'Sem pressão registrada no mês';
       $('monthReadingText').textContent = monthCommitment > 0 ? 'Compromisso pendente do mês atual: ' + brl(monthCommitment) + '.' : 'Nenhuma parcela pendente encontrada para o mês atual.';
       renderDashboardDecision(active);
+      renderCreditorDonut(active);
+    }
+
+    function renderCreditorDonut(activeDebts) {
+      const donut = $('creditorDonut');
+      const legend = $('creditorDonutLegend');
+      if (!donut || !legend) return;
+      const total = activeDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
+      if (!total) {
+        donut.style.background = 'conic-gradient(var(--border) 0 100%)';
+        legend.innerHTML = emptyCard('Sem dívida ativa', 'A divisão por credor aparecerá quando houver saldo ativo.');
+        return;
+      }
+      const rows = [...new Set(activeDebts.map(debt => debt.creditorId).filter(Boolean))]
+        .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)))
+        .map((id, index) => {
+          const value = activeDebts.filter(debt => debt.creditorId === id).reduce((sum, debt) => sum + debtBalance(debt), 0);
+          return { id, value, color: DONUT_COLORS[index % DONUT_COLORS.length] };
+        });
+      let cursor = 0;
+      const stops = rows.map(row => {
+        const start = cursor;
+        const end = cursor + (row.value / total) * 100;
+        cursor = end;
+        return row.color + ' ' + start.toFixed(2) + '% ' + end.toFixed(2) + '%';
+      });
+      donut.style.background = 'conic-gradient(' + stops.join(',') + ')';
+      legend.innerHTML = rows.map(row => {
+        const pct = Math.round((row.value / total) * 100);
+        return '<div class="donut-item"><span class="donut-dot" style="background:' + row.color + '"></span><span>' + escapeHtml(getCreditorName(row.id)) + '</span><strong>' + pct + '% · ' + brl(row.value) + '</strong></div>';
+      }).join('');
     }
 
     function renderDashboardDecision(activeDebts) {
@@ -984,6 +1042,46 @@
       $('paymentForm').classList.remove('show');
     };
 
+    window.openInstallmentModal = function(installmentId) {
+      closeDebtForm();
+      closePaymentForm();
+      const inst = installments.find(item => item.id === installmentId);
+      if (!inst) return showToast('Parcela não encontrada.');
+      editingInstallmentId = installmentId;
+      $('editInstallmentDue').value = inst.dueDate || '';
+      $('editInstallmentValue').value = brl(inst.expectedValue || 0);
+      $('editInstallmentStatus').value = inst.status || 'Pendente';
+      $('installmentModal').classList.add('show');
+    };
+
+    window.closeInstallmentModal = function() {
+      editingInstallmentId = null;
+      $('installmentModal').classList.remove('show');
+    };
+
+    window.saveInstallmentEdit = async function() {
+      if (!editingInstallmentId) return showToast('Nenhuma parcela selecionada.');
+      const inst = installments.find(item => item.id === editingInstallmentId);
+      if (!inst) return showToast('Parcela não encontrada.');
+      const dueDate = $('editInstallmentDue').value;
+      const expectedValue = parseMoney($('editInstallmentValue').value);
+      const status = $('editInstallmentStatus').value;
+      if (!dueDate || !expectedValue) return showToast('Informe vencimento e valor previsto.');
+      await updateDoc(doc(db, 'installments', editingInstallmentId), {
+        dueDate,
+        expectedValue,
+        status,
+        updatedAt: serverTimestamp()
+      });
+      inst.dueDate = dueDate;
+      inst.expectedValue = expectedValue;
+      inst.status = status;
+      if (status !== 'Paga') delete inst.paidAt;
+      closeInstallmentModal();
+      renderAll();
+      showToast('Parcela atualizada com sucesso.');
+    };
+
     window.savePayment = async function() {
       if (!paymentInstallmentId) return showToast('Nenhuma parcela selecionada.');
       const inst = installments.find(i => i.id === paymentInstallmentId);
@@ -1168,11 +1266,32 @@
 
     window.openDebtFromTrail = function(id) {
       const debt = debts.find(item => item.id === id);
-      showPage(debt?.status === 'Em espera' ? 'espera' : 'dividas');
+      showPage(debt && debt.status === 'Em espera' ? 'espera' : 'dividas');
       expandedDebtId = id;
       renderDebts();
-      const target = debt?.status === 'Em espera' ? $('waitingDebts') : $('activeDebts');
+      const target = debt && debt.status === 'Em espera' ? $('waitingDebts') : $('activeDebts');
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.rollDebt = function(id) {
+      const debt = debts.find(item => item.id === id);
+      if (!debt) return showToast('Dívida não encontrada.');
+      const baseDue = debt.firstDue || nextInstallment(debt)?.dueDate || new Date().toISOString().slice(0, 10);
+      window.openDebtForm('new', null, debt.status || 'Ativa');
+      $('debtCreditorSelect').value = debt.creditorId || '';
+      $('debtName').value = debt.name || '';
+      $('debtType').value = debt.type || 'Cartão';
+      $('debtPaymentMethod').value = debt.paymentMethod || 'Boleto';
+      $('debtFirstDue').value = addMonths(baseDue, 1);
+      $('debtInstallmentsQty').value = debt.installmentsQty || '';
+      $('debtInstallmentValue').value = brl(debt.installmentValue || 0);
+      $('debtStatus').value = debt.status || 'Ativa';
+      $('debtCriticality').value = debt.criticality || 'Normal';
+      $('debtBehavior').value = 'Rolagem';
+      $('debtPayoffToday').value = brl(debt.payoffToday || 0);
+      $('debtPayoffOrder').value = nextPayoffOrder();
+      $('debtNotes').value = debt.notes || '';
+      showToast('Rolagem preparada para edição.');
     };
 
     window.moveDebtInTrail = async function(id, direction) {
@@ -1203,6 +1322,7 @@
         showPage(button.dataset.page);
         closeDebtForm();
         closePaymentForm();
+        closeInstallmentModal();
         closeDeleteModal();
       });
     });

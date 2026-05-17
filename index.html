@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rota Financeira</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -22,10 +24,27 @@
 
   <div id="toast" class="toast">Operação realizada com sucesso.</div>
 
+  <div id="installmentModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-brand">Rota Financeira</div>
+      <div class="modal-title">Editar parcela</div>
+      <div class="modal-text">Ajuste apenas esta parcela. As demais continuam como estão.</div>
+      <div class="form-grid" style="grid-template-columns:1fr;">
+        <div><label>Vencimento</label><input id="editInstallmentDue" type="date" /></div>
+        <div><label>Valor previsto</label><input id="editInstallmentValue" inputmode="decimal" /></div>
+        <div><label>Status</label><select id="editInstallmentStatus"><option>Pendente</option><option>Paga</option></select></div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-btn" onclick="closeInstallmentModal()">Cancelar</button>
+        <button class="primary-action" onclick="saveInstallmentEdit()">Salvar parcela</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app">
     <aside>
       <div class="brand">
-        <div class="brand-mark">RF</div>
+        <div class="brand-mark"><img src="assets/favicon.png" alt="Rota Financeira" /></div>
         <div>
           <div class="brand-title">Rota Financeira</div>
           <div class="brand-subtitle">Estratégia de quitação</div>
@@ -77,6 +96,13 @@
           <div class="panel">
             <h2 class="panel-title">Leitura do mês</h2>
             <div class="strategy-box" style="background: var(--amber-soft); border-color: rgba(216,164,65,0.28)"><div class="strategy-title" style="color:#f0c978">Atenção</div><div class="strategy-main" id="monthReading">Sem dados ainda</div><div class="strategy-text" id="monthReadingText">Depois dos primeiros cadastros, esta área indicará risco mensal e próximos vencimentos.</div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">Dívida por credor</h2>
+          <div class="donut-panel">
+            <div class="donut-chart" id="creditorDonut"></div>
+            <div class="donut-legend" id="creditorDonutLegend"></div>
           </div>
         </div>
       </section>
@@ -192,7 +218,14 @@
       </section>
 
       <section id="configuracoes" class="page">
-        <div class="topbar"><div><div class="eyebrow">Parâmetros</div><h1>Configurações</h1><div class="page-desc">Cadastre e edite credores. Eles alimentam a lista suspensa das dívidas.</div></div></div>
+        <div class="topbar"><div><div class="eyebrow">Parâmetros</div><h1>Configurações</h1><div class="page-desc">Ajuste aparência, identidade e cadastros de apoio do sistema.</div></div></div>
+        <div class="panel settings-panel">
+          <h2 class="panel-title">Aparência do sistema</h2>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div><label>Tema</label><select id="themeSelect" onchange="setThemePreference(this.value)"><option value="dark">Escuro</option><option value="light">Claro</option></select></div>
+            <div><label>Identidade visual</label><div class="debt-meta">Logo e favicon do Rota Financeira ativos no sistema.</div></div>
+          </div>
+        </div>
         <div id="creditorMetrics" class="debt-metrics"></div>
         <div class="grid-2">
           <div class="panel"><h2 class="panel-title">Credores cadastrados</h2><div class="debt-list" id="creditorsList"></div></div>
