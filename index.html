@@ -111,7 +111,7 @@
       <section id="espera" class="page">
         <div class="topbar">
           <div><div class="eyebrow">Fora da frente atual</div><h1>Dívidas em espera</h1><div class="page-desc">Acompanhe compromissos reconhecidos que ainda não entraram na frente de pagamento principal.</div></div>
-          <button class="secondary-action" onclick="goToDebtsAndNew()">+ Registrar dívida</button>
+          <button class="primary-action" onclick="goToDebtsAndNew('Em espera')">+ Nova dívida</button>
         </div>
         <div id="waitingCreditorFilters" class="filter-row"></div>
         <div id="waitingDebtMetrics" class="debt-metrics"></div>
@@ -150,6 +150,7 @@
             <div class="form-grid" style="grid-template-columns: 1fr;">
               <div><label>Nome do credor</label><input id="creditorName" placeholder="Ex.: Santander" /></div>
               <div><label>Tipo</label><select id="creditorType"><option>Banco</option><option>Cartão</option><option>Financeira</option><option>Loja</option><option>Pessoa física</option><option>Outro</option></select></div>
+              <div><label>URL da logo</label><input id="creditorLogoUrl" placeholder="https://..." /></div>
               <div><label>Observações</label><textarea id="creditorNotes" placeholder="Ex.: costuma oferecer desconto, tem portal próprio..."></textarea></div>
             </div>
             <div class="form-actions"><button class="primary-action" onclick="saveCreditor()">Salvar credor</button><button class="ghost-btn" onclick="resetCreditorForm()">Cancelar edição</button></div>

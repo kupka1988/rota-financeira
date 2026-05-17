@@ -187,7 +187,12 @@
     }
 
     function creditorLogoHtml(creditorId) {
+      const creditor = creditors.find(c => c.id === creditorId);
       const name = getCreditorName(creditorId);
+      const customLogo = String(creditor?.logoUrl || '').trim();
+      if (customLogo) {
+        return '<div class="creditor-logo"><img alt="' + escapeHtml(name) + '" src="' + escapeHtml(customLogo) + '" onerror="this.replaceWith(document.createTextNode(\'' + escapeHtml(initials(name)) + '\'))"></div>';
+      }
       const domain = creditorDomain(name);
       if (!domain) return '<div class="creditor-logo">' + escapeHtml(initials(name)) + '</div>';
       const src = 'https://www.google.com/s2/favicons?domain_url=https://' + encodeURIComponent(domain) + '&sz=64';
@@ -668,7 +673,8 @@
       renderPayments();
     }
 
-    window.openDebtForm = function(mode = 'new', id = null) {
+    window.openDebtForm = function(mode = 'new', id = null, defaultStatus = 'Ativa') {
+      showPage('dividas');
       closePaymentForm();
       editingDebtId = mode === 'edit' ? id : null;
       $('debtFormTitle').textContent = editingDebtId ? 'Editar dívida' : 'Nova dívida';
@@ -695,7 +701,7 @@
         $('debtFirstDue').value = '';
         $('debtInstallmentsQty').value = '';
         $('debtInstallmentValue').value = '';
-        $('debtStatus').value = 'Ativa';
+        $('debtStatus').value = defaultStatus;
         $('debtCriticality').value = 'Normal';
         $('debtBehavior').value = 'Parcelada';
         $('debtPayoffToday').value = '';
@@ -862,7 +868,7 @@
     window.saveCreditor = async function() {
       const name = $('creditorName').value.trim();
       if (!name) return showToast('Informe o nome do credor.');
-      const payload = { name, type: $('creditorType').value, notes: $('creditorNotes').value.trim(), updatedAt: serverTimestamp() };
+      const payload = { name, type: $('creditorType').value, logoUrl: $('creditorLogoUrl').value.trim(), notes: $('creditorNotes').value.trim(), updatedAt: serverTimestamp() };
       if (editingCreditorId) {
         await updateDoc(doc(db, 'creditors', editingCreditorId), payload);
         const index = creditors.findIndex(c => c.id === editingCreditorId);
@@ -886,6 +892,7 @@
       $('creditorFormTitle').textContent = 'Editar credor';
       $('creditorName').value = creditor.name || '';
       $('creditorType').value = creditor.type || 'Banco';
+      $('creditorLogoUrl').value = creditor.logoUrl || '';
       $('creditorNotes').value = creditor.notes || '';
     };
 
@@ -894,6 +901,7 @@
       $('creditorFormTitle').textContent = 'Novo credor';
       $('creditorName').value = '';
       $('creditorType').value = 'Banco';
+      $('creditorLogoUrl').value = '';
       $('creditorNotes').value = '';
     };
 
@@ -957,9 +965,9 @@
       document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === pageId));
     }
 
-    window.goToDebtsAndNew = function() {
+    window.goToDebtsAndNew = function(defaultStatus = 'Ativa') {
       showPage('dividas');
-      window.openDebtForm('new');
+      window.openDebtForm('new', null, defaultStatus);
     };
 
     window.openDebtFromDashboard = function(id) {
