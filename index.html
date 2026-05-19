@@ -120,8 +120,7 @@
       </div>
       <nav>
         <button class="nav-item active" data-page="dashboard"><span>⌁</span> Dashboard</button>
-        <button class="nav-item" data-page="trilha"><span>⇄</span> Rota</button>
-        <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas Ativas</button>
+        <button class="nav-item" data-page="trilha"><span>⇄</span> Rota Financeira</button>
         <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
         <button class="nav-item" data-page="radar"><span>◎</span> Fora do radar</button>
         <button class="nav-item" data-page="quitadas"><span>✓</span> Quitadas</button>
@@ -179,44 +178,11 @@
       <section id="trilha" class="page">
         <div class="topbar">
           <div>
-            <div class="eyebrow">Rota financeira</div>
-            <h1>Sua rota de quitação</h1>
-            <div class="page-desc">Organize a ordem das dívidas que passaram por Dívidas Ativas. Arraste para ajustar sua estratégia e acompanhe a evolução da jornada.</div>
+            <div class="eyebrow">Dívidas priorizadas</div>
+            <h1>Rota Financeira</h1>
+            <div class="page-desc">Organize a ordem das dívidas que você pretende quitar.</div>
           </div>
           <button class="primary-action" onclick="goToDebtsAndNew()">+ Nova dívida</button>
-        </div>
-        <div id="trailMetrics" class="route-summary"></div>
-        <div id="nextTarget"></div>
-        <div class="route-panel">
-          <div class="route-panel-head">
-            <div>
-              <h2 class="panel-title">Sua rota <span>(ordem de prioridade)</span></h2>
-              <div class="metric-note" id="trailPositionTitle">Preparando a rota</div>
-            </div>
-          </div>
-          <div class="route-list" id="trailRoad"></div>
-        </div>
-      </section>
-
-      <section id="dividas" class="page">
-        <div class="topbar">
-          <div><div class="eyebrow">Carteira ativa</div><h1>Dívidas Ativas</h1><div class="page-desc">Aqui ficam as dívidas que entram no plano atual e aparecem no dashboard principal.</div></div>
-          <button class="primary-action" onclick="openDebtForm('new')">+ Nova dívida</button>
-        </div>
-        <div id="debtMetrics" class="debt-metrics"></div>
-        <div class="sort-bar">
-          <label>Ordenar</label>
-          <select id="debtSort" onchange="setDebtSort(this.value)">
-            <option value="installment-desc">Maior Parcela</option>
-            <option value="progress-desc">Maior Progresso</option>
-            <option value="balance-desc">Maior Saldo Devedor</option>
-            <option value="installment-asc">Menor Parcela</option>
-            <option value="progress-asc">Menor Progresso</option>
-            <option value="balance-asc">Menor Saldo Devedor</option>
-            <option value="trail">Ordem da Rota</option>
-            <option value="priority" selected>Prioridade</option>
-            <option value="next-due">Próxima Parcela</option>
-          </select>
         </div>
         <section id="debtForm" class="form-card">
           <h2 class="panel-title" id="debtFormTitle">Nova dívida</h2>
@@ -237,6 +203,39 @@
           </div>
           <div class="form-actions"><button class="primary-action" onclick="saveDebt()">Salvar dívida</button><button class="ghost-btn" onclick="closeDebtForm()">Cancelar</button></div>
         </section>
+        <div id="trailMetrics" class="route-summary"></div>
+        <div id="nextTarget"></div>
+        <div class="route-panel">
+          <div class="route-panel-head">
+            <div>
+              <h2 class="panel-title">Sua rota <span>(ordem de prioridade)</span></h2>
+              <div class="metric-note" id="trailPositionTitle">Preparando a rota</div>
+            </div>
+          </div>
+          <div class="route-list" id="trailRoad"></div>
+        </div>
+      </section>
+
+      <section id="dividas" class="page legacy-page">
+        <div class="topbar">
+          <div><div class="eyebrow">Tela descontinuada</div><h1>Rota Financeira</h1><div class="page-desc">A Rota Financeira é a referência para dívidas ativas e priorizadas.</div></div>
+          <button class="primary-action" onclick="openDebtForm('new')">+ Nova dívida</button>
+        </div>
+        <div id="debtMetrics" class="debt-metrics"></div>
+        <div class="sort-bar">
+          <label>Ordenar</label>
+          <select id="debtSort" onchange="setDebtSort(this.value)">
+            <option value="installment-desc">Maior Parcela</option>
+            <option value="progress-desc">Maior Progresso</option>
+            <option value="balance-desc">Maior Saldo Devedor</option>
+            <option value="installment-asc">Menor Parcela</option>
+            <option value="progress-asc">Menor Progresso</option>
+            <option value="balance-asc">Menor Saldo Devedor</option>
+            <option value="trail">Ordem da Rota</option>
+            <option value="priority" selected>Prioridade</option>
+            <option value="next-due">Próxima Parcela</option>
+          </select>
+        </div>
         <div class="debt-list" id="activeDebts"></div>
       </section>
 

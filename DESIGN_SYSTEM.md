@@ -28,7 +28,7 @@
 ## Modais
 - Usar modal proprio para confirmacoes e edicoes.
 - Edicao individual de parcelas ocorre em modal.
-- Registro de pagamento ocorre em modal na aba Dividas Ativas.
+- Registro de pagamento ocorre em modal na tela atual, com a Rota Financeira como referencia principal para dividas ativas/priorizadas.
 - Expansao de divida deve ser limpa e operacional: cabecalho compacto, abas de parcelas, um unico menu `Acoes` no topo direito e sem cards motivacionais ou repeticao dos dados do card fechado.
 - Modal de quitacao deve trazer formulario e resumo lado a lado em telas amplas, com leitura clara de valor previsto, valor pago e desconto.
 - Exclusao de pagamento ocorre com modal de confirmacao.

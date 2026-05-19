@@ -288,28 +288,15 @@
       return '<div class="creditor-logo"><img alt="' + escapeHtml(name) + '" src="' + src + '" onerror="this.replaceWith(document.createTextNode(\'' + escapeHtml(initials(name)) + '\'))"></div>';
     }
 
-    function tagsForDebt(debt) {
+    function priorityTagForDebt(debt) {
       let critical = tag('Normal', 'gray');
       if (debt.criticality === 'Máxima') critical = tag('Prioridade Máxima', 'amber');
-      if (debt.criticality === 'Alta') critical = tag('Criticidade Alta', 'blue');
-
-      let behavior = tag('Parcelada', 'green');
-      if (debt.behavior === 'Rolagem') behavior = tag('Rolagem', 'amber');
-      if (debt.behavior === 'Quitação única') behavior = tag('Quitação', 'blue');
-
-      return critical + behavior + tag(debt.type || '-', 'gray') + tag(debt.paymentMethod || '-', 'gray');
+      if (debt.criticality === 'Alta') critical = tag('Prioridade Alta', 'blue');
+      return critical;
     }
 
-    function compactTagsForDebt(debt) {
-      let critical = tag('Normal', 'gray');
-      if (debt.criticality === 'Máxima') critical = tag('Prioridade Máxima', 'amber');
-      if (debt.criticality === 'Alta') critical = tag('Alta', 'blue');
-
-      let behavior = tag('Parcelada', 'green');
-      if (debt.behavior === 'Rolagem') behavior = tag('Rolagem', 'amber');
-      if (debt.behavior === 'Quitação única') behavior = tag('Quitação', 'blue');
-
-      return critical + behavior;
+    function compactTagsForDebt(debt, isNextTarget = false) {
+      return priorityTagForDebt(debt) + (isNextTarget ? tag('Próximo Alvo', 'red') : '');
     }
 
     function daysUntil(dateString) {
@@ -357,18 +344,23 @@
       '</div>';
 
       html += '<div class="installment-list compact-installments">' +
-        '<div class="installment-row header"><div>Parcela</div><div>Vencimento</div><div>Valor</div><div>Status</div></div>';
+        '<div class="installment-row header"><div>Parcela</div><div>Vencimento</div><div>Valor</div><div>Status</div><div>Ação</div></div>';
 
       if (!visible.length) {
         html += '<div class="installment-empty">' + escapeHtml(emptyText) + '</div>';
       } else {
         visible.forEach(item => {
           const statusClass = item.status === 'Paga' || item.status === 'Quitada' ? 'green' : item.status === 'Renegociada' ? 'blue' : 'amber';
+          const payment = paymentForInstallment(item.id);
+          const actionHtml = currentTab === 'paid'
+            ? (payment ? '<button class="ghost-btn mini-action" onclick="window.openDeleteModal(\'payment\', \'' + payment.id + '\')">Excluir pagamento</button>' : '')
+            : '<button class="ghost-btn mini-action" onclick="window.openPaymentForm(\'' + item.id + '\')">Registrar pagamento</button>';
           html += '<div class="installment-row">' +
             '<div data-label="Parcela"><strong>' + item.number + '/' + item.total + '</strong></div>' +
             '<div data-label="Vencimento">' + formatDateBR(item.dueDate) + '</div>' +
             '<div data-label="Valor">' + brl(item.expectedValue) + '</div>' +
             '<div data-label="Status"><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span></div>' +
+            '<div data-label="Ação">' + actionHtml + '</div>' +
           '</div>';
         });
       }
@@ -391,21 +383,21 @@
           ['Excluir dívida', 'openDeleteModal', 'danger']
         ],
         'Em espera': [
-          ['Mover para Dívidas Ativas', 'changeDebtStatus', 'Ativa'],
+          ['Mover para Rota Financeira', 'changeDebtStatus', 'Ativa'],
           ['Mover para Fora do Radar', 'changeDebtStatus', 'Fora do radar'],
           ['Quitar dívida', 'openPayoffModal'],
           ['Editar dívida', 'openDebtForm'],
           ['Excluir dívida', 'openDeleteModal', 'danger']
         ],
         'Fora do radar': [
-          ['Mover para Dívidas Ativas', 'changeDebtStatus', 'Ativa'],
+          ['Mover para Rota Financeira', 'changeDebtStatus', 'Ativa'],
           ['Mover para Em Espera', 'changeDebtStatus', 'Em espera'],
           ['Quitar dívida', 'openPayoffModal'],
           ['Editar dívida', 'openDebtForm'],
           ['Excluir dívida', 'openDeleteModal', 'danger']
         ],
         Quitada: [
-          ['Restaurar para Dívidas Ativas', 'changeDebtStatus', 'Ativa'],
+          ['Restaurar para Rota Financeira', 'changeDebtStatus', 'Ativa'],
           ['Restaurar para Em Espera', 'changeDebtStatus', 'Em espera'],
           ['Restaurar para Fora do Radar', 'changeDebtStatus', 'Fora do radar'],
           ['Editar dívida', 'openDebtForm'],
@@ -444,9 +436,7 @@
       const cardClass = 'debt-card' + toneClass + (isExpanded ? ' expanded' : '');
       const balance = debtBalance(debt);
       const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem Parcela';
-      const metaHtml = isExpanded
-        ? tagsForDebt(debt)
-        : compactTagsForDebt(debt) + '<span>' + escapeHtml(debt.behavior || '-') + '</span><span>' + escapeHtml(debt.type || '-') + '</span>';
+      const metaHtml = compactTagsForDebt(debt);
 
       return '<div class="' + cardClass + '">' +
         '<div class="debt-row">' +
@@ -463,18 +453,25 @@
           '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + installmentCount.paid + '/' + installmentCount.total + '</strong><small>' + progress + '% das parcelas</small><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
           '<button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button>' +
         '</div>' +
-        (isExpanded ? '<div class="debt-detail">' +
-          '<div class="debt-expanded-head">' +
-            '<div class="expanded-facts">' +
-              '<div><span>Criada em</span><strong>' + formatAnyDateBR(debt.createdAt) + '</strong></div>' +
-              '<div><span>Tipo</span><strong>' + escapeHtml(debt.type || '-') + '</strong></div>' +
-              '<div><span>Parcelas pagas</span><strong>' + installmentCount.paid + ' de ' + installmentCount.total + '</strong></div>' +
-              '<div><span>Próximo vencimento</span><strong>' + escapeHtml(nextLabel) + '</strong><small>' + escapeHtml(next ? dueHint(next.dueDate) : '') + '</small></div>' +
-            '</div>' +
-            debtActionMenu(debt) +
+        (isExpanded ? debtExpandedDetail(debt) : '') +
+      '</div>';
+    }
+
+    function debtExpandedDetail(debt) {
+      const next = nextInstallment(debt);
+      const installmentCount = installmentProgress(debt);
+      const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem Parcela';
+      return '<div class="debt-detail">' +
+        '<div class="debt-expanded-head">' +
+          '<div class="expanded-facts">' +
+            '<div><span>Criada em</span><strong>' + formatAnyDateBR(debt.createdAt) + '</strong></div>' +
+            '<div><span>Tipo</span><strong>' + escapeHtml(debt.type || '-') + '</strong></div>' +
+            '<div><span>Parcelas pagas</span><strong>' + installmentCount.paid + ' de ' + installmentCount.total + '</strong></div>' +
+            '<div><span>Próximo vencimento</span><strong>' + escapeHtml(nextLabel) + '</strong><small>' + escapeHtml(next ? dueHint(next.dueDate) : '') + '</small></div>' +
           '</div>' +
-          installmentRowsForDebt(debt) +
-        '</div>' : '') +
+          debtActionMenu(debt) +
+        '</div>' +
+        installmentRowsForDebt(debt) +
       '</div>';
     }
 
@@ -881,12 +878,6 @@
       '</div>';
     }
 
-    function routeStatusTag(debt, done, current) {
-      if (done) return tag('Concluída', 'green');
-      if (current) return tag('Próximo alvo', 'red');
-      return tag(debt.status || 'Ativa', 'blue');
-    }
-
     function routeInstallmentStatusLabel(debt) {
       const progress = installmentProgress(debt);
       return progress.paid + '/' + progress.total;
@@ -924,7 +915,7 @@
 
       if (!route.length) {
         nextTarget.innerHTML = '';
-        road.innerHTML = emptyCard('Rota vazia', 'Cadastre dívidas na aba Dívidas para montar sua ordem de quitação.');
+        road.innerHTML = emptyCard('Rota vazia', 'Cadastre dívidas na Rota Financeira para montar sua ordem de quitação.');
         return;
       }
 
@@ -933,7 +924,7 @@
         nextTarget.innerHTML = '<div class="next-target-card">' +
           '<div class="next-target-main">' +
             '<div class="target-icon">!</div>' +
-            '<div><div class="eyebrow">Próximo alvo</div><h2>' + escapeHtml(getCreditorName(next.creditorId) + ' · ' + next.name) + '</h2><div class="debt-meta">' + compactTagsForDebt(next) + '</div></div>' +
+            '<div><div class="eyebrow">Próximo alvo</div><h2>' + escapeHtml(getCreditorName(next.creditorId) + ' · ' + next.name) + '</h2><div class="debt-meta">' + compactTagsForDebt(next, true) + '</div></div>' +
           '</div>' +
           routeProgressHtml(nextProgress) +
           '<div class="next-target-stat"><span>Saldo</span><strong>' + brl(debtBalance(next)) + '</strong></div>' +
@@ -948,21 +939,26 @@
         const balance = debtBalance(debt);
         const done = debt.status === 'Quitada' || balance === 0;
         const current = !done && debt.id === next?.id;
+        const isExpanded = expandedDebtId === debt.id;
+        const nextItem = nextInstallment(debt);
+        const nextLabel = nextItem ? formatDateBR(nextItem.dueDate) : 'Sem parcela';
         const progressValue = done ? 100 : debtProgress(debt);
         const rank = done ? '✓' : route.filter(item => item.status === 'Ativa').findIndex(item => item.id === debt.id) + 1;
         const dragAttrs = done ? 'draggable="false"' : 'draggable="true" ondragstart="window.startRouteDrag(event, \'' + debt.id + '\')" ondragover="window.routeDragOver(event, \'' + debt.id + '\')" ondrop="window.dropRouteDebt(event, \'' + debt.id + '\')" ondragend="window.endRouteDrag()"';
         const reorderActions = done
           ? ''
           : '<button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">↑</button><button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">↓</button>';
-        return '<div class="route-item' + (done ? ' done' : '') + (current ? ' current' : '') + '" data-debt-id="' + debt.id + '" ' + dragAttrs + '>' +
+        return '<div class="route-item' + (done ? ' done' : '') + (current ? ' current' : '') + (isExpanded ? ' expanded' : '') + '" data-debt-id="' + debt.id + '" ' + dragAttrs + '>' +
           '<button class="drag-handle" title="' + (done ? 'Dívida concluída' : 'Arrastar para reordenar') + '"' + (done ? ' disabled' : '') + '>⋮⋮</button>' +
           '<div class="route-rank">' + rank + '</div>' +
-          '<div class="route-actions">' + reorderActions + '</div>' +
-          '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + routeStatusTag(debt, done, current) + '</div></div></div>' +
+          '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt, current) + '</div></div></div>' +
           routeProgressHtml(progressValue) +
           '<div class="route-stat"><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
           '<div class="route-stat"><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
+          '<div class="route-stat"><span>Próxima Parcela</span><strong>' + escapeHtml(nextLabel) + '</strong></div>' +
           '<div class="route-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(debt) + '</strong></div>' +
+          '<div class="route-actions">' + reorderActions + '<button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button></div>' +
+          (isExpanded ? debtExpandedDetail(debt) : '') +
         '</div>';
       }).join('');
     }
@@ -1191,7 +1187,7 @@
     }
 
     window.openDebtForm = function(mode = 'new', id = null, defaultStatus = 'Ativa') {
-      showPage('dividas');
+      showPage('trilha');
       closePaymentForm();
       window.closePayoffModal();
       editingDebtId = mode === 'edit' ? id : null;
@@ -1244,17 +1240,20 @@
       }
       expandedDebtId = nextExpanded;
       renderDebts();
+      renderTrail();
     };
 
     window.setDebtInstallmentTab = function(tab) {
       expandedDebtTab = tab === 'paid' ? 'paid' : 'pending';
       expandedDebtListMode = 'preview';
       renderDebts();
+      renderTrail();
     };
 
     window.showAllDebtInstallments = function() {
       expandedDebtListMode = 'all';
       renderDebts();
+      renderTrail();
     };
 
     window.filterByCreditor = function(id) {
@@ -1501,7 +1500,7 @@
       if (status !== 'Ativa' && selectedCreditorFilter !== 'all') selectedCreditorFilter = 'all';
       renderAll();
       const messages = {
-        Ativa: 'Dívida ativada com sucesso.',
+        Ativa: 'Dívida movida para Rota Financeira.',
         'Em espera': 'Dívida movida para espera.',
         'Fora do radar': 'Dívida movida para fora do radar.',
         Quitada: 'Dívida movida para quitadas.'
@@ -1598,7 +1597,6 @@
       window.closePayoffModal();
       rebuildIndexes();
       renderAll();
-      showPage('quitadas');
       showToast('Dívida quitada com sucesso.');
     };
 
@@ -1696,8 +1694,7 @@
       const debtWasPaidOff = paidOff.some(debt => debt.id === inst.debtId);
       closePaymentForm();
       renderAll();
-      showPage(debtWasPaidOff ? 'quitadas' : 'dividas');
-      showToast(debtWasPaidOff ? 'Pagamento registrado. Dívida movida para quitadas.' : 'Pagamento registrado com sucesso.');
+      showToast(debtWasPaidOff ? 'Pagamento registrado. Dívida concluída na Rota Financeira.' : 'Pagamento registrado com sucesso.');
     };
 
     window.saveCreditor = async function() {
@@ -1844,7 +1841,6 @@
         expandedDebtId = debtId;
         closeDeleteModal();
         renderAll();
-        showPage('dividas');
         showToast('Pagamento excluído com sucesso.');
       } else {
         const hasDebt = debts.some(d => d.creditorId === deleteContext.id);
@@ -1866,23 +1862,23 @@
     }
 
     window.goToDebtsAndNew = function(defaultStatus = 'Ativa') {
-      showPage('dividas');
+      showPage('trilha');
       window.openDebtForm('new', null, defaultStatus);
     };
 
     window.openDebtFromDashboard = function(id) {
-      showPage('dividas');
+      showPage('trilha');
       expandedDebtId = id;
-      renderDebts();
-      $('activeDebts').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      renderAll();
+      $('trailRoad').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     window.openDebtFromTrail = function(id) {
       const debt = debts.find(item => item.id === id);
-      showPage(debt && debt.status === 'Quitada' ? 'quitadas' : debt && debt.status === 'Fora do radar' ? 'radar' : debt && debt.status === 'Em espera' ? 'espera' : 'dividas');
+      showPage(debt && debt.status === 'Quitada' ? 'quitadas' : debt && debt.status === 'Fora do radar' ? 'radar' : debt && debt.status === 'Em espera' ? 'espera' : 'trilha');
       expandedDebtId = id;
-      renderDebts();
-      const target = debt && debt.status === 'Quitada' ? $('paidOffDebts') : debt && debt.status === 'Fora do radar' ? $('hiddenDebts') : debt && debt.status === 'Em espera' ? $('waitingDebts') : $('activeDebts');
+      renderAll();
+      const target = debt && debt.status === 'Quitada' ? $('paidOffDebts') : debt && debt.status === 'Fora do radar' ? $('hiddenDebts') : debt && debt.status === 'Em espera' ? $('waitingDebts') : $('trailRoad');
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 

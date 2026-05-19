@@ -19,7 +19,8 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 ## Projeto
 - Nome: Rota Financeira.
 - Objetivo: sistema web pessoal para gestao estrategica de dividas, pagamentos, prioridades e rota de quitacao.
-- Nome correto da aba principal de dividas em andamento: `Dividas Ativas`.
+- Nome correto da aba principal de dividas em andamento/priorizadas: `Rota Financeira`.
+- Nao usar mais `Dividas` ou `Dividas Ativas` como aba principal; estes nomes ficam descontinuados na navegacao.
 - Publicacao: GitHub Pages.
 - Repositorio GitHub: https://github.com/kupka1988/rota-financeira.git
 - Branch principal: `main`.

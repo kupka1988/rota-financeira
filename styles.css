@@ -289,7 +289,7 @@
     .route-panel-head .panel-title { margin: 0 0 4px; }
     .route-panel-head .panel-title span { color: var(--muted); font-size: 14px; font-weight: 600; }
     .route-list { display: grid; }
-    .route-item { display: grid; grid-template-columns: 24px 38px 72px minmax(250px, 2fr) minmax(108px, 0.55fr) minmax(108px, 0.48fr) minmax(96px, 0.42fr) minmax(70px, 0.28fr); gap: 10px; align-items: center; min-height: 76px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.018); }
+    .route-item { display: grid; grid-template-columns: 24px 38px minmax(210px, 1.25fr) minmax(150px, 0.9fr) minmax(108px, 0.55fr) minmax(108px, 0.5fr) minmax(126px, 0.58fr) minmax(82px, 0.38fr) minmax(112px, 0.5fr); gap: 10px; align-items: center; min-height: 76px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.018); }
     .route-item:last-child { border-bottom: 0; }
     .route-item.current { background: linear-gradient(90deg, rgba(216,164,65,0.12), rgba(255,255,255,0.018)); }
     .route-item.done { background: linear-gradient(90deg, rgba(63,185,133,0.09), rgba(255,255,255,0.012)); }
@@ -310,6 +310,7 @@
     .route-progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--green)); }
     .route-item.current .route-progress-fill { background: linear-gradient(90deg, #ec4e4e, var(--amber)); }
     .route-actions { display: flex; justify-content: flex-start; align-items: center; gap: 6px; min-width: 0; }
+    .route-item .debt-detail { grid-column: 1 / -1; margin: 4px -14px -12px; }
     .ghost-btn.subtle { width: 32px; height: 32px; padding: 0; color: var(--muted); }
 
     .debt-list { display: grid; gap: 10px; }
@@ -393,7 +394,8 @@
     .installment-list { margin-top:12px; border:1px solid var(--border); border-radius: 14px; overflow: hidden; }
     .installment-title { padding: 14px 16px; font-weight: 700; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.025); }
     .installment-row { display:grid; grid-template-columns: 0.6fr 1fr 1fr 1fr 1fr 0.8fr 1fr; gap:12px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--border); font-size: 13px; }
-    .compact-installments .installment-row { grid-template-columns: 0.7fr 1fr 1fr 0.8fr; min-height: 58px; }
+    .compact-installments .installment-row { grid-template-columns: 0.7fr 1fr 1fr 0.8fr minmax(132px, 0.8fr); min-height: 58px; }
+    .mini-action { min-height: 34px; padding: 8px 10px; font-size: 12px; }
     .installment-row:last-child { border-bottom: 0; }
     .installment-row.header { color: var(--muted); font-size: 12px; font-weight: 650; background: rgba(255,255,255,0.018); }
     .installment-empty { padding: 18px; color: var(--muted); font-size: 13px; }
