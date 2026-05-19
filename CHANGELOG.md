@@ -1,6 +1,7 @@
 # CHANGELOG - Rota Financeira
 
 ## Historico resumido
+- 2026-05-19: definida a pasta OneDrive como repositorio local oficial entre maquinas e regra para backups sempre no OneDrive.
 - 2026-05-17: criado arquivo de contexto como regra permanente do projeto.
 - 2026-05-17: tema claro definido como padrao.
 - 2026-05-17: filtros selecionados ajustados para contraste.

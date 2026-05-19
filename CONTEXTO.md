@@ -24,6 +24,13 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 - Repositorio GitHub: https://github.com/kupka1988/rota-financeira.git
 - Branch principal: `main`.
 
+## Regra de repositorio oficial
+- A pasta oficial de trabalho local e a pasta do OneDrive do projeto.
+- O OneDrive e a referencia local entre maquinas diferentes usadas com Codex.
+- Qualquer backup do projeto deve ser feito sempre dentro do OneDrive, preferencialmente na pasta `backups` do proprio projeto.
+- Clones, copias ou pastas Git locais fora do OneDrive servem apenas como area temporaria de edicao antes de sincronizar, commitar e publicar no GitHub Pages.
+- Nunca tratar uma pasta local fora do OneDrive como fonte oficial do projeto.
+
 ## Stack atual
 - HTML, CSS e JavaScript puro.
 - Arquivos principais: `index.html`, `styles.css`, `app.js`.
@@ -34,7 +41,7 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 - Pasta principal OneDrive: `C:\Users\felipe.k\OneDrive\Documentos\14. Sistemas Kupka\Rota Financeira (Dívidas)`.
 - Git local: a propria pasta OneDrive esta conectada ao remoto GitHub.
 - Backups: `C:\Users\felipe.k\OneDrive\Documentos\14. Sistemas Kupka\Rota Financeira (Dívidas)\backups`.
-- Por seguranca, apos atualizar o Git local, garantir que a pasta principal do OneDrive tambem receba as alteracoes correspondentes.
+- Por seguranca, apos editar em qualquer area temporaria, garantir que a pasta principal do OneDrive receba as alteracoes correspondentes antes de commit, push ou publicacao.
 
 ## Premissas tecnicas
 - Nunca limpar, sobrescrever ou recriar dados do Firebase.
@@ -57,11 +64,12 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 ## Fluxo de trabalho
 1. Ler `CONTEXTO.md` e `REGRAS_NEGOCIO.md`.
 2. Consultar os demais arquivos obrigatorios conforme a tarefa.
-3. Fazer backup dos arquivos alterados na pasta `backups` quando a mudanca for relevante.
-4. Trabalhar diretamente na pasta OneDrive.
-5. Validar sintaxe quando mexer em JavaScript.
-6. Revisar diff antes de commit.
-7. Atualizar a documentacao adequada ao finalizar tarefas relevantes.
-8. Commitar ao final de toda alteracao solicitada.
-9. Confirmar que a pasta principal do OneDrive esta atualizada com as mesmas alteracoes feitas no Git local.
-10. Dar push quando a tarefa envolver publicacao/entrega no remoto ou quando o usuario pedir.
+3. Confirmar que a pasta oficial em uso e a pasta OneDrive do projeto, ou que qualquer area temporaria sera sincronizada para ela antes de finalizar.
+4. Fazer backup dos arquivos alterados sempre no OneDrive, preferencialmente na pasta `backups`, quando a mudanca for relevante.
+5. Trabalhar diretamente na pasta OneDrive sempre que possivel.
+6. Validar sintaxe quando mexer em JavaScript.
+7. Revisar diff antes de commit.
+8. Atualizar a documentacao adequada ao finalizar tarefas relevantes.
+9. Commitar ao final de toda alteracao solicitada.
+10. Confirmar que a pasta principal do OneDrive esta atualizada com as mesmas alteracoes feitas no Git local.
+11. Dar push quando a tarefa envolver publicacao/entrega no remoto ou quando o usuario pedir.
