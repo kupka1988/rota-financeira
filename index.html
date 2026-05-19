@@ -99,6 +99,7 @@
         <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas</button>
         <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
         <button class="nav-item" data-page="radar"><span>◎</span> Fora do radar</button>
+        <button class="nav-item" data-page="quitadas"><span>✓</span> Quitadas</button>
         <button class="nav-item" data-page="renegociacao"><span>⇄</span> Renegociação</button>
         <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
         <button class="nav-item" data-page="historico"><span>↺</span> Histórico</button>
@@ -258,6 +259,15 @@
           </select>
         </div>
         <div class="debt-list" id="hiddenDebts"></div>
+      </section>
+
+      <section id="quitadas" class="page">
+        <div class="topbar">
+          <div><div class="eyebrow">Fechadas</div><h1>Dívidas quitadas</h1><div class="page-desc">Aqui ficam as dívidas sem parcelas abertas. Elas não entram no Dashboard nem nos cálculos da frente atual.</div></div>
+        </div>
+        <div id="paidOffCreditorFilters" class="filter-row"></div>
+        <div id="paidOffDebtMetrics" class="debt-metrics"></div>
+        <div class="debt-list" id="paidOffDebts"></div>
       </section>
 
       <section id="renegociacao" class="page">
