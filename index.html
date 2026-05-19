@@ -95,7 +95,7 @@
       </div>
       <nav>
         <button class="nav-item active" data-page="dashboard"><span>⌁</span> Dashboard</button>
-        <button class="nav-item" data-page="trilha"><span>◇</span> Trilha</button>
+        <button class="nav-item" data-page="trilha"><span>⇄</span> Rota</button>
         <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas</button>
         <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
         <button class="nav-item" data-page="radar"><span>◎</span> Fora do radar</button>
@@ -154,22 +154,33 @@
       <section id="trilha" class="page">
         <div class="topbar">
           <div>
-            <div class="eyebrow">Jornada de quitação</div>
-            <h1>Sua trilha até zerar as dívidas</h1>
-            <div class="page-desc">Defina a ordem em que deseja quitar as dívidas e acompanhe sua posição até a linha de chegada.</div>
+            <div class="eyebrow">Rota financeira</div>
+            <h1>Sua rota de quitação</h1>
+            <div class="page-desc">Organize a ordem das dívidas que passaram por Dívidas. Arraste para ajustar sua estratégia e acompanhe a evolução da jornada.</div>
           </div>
           <button class="primary-action" onclick="goToDebtsAndNew()">+ Nova dívida</button>
         </div>
-        <div id="trailMetrics" class="debt-metrics"></div>
-        <div class="trail-stage">
-          <div class="trail-avatar">
-            <div class="trail-person">RF</div>
+        <div id="trailMetrics" class="route-summary"></div>
+        <div id="nextTarget"></div>
+        <div class="route-panel">
+          <div class="route-panel-head">
             <div>
-              <div class="metric-label">Você está aqui</div>
-              <div class="debt-name" id="trailPositionTitle">Preparando a rota</div>
+              <h2 class="panel-title">Sua rota <span>(ordem de prioridade)</span></h2>
+              <div class="metric-note" id="trailPositionTitle">Preparando a rota</div>
+            </div>
+            <div class="route-head-actions">
+              <span>Prioridade manual</span>
+              <button class="ghost-btn" onclick="showToast('Arraste uma dívida pela alça ou use subir/descer para reorganizar a rota.')">Como funciona</button>
             </div>
           </div>
-          <div class="trail-road" id="trailRoad"></div>
+          <div class="route-list" id="trailRoad"></div>
+        </div>
+        <div class="route-note">
+          <div class="metric-icon green">✓</div>
+          <div>
+            <strong>Em espera e Fora do radar não aparecem aqui.</strong>
+            <span>A rota preserva as dívidas quitadas como histórico concluído da sua jornada financeira.</span>
+          </div>
         </div>
       </section>
 
@@ -188,7 +199,7 @@
             <option value="installment-asc">Menor Parcela</option>
             <option value="progress-asc">Menor Progresso</option>
             <option value="balance-asc">Menor Saldo Devedor</option>
-            <option value="trail">Ordem da Trilha</option>
+            <option value="trail">Ordem da Rota</option>
             <option value="priority" selected>Prioridade</option>
             <option value="next-due">Próxima Parcela</option>
           </select>
@@ -207,7 +218,7 @@
             <div><label>Criticidade</label><select id="debtCriticality"><option>Alta</option><option>Máxima</option><option>Normal</option></select></div>
             <div><label>Comportamento</label><select id="debtBehavior"><option>Parcelada</option><option>Quitação única</option><option>Rolagem</option></select></div>
             <div><label>Valor de quitação hoje</label><input id="debtPayoffToday" inputmode="decimal" placeholder="R$ 0,00" /></div>
-            <div><label>Ordem na trilha</label><input id="debtPayoffOrder" inputmode="numeric" placeholder="Ex.: 1" /></div>
+            <div><label>Ordem na rota</label><input id="debtPayoffOrder" inputmode="numeric" placeholder="Ex.: 1" /></div>
             <div class="span-4"><label>Observações</label><textarea id="debtNotes" placeholder="Condição atual, possibilidade de renegociação, contexto interno..."></textarea></div>
           </div>
           <div class="form-actions"><button class="primary-action" onclick="saveDebt()">Salvar dívida</button><button class="ghost-btn" onclick="closeDebtForm()">Cancelar</button></div>
@@ -231,7 +242,7 @@
             <option value="installment-asc">Menor Parcela</option>
             <option value="progress-asc">Menor Progresso</option>
             <option value="balance-asc">Menor Saldo Devedor</option>
-            <option value="trail">Ordem da Trilha</option>
+            <option value="trail">Ordem da Rota</option>
             <option value="priority" selected>Prioridade</option>
             <option value="next-due">Próxima Parcela</option>
           </select>

@@ -263,23 +263,53 @@
     .insight-tile strong { display: block; color: var(--text); margin-top: 8px; line-height: 1.25; }
     .insight-value { margin-top: 9px; font-size: 20px; color: var(--text); font-weight: 800; letter-spacing: -0.025em; }
     .insight-tile small { display: block; margin-top: 7px; color: var(--muted); line-height: 1.35; }
-    .trail-stage { display: grid; grid-template-columns: 260px 1fr; gap: 18px; align-items: start; }
-    .trail-avatar { position: sticky; top: 24px; display: grid; gap: 14px; padding: 18px; border: 1px solid rgba(63,185,133,0.28); border-radius: var(--radius-lg); background: linear-gradient(180deg, rgba(63,185,133,0.12), rgba(255,255,255,0.02)), var(--panel); box-shadow: var(--shadow); }
-    .trail-person { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 24px; background: linear-gradient(135deg, var(--green), var(--blue)); color: #071018; font-size: 22px; font-weight: 700; box-shadow: 0 20px 50px rgba(63,185,133,0.18); }
-    .trail-road { position: relative; display: grid; gap: 14px; }
-    .trail-road::before { content: ""; position: absolute; left: 24px; top: 18px; bottom: 18px; width: 2px; background: linear-gradient(180deg, var(--green), var(--amber), var(--blue)); opacity: 0.55; }
-    .trail-step { position: relative; display: grid; grid-template-columns: 50px 1fr; gap: 14px; align-items: start; }
-    .trail-marker { position: relative; z-index: 1; width: 50px; height: 50px; display: grid; place-items: center; border-radius: 18px; border: 1px solid var(--border-strong); background: var(--panel-2); color: #ffd77f; font-weight: 700; box-shadow: var(--shadow); }
-    .trail-step.current .trail-marker { background: linear-gradient(135deg, var(--amber), #f4cc78); color: #191007; }
-    .trail-step.done .trail-marker { background: linear-gradient(135deg, var(--green), #7addad); color: #071018; }
-    .trail-card { padding: 16px; border: 1px solid var(--border); border-radius: 18px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018)), var(--panel); box-shadow: var(--shadow); }
-    .trail-step.current .trail-card { border-color: rgba(216,164,65,0.52); background: linear-gradient(90deg, rgba(216,164,65,0.14), rgba(255,255,255,0.018)), var(--panel); }
-    .trail-card-head { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
-    .trail-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .trail-facts div { padding: 10px; border-radius: 13px; border: 1px solid var(--border); background: rgba(255,255,255,0.026); }
-    .trail-facts span { display: block; color: var(--muted); font-size: 11px; font-weight: 650; margin-bottom: 5px; }
-    .trail-facts strong { color: var(--text); font-size: 14px; }
-    .trail-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .route-summary { display: grid; grid-template-columns: 116px minmax(220px, 1.2fr) repeat(4, minmax(150px, 1fr)); gap: 1px; align-items: stretch; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--border); box-shadow: var(--shadow); }
+    .route-summary .debt-metric { box-shadow: none; border: 0; margin: 0; }
+    .route-donut { display: grid; place-items: center; align-content: center; gap: 2px; background: conic-gradient(var(--green) var(--route-progress), rgba(255,255,255,0.09) 0); min-height: 116px; position: relative; }
+    .route-donut::after { content: ""; position: absolute; inset: 16px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); }
+    .route-donut strong, .route-donut span { position: relative; z-index: 1; }
+    .route-donut strong { font-size: 24px; letter-spacing: -0.03em; }
+    .route-donut span { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .route-summary-copy { display: grid; align-content: center; gap: 6px; padding: 18px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--panel); }
+    .route-summary-copy strong { display: block; font-size: 17px; color: var(--text); }
+    .route-summary-copy span { color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .next-target-card { display: grid; grid-template-columns: minmax(310px, 1.35fr) minmax(190px, 0.8fr) repeat(3, minmax(130px, 0.55fr)) auto; gap: 18px; align-items: center; margin-bottom: 16px; padding: 18px 22px; border-radius: var(--radius-lg); border: 1px solid rgba(216,164,65,0.34); background: linear-gradient(90deg, rgba(216,164,65,0.16), rgba(255,255,255,0.025)), var(--panel); box-shadow: var(--shadow); }
+    .next-target-card.complete { grid-template-columns: 1fr; border-color: rgba(63,185,133,0.34); background: linear-gradient(90deg, rgba(63,185,133,0.14), rgba(255,255,255,0.025)), var(--panel); }
+    .next-target-main { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .next-target-main h2 { margin: 3px 0 0; font-size: 20px; letter-spacing: -0.02em; line-height: 1.2; }
+    .target-icon { width: 54px; height: 54px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 18px; background: linear-gradient(135deg, #ec4e4e, #ff8d5c); color: white; font-size: 22px; font-weight: 800; box-shadow: 0 14px 38px rgba(216,100,100,0.18); }
+    .complete .target-icon { background: linear-gradient(135deg, var(--green), #7addad); color: #071018; }
+    .next-target-stat span, .route-stat span { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+    .next-target-stat strong, .route-stat strong { color: var(--text); font-size: 16px; white-space: nowrap; }
+    .route-panel { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+    .route-panel-head { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.026); }
+    .route-panel-head .panel-title { margin: 0 0 4px; }
+    .route-panel-head .panel-title span { color: var(--muted); font-size: 14px; font-weight: 600; }
+    .route-head-actions { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .route-list { display: grid; }
+    .route-item { display: grid; grid-template-columns: 28px 44px minmax(240px, 1.25fr) minmax(170px, 0.8fr) minmax(105px, 0.52fr) minmax(105px, 0.52fr) minmax(96px, 0.45fr) minmax(112px, 0.48fr) auto; gap: 14px; align-items: center; min-height: 76px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.018); }
+    .route-item:last-child { border-bottom: 0; }
+    .route-item.current { background: linear-gradient(90deg, rgba(216,164,65,0.12), rgba(255,255,255,0.018)); }
+    .route-item.done { background: linear-gradient(90deg, rgba(63,185,133,0.09), rgba(255,255,255,0.012)); }
+    .route-item.dragging { opacity: 0.55; }
+    .drag-handle { width: 28px; height: 34px; border: 0; background: transparent; color: var(--muted); cursor: grab; font-weight: 800; line-height: 0.75; letter-spacing: -0.18em; }
+    .drag-handle:active { cursor: grabbing; }
+    .route-rank { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(216,164,65,0.42); color: #ffd77f; background: rgba(216,164,65,0.10); font-weight: 800; }
+    .route-item.done .route-rank { color: #071018; border-color: transparent; background: linear-gradient(135deg, var(--green), #7addad); }
+    .route-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .route-title .debt-name { font-size: 15px; line-height: 1.25; }
+    .route-title .creditor-logo { width: 42px; height: 42px; border-radius: 14px; }
+    .route-progress-top { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 700; margin-bottom: 7px; }
+    .route-progress-top strong { color: var(--text); }
+    .route-progress-track { height: 7px; border-radius: 999px; background: rgba(255,255,255,0.09); overflow: hidden; }
+    .route-progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--green)); }
+    .route-item.current .route-progress-fill { background: linear-gradient(90deg, #ec4e4e, var(--amber)); }
+    .route-actions { display: flex; align-items: center; gap: 6px; }
+    .ghost-btn.subtle { width: 32px; height: 32px; padding: 0; color: var(--muted); }
+    .route-open { min-width: 78px; color: var(--green); border-color: rgba(63,185,133,0.42); }
+    .route-note { display: grid; grid-template-columns: 42px 1fr auto; gap: 14px; align-items: center; margin-top: 14px; padding: 14px 16px; border: 1px solid rgba(63,185,133,0.26); border-radius: 16px; background: linear-gradient(90deg, rgba(63,185,133,0.10), rgba(255,255,255,0.018)), var(--panel); }
+    .route-note strong { display: block; color: var(--text); margin-bottom: 4px; }
+    .route-note span { color: var(--muted); font-size: 13px; line-height: 1.35; }
 
     .debt-list { display: grid; gap: 10px; }
     .debt-card { padding: 0; overflow: visible; }
@@ -411,8 +441,12 @@
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
       .debt-summary { grid-template-columns: 1fr; }
       .debt-insights { grid-template-columns: 1fr; }
-      .trail-stage { grid-template-columns: 1fr; }
-      .trail-avatar { position: relative; top: auto; grid-template-columns: 72px 1fr; align-items: center; }
+      .route-summary { grid-template-columns: 116px 1fr 1fr; }
+      .route-summary-copy { grid-column: span 2; }
+      .next-target-card { grid-template-columns: minmax(280px, 1fr) minmax(180px, 0.8fr) repeat(2, minmax(120px, 0.55fr)); }
+      .next-target-card .route-open { grid-column: 1 / -1; justify-self: start; }
+      .route-item { grid-template-columns: 28px 40px minmax(260px, 1fr) minmax(160px, 0.8fr) minmax(104px, 0.5fr) minmax(104px, 0.5fr); }
+      .route-actions { grid-column: 3 / -1; justify-self: start; }
     }
 
     @media (max-width: 980px) {
@@ -448,6 +482,17 @@
       .payment-row { grid-template-columns: 1fr 1fr; }
       .history-grid { grid-template-columns: 1fr; }
       .installment-row.header { display: none; }
+      .route-summary { grid-template-columns: 1fr 1fr; }
+      .route-donut { min-height: 132px; }
+      .route-summary-copy { grid-column: span 1; }
+      .next-target-card { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .next-target-main, .next-target-card .route-progress, .next-target-card .route-open { grid-column: 1 / -1; }
+      .route-panel-head { align-items: flex-start; flex-direction: column; }
+      .route-item { grid-template-columns: 28px 38px minmax(0, 1fr); gap: 10px; align-items: start; }
+      .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: 3; }
+      .route-stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
+      .route-stat span { margin-bottom: 0; }
+      .route-actions { flex-wrap: wrap; }
     }
 
     @media (max-width: 560px) {
@@ -479,7 +524,8 @@
       body[data-theme="light"] .installment-row,
       body[data-theme="light"] .renegotiation-row,
       body[data-theme="light"] .payment-row,
-      body[data-theme="light"] .trail-facts div { background: rgba(255,255,255,0.72); }
+      body[data-theme="light"] .route-stat,
+      body[data-theme="light"] .next-target-stat { background: rgba(255,255,255,0.72); }
       .debt-metric.creditor-panel { grid-column: auto; }
       .panel-filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; }
       .mini-filter { flex: 0 0 auto; }
@@ -519,16 +565,21 @@
       .front-row .priority-badge, .front-row .front-value, .front-row .ghost-btn { grid-column: 2; justify-self: start; }
       .dashboard-insights { grid-template-columns: 1fr; }
       .panel-head { align-items: flex-start; flex-direction: column; gap: 4px; }
-      .trail-avatar { grid-template-columns: 52px 1fr; padding: 14px; border-radius: 18px; }
-      .trail-person { width: 52px; height: 52px; border-radius: 18px; font-size: 16px; }
-      .trail-road { gap: 12px; }
-      .trail-road::before { left: 18px; }
-      .trail-step { grid-template-columns: 38px 1fr; gap: 10px; }
-      .trail-marker { width: 38px; height: 38px; border-radius: 14px; font-size: 12px; }
-      .trail-card { padding: 13px; border-radius: 16px; }
-      .trail-card-head { align-items: flex-start; }
-      .trail-facts { grid-template-columns: 1fr; gap: 8px; }
-      .trail-actions .ghost-btn { flex: 1 1 92px; }
+      .route-summary { grid-template-columns: 1fr; gap: 8px; border: 0; background: transparent; box-shadow: none; }
+      .route-summary .debt-metric, .route-donut, .route-summary-copy { border: 1px solid var(--border); border-radius: 16px; }
+      .route-donut { min-height: 116px; }
+      .next-target-card { grid-template-columns: 1fr; padding: 16px; border-radius: 16px; }
+      .next-target-stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
+      .next-target-stat span { margin-bottom: 0; }
+      .route-panel { border-radius: 16px; }
+      .route-panel-head { padding: 14px; }
+      .route-head-actions { width: 100%; justify-content: space-between; }
+      .route-item { padding: 12px; }
+      .drag-handle { width: 24px; }
+      .route-title { align-items: flex-start; }
+      .route-title .creditor-logo { width: 38px; height: 38px; border-radius: 13px; }
+      .route-open { flex: 1 1 120px; min-height: 36px; }
+      .route-note { grid-template-columns: 1fr; }
       .form-card { padding: 16px; border-radius: 16px; }
       .form-grid { gap: 12px; }
       .logo-upload { grid-template-columns: 48px 1fr; padding: 10px; }

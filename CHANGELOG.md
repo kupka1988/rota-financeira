@@ -23,6 +23,7 @@
 - 2026-05-19: documentacao reorganizada em `CONTEXTO.md`, `REGRAS_NEGOCIO.md`, `DESIGN_SYSTEM.md`, `ROADMAP.md` e `CHANGELOG.md`.
 - 2026-05-19: Dashboard reorganizado como tela estrategica com proxima acao recomendada, resumo compacto, pressao por meses, vencimentos ativos, frente de pagamento e insights uteis.
 - 2026-05-19: fluxo de trabalho ajustado para finalizar alteracoes com atualizacao dos MDs e commit Git.
+- 2026-05-19: aba `Trilha` renomeada para `Rota` e redesenhada como roadmap estrategico com resumo, proximo alvo, lista compacta, quitadas no historico e reordenacao por arrastar.
 
 ## Referencias de commits
 - Commit remoto mais recente conhecido antes da reorganizacao: `d17333c` (`Ajusta fluxo de pagamento em dividas`).

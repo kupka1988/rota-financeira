@@ -1,7 +1,7 @@
 # REGRAS DE NEGOCIO - Rota Financeira
 
 ## Regras gerais
-- O sistema possui abas: Dashboard, Trilha, Dividas, Em espera, Fora do radar, Renegociacao, Pagamentos, Historico, Configuracoes.
+- O sistema possui abas: Dashboard, Rota, Dividas, Em espera, Fora do radar, Quitadas, Renegociacao, Pagamentos, Historico, Configuracoes.
 - Nao criar botoes sem implementacao.
 - Antes de excluir, remover corretamente dados vinculados.
 
@@ -18,10 +18,18 @@
 - Frente de pagamento ordena dividas ativas por prioridade estrategica considerando vencimento proximo, impacto mensal, saldo em aberto, oportunidade de quitacao, atraso e criticidade manual.
 - Insights devem ser uteis para decisao; evitar graficos grandes que nao apoiem acao.
 
-## Trilha
-- Deve mostrar apenas dividas ativas.
-- Nao mostrar dividas em espera.
-- Permite ordenar a rota de quitacao.
+## Rota
+- Funciona como visao estrategica da ordem de quitacao das dividas.
+- Considera apenas dividas que passaram pela aba Dividas.
+- Mostra dividas ativas e dividas quitadas.
+- Nao mostra dividas em espera.
+- Nao mostra dividas fora do radar.
+- Dividas quitadas permanecem na rota como concluidas, preservando historico da jornada.
+- Permite ordenar a rota de quitacao por prioridade manual.
+- Preferencia de ordenacao: drag and drop.
+- Fallback de ordenacao: botoes discretos de subir/descer.
+- Ordem deve ser salva no Firebase em `payoffOrder`.
+- Novas dividas ativas entram no final da rota.
 
 ## Dividas
 - Mostra progresso em quantidade de parcelas, ex.: `2/12`.
@@ -42,7 +50,12 @@
 ## Em espera
 - Mostra dividas fora da frente atual.
 - Mostra progresso em quantidade de parcelas, ex.: `2/12`.
-- Dividas em espera nao entram na Trilha.
+- Dividas em espera nao entram na Rota.
+
+## Quitadas
+- Mostra dividas sem parcelas abertas.
+- Nao entra no Dashboard, Renegociacao ou divida total reconhecida.
+- Permanece na Rota como item concluido quando tiver passado pela frente de Dividas.
 
 ## Fora do radar
 - Status para dividas reconhecidas que nao entram no Dashboard.
