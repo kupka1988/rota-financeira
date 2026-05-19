@@ -32,6 +32,7 @@
 - Fallback de ordenacao: botoes discretos de subir/descer.
 - Ordem deve ser salva no Firebase em `payoffOrder`.
 - Novas dividas ativas entram no final da rota.
+- Dividas movidas de `Em espera` ou `Fora do radar` para `Ativa` entram no final das ativas, antes das quitadas.
 
 ## Dividas
 - Mostra progresso em quantidade de parcelas, ex.: `2/12`.

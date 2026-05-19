@@ -704,6 +704,13 @@
       return max + 1;
     }
 
+    function nextActiveRouteOrder(exceptId = null) {
+      const max = debts
+        .filter(debt => debt.id !== exceptId && debt.status === 'Ativa')
+        .reduce((value, debt) => Math.max(value, Number(debt.payoffOrder || 0)), 0);
+      return max + 1;
+    }
+
     function renderHistory() {
       const metrics = $('historyMetrics');
       const list = $('historyList');
@@ -855,10 +862,9 @@
       return tag(debt.status || 'Ativa', 'blue');
     }
 
-    function routeRemainingLabel(debt) {
+    function routeInstallmentStatusLabel(debt) {
       const progress = installmentProgress(debt);
-      const remaining = remainingInstallmentsCount(debt);
-      return remaining + '/' + progress.total;
+      return progress.paid + '/' + progress.total;
     }
 
     function renderTrail() {
@@ -883,8 +889,8 @@
         '<div class="route-summary-metrics">' +
         debtMetric('Total de dívidas', String(route.length), '⇄', 'blue') +
         debtMetric('Saldo total', brl(totalBalance), '▣', 'red') +
-        debtMetric('Compromisso mensal', brl(monthlyCommitment), '▤', 'green') +
         debtMetric('Concluídas', String(completed), '✓', 'green') +
+        debtMetric('Compromisso mensal', brl(monthlyCommitment), '▤', 'green') +
         '</div>';
 
       position.textContent = next
@@ -902,12 +908,12 @@
         nextTarget.innerHTML = '<div class="next-target-card">' +
           '<div class="next-target-main">' +
             '<div class="target-icon">!</div>' +
-            '<div><div class="eyebrow">Próximo alvo</div><h2>' + escapeHtml(getCreditorName(next.creditorId) + ' · ' + next.name) + '</h2><div class="debt-meta">' + compactTagsForDebt(next) + '</div><button class="ghost-btn route-open target-open" onclick="window.openDebtFromTrail(\'' + next.id + '\')">Abrir dívida</button></div>' +
+            '<div><div class="eyebrow">Próximo alvo</div><h2>' + escapeHtml(getCreditorName(next.creditorId) + ' · ' + next.name) + '</h2><div class="debt-meta">' + compactTagsForDebt(next) + '</div></div>' +
           '</div>' +
           routeProgressHtml(nextProgress) +
           '<div class="next-target-stat"><span>Saldo</span><strong>' + brl(debtBalance(next)) + '</strong></div>' +
           '<div class="next-target-stat"><span>Parcela</span><strong>' + brl(next.installmentValue) + '</strong></div>' +
-          '<div class="next-target-stat"><span>Parcelas restantes</span><strong>' + routeRemainingLabel(next) + '</strong></div>' +
+          '<div class="next-target-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(next) + '</strong></div>' +
         '</div>';
       } else {
         nextTarget.innerHTML = '<div class="next-target-card complete"><div class="next-target-main"><div class="target-icon">✓</div><div><div class="eyebrow">Jornada concluída</div><h2>Todas as dívidas da rota foram quitadas</h2><div class="debt-meta">Seu histórico permanece aqui para mostrar o caminho percorrido.</div></div></div></div>';
@@ -926,12 +932,12 @@
         return '<div class="route-item' + (done ? ' done' : '') + (current ? ' current' : '') + '" data-debt-id="' + debt.id + '" ' + dragAttrs + '>' +
           '<button class="drag-handle" title="' + (done ? 'Dívida concluída' : 'Arrastar para reordenar') + '"' + (done ? ' disabled' : '') + '>⋮⋮</button>' +
           '<div class="route-rank">' + rank + '</div>' +
+          '<div class="route-actions">' + reorderActions + '</div>' +
           '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + routeStatusTag(debt, done, current) + '</div></div></div>' +
           routeProgressHtml(progressValue) +
           '<div class="route-stat"><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
           '<div class="route-stat"><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
-          '<div class="route-stat"><span>Restantes</span><strong>' + routeRemainingLabel(debt) + '</strong></div>' +
-          '<div class="route-actions">' + reorderActions + '<button class="ghost-btn route-open" onclick="window.openDebtFromTrail(\'' + debt.id + '\')">Abrir</button></div>' +
+          '<div class="route-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(debt) + '</strong></div>' +
         '</div>';
       }).join('');
     }
@@ -1441,9 +1447,14 @@
     }
 
     window.changeDebtStatus = async function(id, status) {
-      await updateDoc(doc(db, 'debts', id), { status, updatedAt: serverTimestamp() });
       const debt = debts.find(d => d.id === id);
-      if (debt) debt.status = status;
+      const payload = { status, updatedAt: serverTimestamp() };
+      if (status === 'Ativa') payload.payoffOrder = nextActiveRouteOrder(id);
+      await updateDoc(doc(db, 'debts', id), payload);
+      if (debt) {
+        debt.status = status;
+        if (payload.payoffOrder) debt.payoffOrder = payload.payoffOrder;
+      }
       if (status !== 'Ativa' && selectedCreditorFilter !== 'all') selectedCreditorFilter = 'all';
       renderAll();
       const messages = {

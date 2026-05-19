@@ -25,6 +25,7 @@
 - 2026-05-19: fluxo de trabalho ajustado para finalizar alteracoes com atualizacao dos MDs e commit Git.
 - 2026-05-19: aba `Trilha` renomeada para `Rota` e redesenhada como roadmap estrategico com resumo, proximo alvo, lista compacta, quitadas no historico e reordenacao por arrastar.
 - 2026-05-19: refinada responsividade da Rota, contraste da posicao, botoes de ordenacao, layout do proximo alvo e bloqueio de reordenacao para quitadas.
+- 2026-05-19: Rota ajustada para exibir status pago/total, remover botoes abrir, ampliar progresso e enviar dividas ativadas ao fim das ativas.
 
 ## Referencias de commits
 - Commit remoto mais recente conhecido antes da reorganizacao: `d17333c` (`Ajusta fluxo de pagamento em dividas`).
