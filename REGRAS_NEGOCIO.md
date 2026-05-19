@@ -25,6 +25,8 @@
 - Nao mostra dividas em espera.
 - Nao mostra dividas fora do radar.
 - Dividas quitadas permanecem na rota como concluidas, preservando historico da jornada.
+- Dividas quitadas ficam sempre no final da rota.
+- Dividas quitadas nao podem ser reordenadas por drag and drop nem pelos botoes subir/descer.
 - Permite ordenar a rota de quitacao por prioridade manual.
 - Preferencia de ordenacao: drag and drop.
 - Fallback de ordenacao: botoes discretos de subir/descer.

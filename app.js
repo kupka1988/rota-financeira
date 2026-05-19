@@ -682,9 +682,13 @@
     }
 
     function orderedTrailDebts() {
-      return debts
-        .filter(debt => debt.status === 'Ativa' || debt.status === 'Quitada')
+      const active = debts
+        .filter(debt => debt.status === 'Ativa')
         .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+      const paidOff = debts
+        .filter(debt => debt.status === 'Quitada')
+        .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+      return [...active, ...paidOff];
     }
 
     function eligibleRenegotiationDebts() {
@@ -876,10 +880,12 @@
       metrics.innerHTML =
         '<div class="route-donut" style="--route-progress:' + progress + '%;"><strong>' + progress + '%</strong><span>jornada</span></div>' +
         '<div class="route-summary-copy"><div class="metric-label">Progresso da sua jornada</div><strong>Você já quitou ' + completed + ' de ' + route.length + ' dívidas</strong><span>' + (route.length ? 'Continue avançando na ordem definida para sua rota.' : 'Cadastre uma dívida ativa para iniciar sua rota.') + '</span></div>' +
+        '<div class="route-summary-metrics">' +
         debtMetric('Total de dívidas', String(route.length), '⇄', 'blue') +
         debtMetric('Saldo total', brl(totalBalance), '▣', 'red') +
         debtMetric('Compromisso mensal', brl(monthlyCommitment), '▤', 'green') +
-        debtMetric('Concluídas', String(completed), '✓', 'green');
+        debtMetric('Concluídas', String(completed), '✓', 'green') +
+        '</div>';
 
       position.textContent = next
         ? 'Próximo alvo: ' + getCreditorName(next.creditorId) + ' · ' + next.name
@@ -896,13 +902,12 @@
         nextTarget.innerHTML = '<div class="next-target-card">' +
           '<div class="next-target-main">' +
             '<div class="target-icon">!</div>' +
-            '<div><div class="eyebrow">Próximo alvo</div><h2>' + escapeHtml(getCreditorName(next.creditorId) + ' · ' + next.name) + '</h2><div class="debt-meta">' + compactTagsForDebt(next) + '</div></div>' +
+            '<div><div class="eyebrow">Próximo alvo</div><h2>' + escapeHtml(getCreditorName(next.creditorId) + ' · ' + next.name) + '</h2><div class="debt-meta">' + compactTagsForDebt(next) + '</div><button class="ghost-btn route-open target-open" onclick="window.openDebtFromTrail(\'' + next.id + '\')">Abrir dívida</button></div>' +
           '</div>' +
           routeProgressHtml(nextProgress) +
           '<div class="next-target-stat"><span>Saldo</span><strong>' + brl(debtBalance(next)) + '</strong></div>' +
           '<div class="next-target-stat"><span>Parcela</span><strong>' + brl(next.installmentValue) + '</strong></div>' +
           '<div class="next-target-stat"><span>Parcelas restantes</span><strong>' + routeRemainingLabel(next) + '</strong></div>' +
-          '<button class="ghost-btn route-open" onclick="window.openDebtFromTrail(\'' + next.id + '\')">Abrir dívida</button>' +
         '</div>';
       } else {
         nextTarget.innerHTML = '<div class="next-target-card complete"><div class="next-target-main"><div class="target-icon">✓</div><div><div class="eyebrow">Jornada concluída</div><h2>Todas as dívidas da rota foram quitadas</h2><div class="debt-meta">Seu histórico permanece aqui para mostrar o caminho percorrido.</div></div></div></div>';
@@ -913,16 +918,20 @@
         const done = debt.status === 'Quitada' || balance === 0;
         const current = !done && debt.id === next?.id;
         const progressValue = done ? 100 : debtProgress(debt);
-        return '<div class="route-item' + (done ? ' done' : '') + (current ? ' current' : '') + '" draggable="true" data-debt-id="' + debt.id + '" ondragstart="window.startRouteDrag(event, \'' + debt.id + '\')" ondragover="window.routeDragOver(event, \'' + debt.id + '\')" ondrop="window.dropRouteDebt(event, \'' + debt.id + '\')" ondragend="window.endRouteDrag()">' +
-          '<button class="drag-handle" title="Arrastar para reordenar">⋮⋮</button>' +
-          '<div class="route-rank">' + (done ? '✓' : index + 1) + '</div>' +
-          '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + '</div></div></div>' +
+        const rank = done ? '✓' : route.filter(item => item.status === 'Ativa').findIndex(item => item.id === debt.id) + 1;
+        const dragAttrs = done ? 'draggable="false"' : 'draggable="true" ondragstart="window.startRouteDrag(event, \'' + debt.id + '\')" ondragover="window.routeDragOver(event, \'' + debt.id + '\')" ondrop="window.dropRouteDebt(event, \'' + debt.id + '\')" ondragend="window.endRouteDrag()"';
+        const reorderActions = done
+          ? ''
+          : '<button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">↑</button><button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">↓</button>';
+        return '<div class="route-item' + (done ? ' done' : '') + (current ? ' current' : '') + '" data-debt-id="' + debt.id + '" ' + dragAttrs + '>' +
+          '<button class="drag-handle" title="' + (done ? 'Dívida concluída' : 'Arrastar para reordenar') + '"' + (done ? ' disabled' : '') + '>⋮⋮</button>' +
+          '<div class="route-rank">' + rank + '</div>' +
+          '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + routeStatusTag(debt, done, current) + '</div></div></div>' +
           routeProgressHtml(progressValue) +
           '<div class="route-stat"><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
           '<div class="route-stat"><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
           '<div class="route-stat"><span>Restantes</span><strong>' + routeRemainingLabel(debt) + '</strong></div>' +
-          '<div class="route-status">' + routeStatusTag(debt, done, current) + '</div>' +
-          '<div class="route-actions"><button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">↑</button><button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">↓</button><button class="ghost-btn route-open" onclick="window.openDebtFromTrail(\'' + debt.id + '\')">Abrir</button></div>' +
+          '<div class="route-actions">' + reorderActions + '<button class="ghost-btn route-open" onclick="window.openDebtFromTrail(\'' + debt.id + '\')">Abrir</button></div>' +
         '</div>';
       }).join('');
     }
@@ -1764,7 +1773,11 @@
     }
 
     window.moveDebtInTrail = async function(id, direction) {
-      const route = orderedTrailDebts().map((debt, index) => ({ ...debt, payoffOrder: index + 1 }));
+      const targetDebt = debts.find(debt => debt.id === id);
+      if (!targetDebt || targetDebt.status === 'Quitada') return;
+      const route = orderedTrailDebts()
+        .filter(debt => debt.status === 'Ativa')
+        .map((debt, index) => ({ ...debt, payoffOrder: index + 1 }));
       const currentIndex = route.findIndex(debt => debt.id === id);
       const nextIndex = currentIndex + direction;
       if (currentIndex < 0 || nextIndex < 0 || nextIndex >= route.length) return;
@@ -1776,6 +1789,8 @@
     };
 
     window.startRouteDrag = function(event, id) {
+      const debt = debts.find(item => item.id === id);
+      if (!debt || debt.status === 'Quitada') return;
       draggedRouteDebtId = id;
       if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = 'move';
@@ -1797,7 +1812,9 @@
       document.querySelectorAll('.route-item.dragging').forEach(item => item.classList.remove('dragging'));
       if (!sourceId || sourceId === targetId) return;
 
-      const route = orderedTrailDebts();
+      const targetDebt = debts.find(debt => debt.id === targetId);
+      if (!targetDebt || targetDebt.status === 'Quitada') return;
+      const route = orderedTrailDebts().filter(debt => debt.status === 'Ativa');
       const from = route.findIndex(debt => debt.id === sourceId);
       const to = route.findIndex(debt => debt.id === targetId);
       if (from < 0 || to < 0) return;
