@@ -59,6 +59,31 @@
     </div>
   </div>
 
+  <div id="payoffModal" class="modal-overlay">
+    <div class="modal-card wide-modal payoff-modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Quitar dívida</div>
+          <div class="modal-text">Informe o valor pago para encerrar esta dívida.</div>
+        </div>
+        <button class="ghost-btn icon-btn" onclick="closePayoffModal()">×</button>
+      </div>
+      <div class="payoff-layout">
+        <div class="form-grid payoff-form-grid">
+          <div><label>Valor de quitação</label><input id="payoffValue" inputmode="decimal" oninput="updatePayoffSummary()" /></div>
+          <div><label>Data do pagamento</label><input id="payoffDate" type="date" onchange="updatePayoffSummary()" /></div>
+          <div><label>Forma de pagamento (opcional)</label><select id="payoffMethod" onchange="updatePayoffSummary()"><option value="">Selecione...</option><option>Boleto</option><option>Débito automático</option><option>Fatura do cartão</option><option>Outro</option><option>PIX</option><option>Transferência</option></select></div>
+          <div><label>Observação (opcional)</label><textarea id="payoffNotes" maxlength="120" placeholder="Ex.: negociação, acordo, etc."></textarea></div>
+        </div>
+        <div class="payoff-summary-panel" id="payoffSummary"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-btn" onclick="closePayoffModal()">Cancelar</button>
+        <button class="primary-action" onclick="confirmPayoffDebt()">Confirmar quitação</button>
+      </div>
+    </div>
+  </div>
+
   <div id="renegotiationModal" class="modal-overlay">
     <div class="modal-card wide-modal">
       <div class="modal-brand">Rota Financeira</div>
@@ -96,7 +121,7 @@
       <nav>
         <button class="nav-item active" data-page="dashboard"><span>⌁</span> Dashboard</button>
         <button class="nav-item" data-page="trilha"><span>⇄</span> Rota</button>
-        <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas</button>
+        <button class="nav-item" data-page="dividas"><span>▣</span> Dívidas Ativas</button>
         <button class="nav-item" data-page="espera"><span>◌</span> Em espera</button>
         <button class="nav-item" data-page="radar"><span>◎</span> Fora do radar</button>
         <button class="nav-item" data-page="quitadas"><span>✓</span> Quitadas</button>
@@ -156,7 +181,7 @@
           <div>
             <div class="eyebrow">Rota financeira</div>
             <h1>Sua rota de quitação</h1>
-            <div class="page-desc">Organize a ordem das dívidas que passaram por Dívidas. Arraste para ajustar sua estratégia e acompanhe a evolução da jornada.</div>
+            <div class="page-desc">Organize a ordem das dívidas que passaram por Dívidas Ativas. Arraste para ajustar sua estratégia e acompanhe a evolução da jornada.</div>
           </div>
           <button class="primary-action" onclick="goToDebtsAndNew()">+ Nova dívida</button>
         </div>
@@ -175,7 +200,7 @@
 
       <section id="dividas" class="page">
         <div class="topbar">
-          <div><div class="eyebrow">Carteira ativa</div><h1>Dívidas em gestão</h1><div class="page-desc">Aqui ficam as dívidas que entram no plano atual e aparecem no dashboard principal.</div></div>
+          <div><div class="eyebrow">Carteira ativa</div><h1>Dívidas Ativas</h1><div class="page-desc">Aqui ficam as dívidas que entram no plano atual e aparecem no dashboard principal.</div></div>
           <button class="primary-action" onclick="openDebtForm('new')">+ Nova dívida</button>
         </div>
         <div id="debtMetrics" class="debt-metrics"></div>

@@ -34,6 +34,9 @@
     let selectedHiddenDebtSort = 'priority';
     let selectedRenegotiationDebtIds = new Set();
     let expandedDebtId = null;
+    let expandedDebtTab = 'pending';
+    let expandedDebtListMode = 'preview';
+    let payoffDebtId = null;
     let editingInstallmentId = null;
     let draggedRouteDebtId = null;
 
@@ -61,6 +64,14 @@
       return Number(String(value).replace(/R\$/g, '').replace(/\./g, '').replace(',', '.').trim()) || 0;
     }
     function formatDateBR(dateString) { return dateString ? new Date(dateString + 'T00:00:00').toLocaleDateString('pt-BR') : '-'; }
+    function formatAnyDateBR(value) {
+      if (!value) return '-';
+      if (typeof value === 'string') return formatDateBR(value.slice(0, 10));
+      if (typeof value.toDate === 'function') return value.toDate().toLocaleDateString('pt-BR');
+      if (value.seconds) return new Date(value.seconds * 1000).toLocaleDateString('pt-BR');
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('pt-BR');
+    }
     function addMonths(dateString, months) {
       const date = new Date(dateString + 'T00:00:00');
       const day = date.getDate();
@@ -115,7 +126,7 @@
     function debtPaid(debt) { return debtPayments(debt.id).reduce((sum, item) => sum + Number(item.paidValue || 0), 0); }
     function debtDiscount(debt) { return debtPayments(debt.id).reduce((sum, item) => sum + Number(item.discount || 0), 0); }
     function debtInterest(debt) { return debtPayments(debt.id).reduce((sum, item) => sum + Number(item.interest || 0), 0); }
-    function isOpenInstallment(item) { return item.status !== 'Paga' && item.status !== 'Renegociada'; }
+    function isOpenInstallment(item) { return !['Paga', 'Renegociada', 'Quitada', 'Cancelada'].includes(item.status); }
     function openInstallmentsForDebt(debt) {
       return debtInstallments(debt.id).filter(isOpenInstallment);
     }
@@ -137,7 +148,7 @@
     }
 
     function monthsToClearDebt(debt) {
-      const openItems = debtInstallments(debt.id).filter(item => item.status !== 'Paga' && item.status !== 'Renegociada').sort(byDueDate);
+      const openItems = debtInstallments(debt.id).filter(isOpenInstallment).sort(byDueDate);
       if (!openItems.length) return 0;
       const lastDue = openItems[openItems.length - 1].dueDate;
       if (!lastDue) return Math.ceil(openItems.length / 1);
@@ -150,7 +161,7 @@
 
     function installmentProgress(debt) {
       const items = debtInstallments(debt.id);
-      const paid = items.filter(item => item.status === 'Paga').length;
+      const paid = items.filter(item => item.status === 'Paga' || item.status === 'Quitada').length;
       return { paid, total: items.length || Number(debt.installmentsQty || 0) || 0 };
     }
 
@@ -327,41 +338,92 @@
     }
 
     function installmentRowsForDebt(debt) {
-      const items = debtInstallments(debt.id).sort(byDueDate);
-      if (!items.length) return '<div class="debt-meta" style="margin-top:14px;">Nenhuma parcela gerada para esta dívida.</div>';
+      const allItems = debtInstallments(debt.id);
+      if (!allItems.length) return '<div class="debt-meta" style="margin-top:14px;">Nenhuma parcela gerada para esta dívida.</div>';
 
-      let html = '<div class="installment-list"><div class="installment-title">Parcelas (' + items.length + ')</div>' +
-        '<div class="installment-row header"><div>Parcela</div><div>Vencimento</div><div>Valor Previsto</div><div>Valor Pago</div><div>Desconto / Juros</div><div>Status</div><div>Ação</div></div>';
-      items.forEach(item => {
-        const pay = paymentForInstallment(item.id);
-        const paidValue = pay ? Number(pay.paidValue || 0) : 0;
-        const discount = pay ? Number(pay.discount || 0) : 0;
-        const interest = pay ? Number(pay.interest || 0) : 0;
-        const statusClass = item.status === 'Paga' ? 'green' : item.status === 'Renegociada' ? 'blue' : 'amber';
-        const payButton = isOpenInstallment(item)
-          ? '<button class="ghost-btn" onclick="window.openPaymentForm(\'' + item.id + '\')">Registrar Pagamento</button>'
-          : '';
-        const deletePaymentButton = item.status === 'Paga' && pay
-          ? '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'payment\', \'' + pay.id + '\')">Excluir pagamento</button>'
-          : '';
-        const editButton = '<button class="ghost-btn" onclick="window.openInstallmentModal(\'' + item.id + '\')">Editar Parcela</button>';
-        let diffText = '-';
-        if (discount > 0) diffText = 'Desconto ' + brl(discount);
-        if (interest > 0) diffText = 'Juros ' + brl(interest);
+      const pending = allItems.filter(isOpenInstallment).sort(byDueDate);
+      const paid = allItems.filter(item => item.status === 'Paga' || item.status === 'Quitada').sort((a, b) => String(b.dueDate || '').localeCompare(String(a.dueDate || '')));
+      const currentTab = expandedDebtTab === 'paid' ? 'paid' : 'pending';
+      const source = currentTab === 'paid' ? paid : pending;
+      const isPreview = expandedDebtListMode !== 'all';
+      const visible = isPreview ? source.slice(0, 5) : source;
+      const emptyText = currentTab === 'paid' ? 'Nenhuma parcela paga registrada.' : 'Nenhuma parcela pendente.';
+      const buttonText = currentTab === 'paid' ? 'Ver histórico completo' : 'Ver todas as parcelas pendentes';
+      const countText = currentTab === 'paid' ? '5 últimas' : '5 próximas';
 
-        html += '<div class="installment-row">' +
-          '<div data-label="Parcela"><strong>' + item.number + '/' + item.total + '</strong></div>' +
-          '<div data-label="Vencimento">' + formatDateBR(item.dueDate) + '</div>' +
-          '<div data-label="Valor Previsto">' + brl(item.expectedValue) + '</div>' +
-          '<div data-label="Valor Pago">' + (pay ? brl(paidValue) : '-') + '</div>' +
-          '<div data-label="Desconto / Juros">' + escapeHtml(diffText) + '</div>' +
-          '<div data-label="Status"><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span></div>' +
-          '<div data-label="Ação"><div class="action-group">' + payButton + deletePaymentButton + editButton + '</div></div>' +
-        '</div>';
-      });
+      let html = '<div class="installment-tabs">' +
+        '<button class="installment-tab ' + (currentTab === 'pending' ? 'is-active' : '') + '" onclick="window.setDebtInstallmentTab(\'pending\')">Pendentes <span>' + (currentTab === 'pending' ? escapeHtml(countText) : pending.length) + '</span></button>' +
+        '<button class="installment-tab ' + (currentTab === 'paid' ? 'is-active' : '') + '" onclick="window.setDebtInstallmentTab(\'paid\')">Pagas <span>' + (currentTab === 'paid' ? escapeHtml(countText) : paid.length) + '</span></button>' +
+      '</div>';
+
+      html += '<div class="installment-list compact-installments">' +
+        '<div class="installment-row header"><div>Parcela</div><div>Vencimento</div><div>Valor</div><div>Status</div></div>';
+
+      if (!visible.length) {
+        html += '<div class="installment-empty">' + escapeHtml(emptyText) + '</div>';
+      } else {
+        visible.forEach(item => {
+          const statusClass = item.status === 'Paga' || item.status === 'Quitada' ? 'green' : item.status === 'Renegociada' ? 'blue' : 'amber';
+          html += '<div class="installment-row">' +
+            '<div data-label="Parcela"><strong>' + item.number + '/' + item.total + '</strong></div>' +
+            '<div data-label="Vencimento">' + formatDateBR(item.dueDate) + '</div>' +
+            '<div data-label="Valor">' + brl(item.expectedValue) + '</div>' +
+            '<div data-label="Status"><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span></div>' +
+          '</div>';
+        });
+      }
+
+      if (source.length && isPreview) {
+        html += '<button class="installment-more" onclick="window.showAllDebtInstallments()">' + escapeHtml(buttonText) + '<span>›</span></button>';
+      }
 
       html += '</div>';
       return html;
+    }
+
+    function debtActionMenu(debt) {
+      const actionsByStatus = {
+        Ativa: [
+          ['Mover para Em Espera', 'changeDebtStatus', 'Em espera'],
+          ['Mover para Fora do Radar', 'changeDebtStatus', 'Fora do radar'],
+          ['Quitar dívida', 'openPayoffModal'],
+          ['Editar dívida', 'openDebtForm'],
+          ['Excluir dívida', 'openDeleteModal', 'danger']
+        ],
+        'Em espera': [
+          ['Mover para Dívidas Ativas', 'changeDebtStatus', 'Ativa'],
+          ['Mover para Fora do Radar', 'changeDebtStatus', 'Fora do radar'],
+          ['Quitar dívida', 'openPayoffModal'],
+          ['Editar dívida', 'openDebtForm'],
+          ['Excluir dívida', 'openDeleteModal', 'danger']
+        ],
+        'Fora do radar': [
+          ['Mover para Dívidas Ativas', 'changeDebtStatus', 'Ativa'],
+          ['Mover para Em Espera', 'changeDebtStatus', 'Em espera'],
+          ['Quitar dívida', 'openPayoffModal'],
+          ['Editar dívida', 'openDebtForm'],
+          ['Excluir dívida', 'openDeleteModal', 'danger']
+        ],
+        Quitada: [
+          ['Restaurar para Dívidas Ativas', 'changeDebtStatus', 'Ativa'],
+          ['Restaurar para Em Espera', 'changeDebtStatus', 'Em espera'],
+          ['Restaurar para Fora do Radar', 'changeDebtStatus', 'Fora do radar'],
+          ['Editar dívida', 'openDebtForm'],
+          ['Excluir dívida', 'openDeleteModal', 'danger']
+        ]
+      };
+      const actions = actionsByStatus[debt.status] || actionsByStatus.Ativa;
+      const buttons = actions.map(action => {
+        const [label, type, valueOrTone, maybeTone] = action;
+        const tone = valueOrTone === 'danger' || maybeTone === 'danger' ? ' danger-btn' : '';
+        let onclick = '';
+        if (type === 'changeDebtStatus') onclick = 'window.changeDebtStatus(\'' + debt.id + '\', \'' + valueOrTone + '\')';
+        if (type === 'openPayoffModal') onclick = 'window.openPayoffModal(\'' + debt.id + '\')';
+        if (type === 'openDebtForm') onclick = 'window.openDebtForm(\'edit\', \'' + debt.id + '\')';
+        if (type === 'openDeleteModal') onclick = 'window.openDeleteModal(\'debt\', \'' + debt.id + '\')';
+        return '<button class="ghost-btn' + tone + '" onclick="' + onclick + '">' + escapeHtml(label) + '</button>';
+      }).join('');
+      return '<details class="more-actions debt-menu"><summary class="ghost-btn">Ações <span>⋮</span></summary><div class="more-menu">' + buttons + '</div></details>';
     }
 
     function financeItem(label, value, isPrimary) {
@@ -378,35 +440,10 @@
       const installmentCount = installmentProgress(debt);
       const isExpanded = expandedDebtId === debt.id;
       const title = escapeHtml(getCreditorName(debt.creditorId)) + ' · ' + escapeHtml(debt.name);
-      let statusAction = '';
-      if (debt.status === 'Ativa') {
-        statusAction = '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Em espera\')">Mover Para Espera</button><button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Fora do radar\')">Mover Para Fora do Radar</button>';
-      } else if (debt.status === 'Em espera') {
-        statusAction = '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Ativa\')">Ativar</button><button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Fora do radar\')">Mover Para Fora do Radar</button>';
-      } else if (debt.status === 'Fora do radar') {
-        statusAction = '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Ativa\')">Ativar</button><button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Em espera\')">Mover Para Espera</button>';
-      } else if (debt.status === 'Quitada') {
-        statusAction = '<button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Ativa\')">Reativar</button><button class="ghost-btn" onclick="window.changeDebtStatus(\'' + debt.id + '\', \'Fora do radar\')">Mover Para Fora do Radar</button>';
-      }
-      const payAction = next
-        ? '<button class="ghost-btn" onclick="window.openPaymentForm(\'' + next.id + '\')">Registrar Pagamento</button>'
-        : '';
-      const expandedAction = isExpanded ? 'Ocultar Parcelas' : 'Ver Parcelas';
       const toneClass = debt.criticality === 'Máxima' ? ' priority-max' : debt.criticality === 'Alta' ? ' priority-high' : ' priority-normal';
       const cardClass = 'debt-card' + toneClass + (isExpanded ? ' expanded' : '');
-      const total = debtTotal(debt);
-      const paid = debtPaid(debt);
       const balance = debtBalance(debt);
-      const discount = debtDiscount(debt);
-      const interest = debtInterest(debt);
       const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem Parcela';
-      const priorityTitle = debt.criticality === 'Máxima' ? 'Foco total nesta dívida' : debt.criticality === 'Alta' ? 'Acompanhar de perto' : 'Manter na rota';
-      const priorityText = debt.criticality === 'Máxima'
-        ? 'É sua dívida mais sensível. Quitar as próximas parcelas no prazo evita juros e acelera sua liberdade financeira.'
-        : 'Mantenha a parcela em dia e acompanhe qualquer oportunidade de quitação com desconto.';
-      const actionText = next
-        ? 'Pague até ' + formatDateBR(next.dueDate) + ' para manter o controle da rota.'
-        : 'Sem parcela pendente para esta dívida.';
       const metaHtml = isExpanded
         ? tagsForDebt(debt)
         : compactTagsForDebt(debt) + '<span>' + escapeHtml(debt.behavior || '-') + '</span><span>' + escapeHtml(debt.type || '-') + '</span>';
@@ -426,30 +463,18 @@
           '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + installmentCount.paid + '/' + installmentCount.total + '</strong><small>' + progress + '% das parcelas</small><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
           '<button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button>' +
         '</div>' +
-        (isExpanded ? '<div class="debt-detail"><div class="debt-summary">' +
-          financeItem('Parcela Prevista', brl(debt.installmentValue), true) +
-          '<div class="finance-grid">' +
-            financeItem('Saldo Devedor', brl(balance), false) +
-            financeItem('Valor Pago', brl(paid), false) +
-            financeItem('Valor Total', brl(total), false) +
-            financeItem('Quitação Hoje', brl(debt.payoffToday), false) +
-            financeItem('Desconto Acumulado', brl(discount), false) +
-            financeItem('Juros Pagos', brl(interest), false) +
+        (isExpanded ? '<div class="debt-detail">' +
+          '<div class="debt-expanded-head">' +
+            '<div class="expanded-facts">' +
+              '<div><span>Criada em</span><strong>' + formatAnyDateBR(debt.createdAt) + '</strong></div>' +
+              '<div><span>Tipo</span><strong>' + escapeHtml(debt.type || '-') + '</strong></div>' +
+              '<div><span>Parcelas pagas</span><strong>' + installmentCount.paid + ' de ' + installmentCount.total + '</strong></div>' +
+              '<div><span>Próximo vencimento</span><strong>' + escapeHtml(nextLabel) + '</strong><small>' + escapeHtml(next ? dueHint(next.dueDate) : '') + '</small></div>' +
+            '</div>' +
+            debtActionMenu(debt) +
           '</div>' +
-        '</div>' +
-        '<div class="progress-box">' +
-          '<div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:7px;"><span>Progresso</span><strong style="color:var(--soft)">' + progress + '%</strong></div>' +
-          '<div class="progress-line"><div class="progress-fill" style="width:' + progress + '%;"></div></div>' +
-        '</div>' +
-        '<div class="debt-insights">' +
-          '<div class="insight-card"><div class="metric-icon">◎</div><div><div class="insight-title">' + escapeHtml(priorityTitle) + '</div><div class="strategy-text" style="margin-top:0;">' + escapeHtml(priorityText) + '</div></div></div>' +
-          '<div class="insight-card compact"><div class="insight-title">Resumo desta dívida</div><div class="mini-list"><div><span>Valor Total</span><strong>' + brl(total) + '</strong></div><div><span>Quitação Hoje</span><strong>' + brl(debt.payoffToday) + '</strong></div><div><span>Parcelas em Aberto</span><strong>' + openInstallmentsForDebt(debt).length + ' de ' + debtInstallments(debt.id).length + '</strong></div></div></div>' +
-          '<div class="insight-card"><div class="metric-icon green">✓</div><div><div class="insight-title">Próxima ação sugerida</div><div class="strategy-text" style="margin-top:0;">' + escapeHtml(actionText) + '</div></div></div>' +
-        '</div>' + installmentRowsForDebt(debt) +
-        '<div class="debt-actions">' +
-          '<div class="action-group"><button class="ghost-btn" onclick="window.toggleDebt(\'' + debt.id + '\')">' + expandedAction + '</button>' + payAction + '</div>' +
-          '<div class="action-group"><button class="ghost-btn" onclick="window.rollDebt(\'' + debt.id + '\')">Criar Rolagem</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">Subir na Rota</button><button class="ghost-btn" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">Descer na Rota</button><button class="ghost-btn" onclick="window.openDebtForm(\'edit\', \'' + debt.id + '\')">Editar</button>' + statusAction + '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'debt\', \'' + debt.id + '\')">Excluir Dívida</button></div>' +
-        '</div></div>' : '') +
+          installmentRowsForDebt(debt) +
+        '</div>' : '') +
       '</div>';
     }
 
@@ -1168,6 +1193,7 @@
     window.openDebtForm = function(mode = 'new', id = null, defaultStatus = 'Ativa') {
       showPage('dividas');
       closePaymentForm();
+      window.closePayoffModal();
       editingDebtId = mode === 'edit' ? id : null;
       $('debtFormTitle').textContent = editingDebtId ? 'Editar dívida' : 'Nova dívida';
       if (editingDebtId) {
@@ -1211,7 +1237,23 @@
     };
 
     window.toggleDebt = function(id) {
-      expandedDebtId = expandedDebtId === id ? null : id;
+      const nextExpanded = expandedDebtId === id ? null : id;
+      if (expandedDebtId !== id) {
+        expandedDebtTab = 'pending';
+        expandedDebtListMode = 'preview';
+      }
+      expandedDebtId = nextExpanded;
+      renderDebts();
+    };
+
+    window.setDebtInstallmentTab = function(tab) {
+      expandedDebtTab = tab === 'paid' ? 'paid' : 'pending';
+      expandedDebtListMode = 'preview';
+      renderDebts();
+    };
+
+    window.showAllDebtInstallments = function() {
+      expandedDebtListMode = 'all';
       renderDebts();
     };
 
@@ -1275,6 +1317,7 @@
       closeDebtForm();
       closePaymentForm();
       closeInstallmentModal();
+      window.closePayoffModal();
 
       const total = selected.reduce((sum, debt) => sum + debtBalance(debt), 0);
       const creditorIds = [...new Set(selected.map(debt => debt.creditorId).filter(Boolean))];
@@ -1466,8 +1509,102 @@
       showToast(messages[status] || 'Situação atualizada com sucesso.');
     };
 
+    function payoffSummaryValues() {
+      const debt = debts.find(d => d.id === payoffDebtId);
+      const totalRemaining = debt ? debtBalance(debt) : 0;
+      const paidValue = parseMoney($('payoffValue')?.value || 0);
+      const discount = Math.max(0, totalRemaining - paidValue);
+      const interest = Math.max(0, paidValue - totalRemaining);
+      return { debt, totalRemaining, paidValue, discount, interest };
+    }
+
+    window.updatePayoffSummary = function() {
+      const target = $('payoffSummary');
+      if (!target) return;
+      const { totalRemaining, paidValue, discount, interest } = payoffSummaryValues();
+      const discountPct = totalRemaining ? Math.round((discount / totalRemaining) * 10000) / 100 : 0;
+      target.innerHTML =
+        '<h3>Resumo da quitação</h3>' +
+        '<div class="mini-list payoff-mini-list">' +
+          '<div><span>Valor total previsto</span><strong>' + brl(totalRemaining) + '</strong></div>' +
+          '<div><span>Valor de quitação</span><strong>' + brl(paidValue) + '</strong></div>' +
+        '</div>' +
+        '<div class="payoff-discount">' +
+          '<span>' + (interest > 0 ? 'Valor acima do previsto' : 'Desconto obtido') + '</span>' +
+          '<strong>' + brl(interest > 0 ? interest : discount) + '</strong>' +
+          '<small>' + (interest > 0 ? 'Sem desconto aplicado' : discountPct.toLocaleString('pt-BR') + '% de desconto') + '</small>' +
+        '</div>' +
+        '<p class="payoff-note">Ao confirmar, as parcelas futuras serão encerradas e a dívida será marcada como quitada.</p>';
+    };
+
+    window.openPayoffModal = function(id) {
+      const debt = debts.find(d => d.id === id);
+      if (!debt) return showToast('Dívida não encontrada.');
+      closeDebtForm();
+      closePaymentForm();
+      closeInstallmentModal();
+      payoffDebtId = id;
+      const remaining = debtBalance(debt);
+      $('payoffValue').value = brl(debt.payoffToday || remaining);
+      $('payoffDate').value = new Date().toISOString().slice(0, 10);
+      $('payoffMethod').value = '';
+      $('payoffNotes').value = '';
+      updatePayoffSummary();
+      $('payoffModal').classList.add('show');
+    };
+
+    window.closePayoffModal = function() {
+      payoffDebtId = null;
+      $('payoffModal')?.classList.remove('show');
+    };
+
+    window.confirmPayoffDebt = async function() {
+      const { debt, totalRemaining, paidValue, discount, interest } = payoffSummaryValues();
+      if (!debt) return showToast('Dívida não encontrada.');
+      if (!paidValue) return showToast('Informe o valor de quitação.');
+      const paymentDate = $('payoffDate').value;
+      if (!paymentDate) return showToast('Informe a data do pagamento.');
+
+      const openItems = openInstallmentsForDebt(debt);
+      const batch = writeBatch(db);
+      openItems.forEach(item => {
+        item.status = 'Quitada';
+        item.paidAt = paymentDate;
+        batch.update(doc(db, 'installments', item.id), { status: 'Quitada', paidAt: paymentDate, updatedAt: serverTimestamp() });
+      });
+      debt.status = 'Quitada';
+      debt.paidOffAt = paymentDate;
+      batch.update(doc(db, 'debts', debt.id), { status: 'Quitada', paidOffAt: paymentDate, updatedAt: serverTimestamp() });
+      await batch.commit();
+
+      const paymentPayload = {
+        debtId: debt.id,
+        installmentId: 'payoff-' + debt.id,
+        installmentNumber: 'Quitação',
+        expectedDate: paymentDate,
+        paymentDate,
+        expectedValue: totalRemaining,
+        paidValue,
+        discount,
+        interest,
+        method: $('payoffMethod').value,
+        notes: $('payoffNotes').value.trim(),
+        type: 'payoff',
+        createdAt: serverTimestamp()
+      };
+      const created = await addDoc(collection(db, 'payments'), paymentPayload);
+      payments.push({ id: created.id, ...paymentPayload });
+      expandedDebtId = debt.id;
+      window.closePayoffModal();
+      rebuildIndexes();
+      renderAll();
+      showPage('quitadas');
+      showToast('Dívida quitada com sucesso.');
+    };
+
     window.openPaymentForm = function(installmentId) {
       closeDebtForm();
+      window.closePayoffModal();
       const inst = installments.find(i => i.id === installmentId);
       if (!inst) return;
       const debt = debts.find(d => d.id === inst.debtId);
