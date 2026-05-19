@@ -45,6 +45,13 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 - Push quando autorizado:
   `& 'C:\Program Files\Git\cmd\git.exe' push origin main`
 
+## Processo padrao para ajustes
+- Para ajustes comuns, usar fluxo enxuto: ler contexto/regras, verificar Git, fazer backup dos arquivos alterados, editar, validar o necessario, revisar diff, commitar e dar push.
+- Nao configurar Firebase, deploy, servidor local, navegador, documentacao ampla ou infraestrutura se o pedido nao exigir.
+- Nao repetir validacoes equivalentes.
+- Atualizar documentacao apenas quando regra, fluxo, decisao tecnica ou historico relevante mudar.
+- Ampliar o processo somente quando o pedido exigir ou houver erro real.
+
 ## Fluxo de trabalho
 1. Ler `CONTEXTO.md` e `REGRAS_NEGOCIO.md`.
 2. Consultar os demais arquivos obrigatorios conforme a tarefa.
