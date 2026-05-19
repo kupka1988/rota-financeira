@@ -7,13 +7,16 @@
 
 ## Dashboard
 - Deve usar dados reais do Firebase.
-- Mostra grafico donut de percentual da divida ativa por credor.
-- Mostra `Pressao financeira estrutural`.
-- `Pressao financeira estrutural` considera apenas dividas ativas.
-- Classificacao por parcelas restantes:
-  - curto prazo: menor que 6.
-  - medio prazo: 6 a 11.
-  - longo prazo: 12 ou mais.
+- Deve funcionar como tela estrategica e operacional, focada no que exige atencao agora.
+- Proxima acao recomendada considera apenas parcelas pendentes de dividas `Ativa`.
+- Proximos vencimentos, pressao financeira e frente de pagamento ignoram `Em espera` e `Fora do radar`.
+- Pressao financeira considera apenas dividas ativas com saldo em aberto.
+- Classificacao da pressao por meses para quitar:
+  - curto prazo: ate 6 meses.
+  - medio prazo: de 6 a 12 meses.
+  - longo prazo: acima de 12 meses.
+- Frente de pagamento ordena dividas ativas por prioridade estrategica considerando vencimento proximo, impacto mensal, saldo em aberto, oportunidade de quitacao, atraso e criticidade manual.
+- Insights devem ser uteis para decisao; evitar graficos grandes que nao apoiem acao.
 
 ## Trilha
 - Deve mostrar apenas dividas ativas.

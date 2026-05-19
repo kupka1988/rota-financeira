@@ -111,48 +111,42 @@
         <div class="topbar">
           <div>
             <div class="eyebrow">Painel executivo</div>
-            <h1>Frente de pagamento atual</h1>
-            <div class="page-desc">Visualize apenas o que está sob gestão agora. As dívidas em espera continuam registradas, mas não pesam no painel principal.</div>
+            <h1>Visão financeira atual</h1>
+            <div class="page-desc">Foco, estratégia e ação para quitar o que exige atenção agora. Em espera e fora do radar ficam fora desta pressão visual.</div>
           </div>
           <button class="primary-action" onclick="goToDebtsAndNew()">+ Nova dívida</button>
         </div>
-        <div class="grid-4">
-          <div class="metric-card priority"><div class="metric-label">Prioridade Máxima</div><div class="metric-value" id="dashPriority">R$ 0,00</div><div class="metric-note">Dívidas sensíveis no topo da rota atual.</div></div>
-          <div class="metric-card"><div class="metric-label">Dívida Sob Gestão</div><div class="metric-value" id="dashActiveDebt">R$ 0,00</div><div class="metric-note">Total ativo, sem incluir itens em espera.</div></div>
-          <div class="metric-card"><div class="metric-label">Compromisso Mensal</div><div class="metric-value" id="dashMonthCommitment">R$ 0,00</div><div class="metric-note">Parcelas pendentes no mês atual.</div></div>
-          <div class="metric-card"><div class="metric-label">Dívida Total Reconhecida</div><div class="metric-value" id="dashTotalDebt">R$ 0,00</div><div class="metric-note">Inclui ativas e em espera.</div></div>
+        <div class="dashboard-hero">
+          <div id="dashboardNextAction"></div>
+          <div id="dashboardSummary"></div>
         </div>
-        <div class="panel">
-          <h2 class="panel-title">Pressão financeira estrutural</h2>
+        <div class="panel dashboard-pressure-panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Pressão financeira</h2>
+            <span>por prazo para quitar</span>
+          </div>
           <div class="pressure-grid" id="deadlinePressure"></div>
         </div>
-        <div class="decision-grid">
+        <div class="dashboard-main-grid">
           <div class="decision-panel">
-            <h2 class="panel-title">Foco imediato</h2>
-            <div id="dashboardFocus"></div>
-            <div class="risk-strip" id="dashboardRisk"></div>
-          </div>
-          <div class="decision-panel">
-            <h2 class="panel-title">Próximos vencimentos</h2>
+            <div class="panel-head">
+              <h2 class="panel-title">Próximos vencimentos</h2>
+              <span>apenas dívidas ativas</span>
+            </div>
             <div class="decision-list" id="dashboardUpcoming"></div>
           </div>
-        </div>
-        <div class="grid-2">
-          <div class="panel">
-            <h2 class="panel-title">Rota de quitação</h2>
-            <div class="strategy-box"><div class="strategy-title">Próxima Melhor Ação</div><div class="strategy-main" id="strategyMain">Cadastre a primeira dívida</div><div class="strategy-text" id="strategyText">A rota de quitação será calculada a partir das dívidas ativas, criticidade, parcelas e pagamentos registrados.</div></div>
-          </div>
-          <div class="panel">
-            <h2 class="panel-title">Leitura do mês</h2>
-            <div class="strategy-box" style="background: var(--amber-soft); border-color: rgba(216,164,65,0.28)"><div class="strategy-title" style="color:#f0c978">Atenção</div><div class="strategy-main" id="monthReading">Sem dados ainda</div><div class="strategy-text" id="monthReadingText">Depois dos primeiros cadastros, esta área indicará risco mensal e próximos vencimentos.</div></div>
+          <div class="decision-panel payment-front-panel">
+            <div class="panel-head">
+              <h2 class="panel-title">Frente de pagamento</h2>
+              <span>sua estratégia</span>
+            </div>
+            <div class="front-explain">Priorizamos dívidas que têm vencimento próximo, maior impacto financeiro e ajudam a reduzir pressão.</div>
+            <div id="paymentFront"></div>
           </div>
         </div>
         <div class="panel">
-          <h2 class="panel-title">Dívida por credor</h2>
-          <div class="donut-panel">
-            <div class="donut-chart" id="creditorDonut"></div>
-            <div class="donut-legend" id="creditorDonutLegend"></div>
-          </div>
+          <h2 class="panel-title">Insights para decisão</h2>
+          <div class="dashboard-insights" id="dashboardInsights"></div>
         </div>
       </section>
 

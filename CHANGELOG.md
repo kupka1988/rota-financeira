@@ -21,6 +21,8 @@
 - 2026-05-19: pagamento passou a manter divida expandida.
 - 2026-05-19: parcelas pagas ganharam exclusao com retorno para pendente.
 - 2026-05-19: documentacao reorganizada em `CONTEXTO.md`, `REGRAS_NEGOCIO.md`, `DESIGN_SYSTEM.md`, `ROADMAP.md` e `CHANGELOG.md`.
+- 2026-05-19: Dashboard reorganizado como tela estrategica com proxima acao recomendada, resumo compacto, pressao por meses, vencimentos ativos, frente de pagamento e insights uteis.
+- 2026-05-19: fluxo de trabalho ajustado para finalizar alteracoes com atualizacao dos MDs e commit Git.
 
 ## Referencias de commits
 - Commit remoto mais recente conhecido antes da reorganizacao: `d17333c` (`Ajusta fluxo de pagamento em dividas`).

@@ -37,7 +37,6 @@
 
     const $ = (id) => document.getElementById(id);
     const THEME_KEY = 'rotaFinanceiraTheme';
-    const DONUT_COLORS = ['#3fb985', '#4d8df7', '#d8a441', '#d86464', '#8b6ff5', '#35b7c8', '#ef7d4f'];
 
     function applyTheme(theme) {
       const nextTheme = theme === 'light' ? 'light' : 'dark';
@@ -127,6 +126,18 @@
       const items = debtInstallments(debt.id);
       if (!items.length) return Number(debt.installmentsQty || 0) || 0;
       return items.filter(item => item.status !== 'Paga' && item.status !== 'Renegociada').length;
+    }
+
+    function monthsToClearDebt(debt) {
+      const openItems = debtInstallments(debt.id).filter(item => item.status !== 'Paga' && item.status !== 'Renegociada').sort(byDueDate);
+      if (!openItems.length) return 0;
+      const lastDue = openItems[openItems.length - 1].dueDate;
+      if (!lastDue) return Math.ceil(openItems.length / 1);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const last = new Date(lastDue + 'T00:00:00');
+      const monthDiff = (last.getFullYear() - today.getFullYear()) * 12 + (last.getMonth() - today.getMonth());
+      return Math.max(1, monthDiff + 1);
     }
 
     function installmentProgress(debt) {
@@ -826,78 +837,44 @@
 
     function renderDashboard() {
       const active = debts.filter(d => d.status === 'Ativa');
+      const activeIds = new Set(active.map(d => d.id));
       const totalActive = active.reduce((sum, d) => sum + debtBalance(d), 0);
       const totalRecognized = debts.filter(d => d.status !== 'Renegociada' && d.status !== 'Fora do radar').reduce((sum, d) => sum + debtBalance(d), 0);
-      const priority = active.filter(d => d.criticality === 'Máxima').reduce((sum, d) => sum + debtBalance(d), 0);
       const month = currentMonthKey();
-      const activeIds = new Set(active.map(d => d.id));
-      const monthCommitment = installments
+      const monthInstallments = installments
         .filter(i => i.status !== 'Paga' && String(i.dueDate || '').startsWith(month) && activeIds.has(i.debtId))
-        .reduce((sum, i) => sum + Number(i.expectedValue || 0), 0);
-      const next = active.map(nextInstallment).filter(Boolean).sort(byDueDate)[0] || null;
+        .sort(byDueDate);
+      const monthCommitment = monthInstallments.reduce((sum, i) => sum + Number(i.expectedValue || 0), 0);
+      const openInstallments = installments
+        .filter(i => i.status !== 'Paga' && activeIds.has(i.debtId))
+        .sort(byDueDate);
 
-      $('dashPriority').textContent = brl(priority);
-      $('dashActiveDebt').textContent = brl(totalActive);
-      $('dashMonthCommitment').textContent = brl(monthCommitment);
-      $('dashTotalDebt').textContent = brl(totalRecognized);
-      $('strategyMain').textContent = next ? 'Pagar próxima prestação' : (active.length ? 'Manter foco na frente ativa' : 'Cadastre a primeira dívida');
-      $('strategyText').textContent = next ? 'Próxima prestação em ' + formatDateBR(next.dueDate) + ', no valor de ' + brl(next.expectedValue) + '.' : (active.length ? 'Acompanhe as próximas parcelas, priorize criticidade máxima e registre os pagamentos reais.' : 'A rota de quitação será calculada a partir das dívidas ativas, criticidade, parcelas e pagamentos registrados.');
-      $('monthReading').textContent = monthCommitment > 0 ? 'Há parcelas no mês atual' : 'Sem pressão registrada no mês';
-      $('monthReadingText').textContent = monthCommitment > 0 ? 'Compromisso pendente do mês atual: ' + brl(monthCommitment) + '.' : 'Nenhuma parcela pendente encontrada para o mês atual.';
-      renderDashboardDecision(active);
+      renderDashboardAction(active, openInstallments);
+      renderDashboardSummary({ totalRecognized, totalActive, monthCommitment, monthInstallments, active });
       renderDeadlinePressure(active);
-      renderCreditorDonut(active);
+      renderDashboardDecision(active, openInstallments);
+      renderDashboardInsights(active, openInstallments, totalActive);
     }
 
     function renderDeadlinePressure(activeDebts) {
       const container = $('deadlinePressure');
       if (!container) return;
       const groups = [
-        { key: 'short', title: 'Curto prazo', hint: '< 6 parcelas', test: count => count < 6 },
-        { key: 'medium', title: 'Médio prazo', hint: '6 a 11 parcelas', test: count => count >= 6 && count <= 11 },
-        { key: 'long', title: 'Longo prazo', hint: '12+ parcelas', test: count => count >= 12 }
+        { key: 'short', title: 'Curto prazo', hint: 'Até 6 meses', test: months => months <= 6 },
+        { key: 'medium', title: 'Médio prazo', hint: 'De 6 a 12 meses', test: months => months > 6 && months <= 12 },
+        { key: 'long', title: 'Longo prazo', hint: 'Acima de 12 meses', test: months => months > 12 }
       ].map(group => {
-        const items = activeDebts.filter(debt => group.test(remainingInstallmentsCount(debt)));
+        const items = activeDebts.filter(debt => debtBalance(debt) > 0 && group.test(monthsToClearDebt(debt)));
         return { ...group, items, balance: items.reduce((sum, debt) => sum + debtBalance(debt), 0) };
       });
 
       container.innerHTML = groups.map(group => {
         return '<div class="pressure-card ' + group.key + '">' +
-          '<div class="metric-label">' + escapeHtml(group.title) + '</div>' +
-          '<div class="pressure-value">' + brl(group.balance) + '</div>' +
+          '<div class="pressure-title">' + escapeHtml(group.title) + '</div>' +
           '<div class="metric-note">' + escapeHtml(group.hint) + '</div>' +
+          '<div class="pressure-value">' + brl(group.balance) + '</div>' +
           '<div class="pressure-count">' + group.items.length + ' dívida(s)</div>' +
         '</div>';
-      }).join('');
-    }
-
-    function renderCreditorDonut(activeDebts) {
-      const donut = $('creditorDonut');
-      const legend = $('creditorDonutLegend');
-      if (!donut || !legend) return;
-      const total = activeDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
-      if (!total) {
-        donut.style.background = 'conic-gradient(var(--border) 0 100%)';
-        legend.innerHTML = emptyCard('Sem dívida ativa', 'A divisão por credor aparecerá quando houver saldo ativo.');
-        return;
-      }
-      const rows = [...new Set(activeDebts.map(debt => debt.creditorId).filter(Boolean))]
-        .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)))
-        .map((id, index) => {
-          const value = activeDebts.filter(debt => debt.creditorId === id).reduce((sum, debt) => sum + debtBalance(debt), 0);
-          return { id, value, color: DONUT_COLORS[index % DONUT_COLORS.length] };
-        });
-      let cursor = 0;
-      const stops = rows.map(row => {
-        const start = cursor;
-        const end = cursor + (row.value / total) * 100;
-        cursor = end;
-        return row.color + ' ' + start.toFixed(2) + '% ' + end.toFixed(2) + '%';
-      });
-      donut.style.background = 'conic-gradient(' + stops.join(',') + ')';
-      legend.innerHTML = rows.map(row => {
-        const pct = Math.round((row.value / total) * 100);
-        return '<div class="donut-item"><span class="donut-dot" style="background:' + row.color + '"></span><span>' + escapeHtml(getCreditorName(row.id)) + '</span><strong>' + pct + '% · ' + brl(row.value) + '</strong></div>';
       }).join('');
     }
 
@@ -926,52 +903,138 @@
       }).join('');
     }
 
-    function renderDashboardDecision(activeDebts) {
-      const focusContainer = $('dashboardFocus');
-      const riskContainer = $('dashboardRisk');
+    function renderDashboardAction(activeDebts, openInstallments) {
+      const container = $('dashboardNextAction');
+      if (!container) return;
+      if (!activeDebts.length) {
+        container.innerHTML = emptyCard('Nenhuma ação pendente', 'Cadastre ou ative uma dívida para montar sua próxima ação.');
+        return;
+      }
+      const next = openInstallments[0] || null;
+      if (!next) {
+        container.innerHTML = '<div class="next-action-card"><div><div class="action-pill">Próxima ação recomendada</div><h2>Sem parcelas pendentes</h2><p>Todas as dívidas ativas estão sem cobrança aberta no momento.</p></div><button class="primary-action" onclick="goToDebtsAndNew()">Nova dívida</button></div>';
+        return;
+      }
+      const debt = activeDebts.find(d => d.id === next.debtId);
+      const title = debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida não encontrada';
+      const impact = daysUntil(next.dueDate) < 0 ? 'regulariza atraso e reduz pressão imediata' : daysUntil(next.dueDate) <= 6 ? 'evita atraso e reduz pressão de curto prazo' : 'mantém sua rota em dia';
+      container.innerHTML =
+        '<div class="next-action-card">' +
+          '<div class="next-action-content">' +
+            '<div class="action-pill">Próxima ação recomendada</div>' +
+            '<h2>Pagar ' + escapeHtml(title) + '</h2>' +
+            '<p>Vence ' + dueHint(next.dueDate).toLowerCase() + ' · ' + formatDateBR(next.dueDate) + '</p>' +
+            '<div class="next-action-value">' + brl(next.expectedValue) + '</div>' +
+            '<div class="impact-line">Impacto: ' + escapeHtml(impact) + '.</div>' +
+          '</div>' +
+          '<button class="primary-action" onclick="window.openPaymentForm(\'' + next.id + '\')">Registrar pagamento</button>' +
+        '</div>';
+    }
+
+    function renderDashboardSummary(data) {
+      const container = $('dashboardSummary');
+      if (!container) return;
+      const statusText = data.active.length ? (data.monthCommitment > 0 ? 'Você está no caminho certo' : 'Sem pressão no mês atual') : 'Cadastre uma dívida ativa';
+      container.innerHTML =
+        '<div class="summary-card">' +
+          '<h2 class="panel-title">Resumo geral</h2>' +
+          '<div class="summary-grid">' +
+            '<div><span>Dívida total reconhecida</span><strong>' + brl(data.totalRecognized) + '</strong></div>' +
+            '<div><span>Total em aberto</span><strong>' + brl(data.totalActive) + '</strong></div>' +
+            '<div><span>Compromisso mensal</span><strong>' + brl(data.monthCommitment) + '</strong></div>' +
+            '<div><span>Parcelas do mês</span><strong>' + data.monthInstallments.length + '</strong><small>' + brl(data.monthCommitment) + '</small></div>' +
+          '</div>' +
+          '<div class="summary-status">' + escapeHtml(statusText) + '</div>' +
+        '</div>';
+    }
+
+    function dashboardPriorityScore(debt) {
+      const next = nextInstallment(debt);
+      const days = next ? daysUntil(next.dueDate) : 999;
+      const overdueScore = days < 0 ? 280 : 0;
+      const dueScore = Math.max(0, 180 - Math.max(days, 0) * 6);
+      const monthlyImpact = Number(debt.installmentValue || (next ? next.expectedValue : 0) || 0);
+      const balance = debtBalance(debt);
+      const payoffOpportunity = balance > 0 ? Math.max(0, 100 - balance / 1000) : 0;
+      const criticalityScore = debt.criticality === 'Máxima' ? 180 : debt.criticality === 'Alta' ? 110 : 45;
+      return overdueScore + dueScore + monthlyImpact / 35 + balance / 2500 + payoffOpportunity + criticalityScore;
+    }
+
+    function priorityReason(debt) {
+      const next = nextInstallment(debt);
+      const days = next ? daysUntil(next.dueDate) : null;
+      if (days !== null && days < 0) return 'Parcela vencida pede regularização imediata';
+      if (days !== null && days <= 6) return 'Vencimento muito próximo';
+      if (debt.criticality === 'Máxima') return 'Criticidade máxima definida manualmente';
+      if (Number(debt.installmentValue || 0) >= 1000) return 'Alto impacto mensal';
+      if (monthsToClearDebt(debt) <= 6) return 'Ajuda a reduzir pressão de curto prazo';
+      return 'Boa relação entre urgência e saldo';
+    }
+
+    function priorityTone(index) {
+      if (index < 2) return { label: 'Alta prioridade', tone: 'danger' };
+      if (index < 4) return { label: 'Média prioridade', tone: 'amber' };
+      return { label: 'Baixa prioridade', tone: 'green' };
+    }
+
+    function renderDashboardDecision(activeDebts, openInstallments) {
       const upcomingContainer = $('dashboardUpcoming');
-      if (!focusContainer || !riskContainer || !upcomingContainer) return;
+      const frontContainer = $('paymentFront');
+      if (!upcomingContainer || !frontContainer) return;
 
       if (!activeDebts.length) {
-        focusContainer.innerHTML = emptyCard('Nenhuma dívida ativa', 'Cadastre ou ative uma dívida para montar sua frente de quitação.');
-        riskContainer.innerHTML = '';
         upcomingContainer.innerHTML = emptyCard('Sem vencimentos ativos', 'Os próximos compromissos aparecerão aqui.');
+        frontContainer.innerHTML = emptyCard('Sem frente de pagamento', 'Ative uma dívida para calcular a estratégia.');
         return;
       }
 
-      const ranked = [...activeDebts].sort((a, b) => {
-        const score = debt => (debt.criticality === 'Máxima' ? 3 : debt.criticality === 'Alta' ? 2 : 1) * 100000 + debtBalance(debt);
-        return score(b) - score(a);
-      });
-      const focus = ranked[0];
-      const focusNext = nextInstallment(focus);
-      const openInstallments = installments
-        .filter(i => i.status !== 'Paga' && activeDebts.some(d => d.id === i.debtId))
-        .sort(byDueDate)
-        .slice(0, 5);
-
-      focusContainer.innerHTML =
-        '<div class="focus-card">' +
-          creditorLogoHtml(focus.creditorId) +
-          '<div><div class="debt-name">' + escapeHtml(getCreditorName(focus.creditorId) + ' · ' + focus.name) + '</div>' +
-          '<div class="debt-meta">' + compactTagsForDebt(focus) + '<span>Saldo ' + brl(debtBalance(focus)) + '</span><span>Parcela ' + brl(focus.installmentValue) + '</span></div>' +
-          '<div class="strategy-text">Próxima ação: ' + (focusNext ? 'pagar até ' + formatDateBR(focusNext.dueDate) + ' (' + dueHint(focusNext.dueDate) + ').' : 'sem parcela pendente.') + '</div></div>' +
-          '<button class="primary-action" onclick="window.openDebtFromDashboard(\'' + focus.id + '\')">Abrir dívida</button>' +
-        '</div>';
-
-      const maxCount = activeDebts.filter(d => d.criticality === 'Máxima').length;
-      const highCount = activeDebts.filter(d => d.criticality === 'Alta').length;
-      const rollingCount = activeDebts.filter(d => d.behavior === 'Rolagem').length;
-      riskContainer.innerHTML =
-        '<div class="risk-item"><div class="metric-label">Prioridade Máxima</div><strong>' + maxCount + '</strong></div>' +
-        '<div class="risk-item"><div class="metric-label">Criticidade Alta</div><strong>' + highCount + '</strong></div>' +
-        '<div class="risk-item"><div class="metric-label">Rolagem</div><strong>' + rollingCount + '</strong></div>';
-
-      upcomingContainer.innerHTML = openInstallments.length ? openInstallments.map(item => {
+      upcomingContainer.innerHTML = openInstallments.slice(0, 5).length ? openInstallments.slice(0, 5).map(item => {
         const debt = debts.find(d => d.id === item.debtId);
         const title = debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida não encontrada';
-        return '<div class="decision-row"><div><strong>' + escapeHtml(title) + '</strong><small>' + formatDateBR(item.dueDate) + ' · ' + dueHint(item.dueDate) + '</small></div><strong>' + brl(item.expectedValue) + '</strong></div>';
+        return '<div class="decision-row due-row"><div><strong>' + escapeHtml(title) + '</strong><small>' + formatDateBR(item.dueDate) + ' · ' + dueHint(item.dueDate) + '</small></div><strong>' + brl(item.expectedValue) + '</strong><button class="ghost-btn" onclick="window.openDebtFromDashboard(\'' + item.debtId + '\')">Abrir</button></div>';
       }).join('') : emptyCard('Sem parcelas pendentes', 'Nenhuma parcela ativa encontrada na frente atual.');
+
+      const ranked = [...activeDebts]
+        .filter(debt => debtBalance(debt) > 0)
+        .sort((a, b) => dashboardPriorityScore(b) - dashboardPriorityScore(a))
+        .slice(0, 5);
+
+      frontContainer.innerHTML = ranked.length ? ranked.map((debt, index) => {
+        const next = nextInstallment(debt);
+        const tone = priorityTone(index);
+        const relevantValue = Number(debt.installmentValue || (next ? next.expectedValue : 0) || 0);
+        return '<div class="front-row">' +
+          '<div class="front-rank">' + (index + 1) + '</div>' +
+          '<div><strong>' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</strong><small>' + escapeHtml(priorityReason(debt)) + (next ? ' · ' + dueHint(next.dueDate) : '') + '</small></div>' +
+          '<span class="priority-badge ' + tone.tone + '">' + tone.label + '</span>' +
+          '<div class="front-value">' + brl(relevantValue || debtBalance(debt)) + '</div>' +
+          '<button class="ghost-btn" onclick="window.openDebtFromDashboard(\'' + debt.id + '\')">Abrir dívida</button>' +
+        '</div>';
+      }).join('') : emptyCard('Sem frente de pagamento', 'Nenhuma dívida ativa com saldo em aberto.');
+    }
+
+    function renderDashboardInsights(activeDebts, openInstallments, totalActive) {
+      const container = $('dashboardInsights');
+      if (!container) return;
+      if (!activeDebts.length) {
+        container.innerHTML = emptyCard('Sem insights ainda', 'Cadastre ou ative dívidas para gerar recomendações.');
+        return;
+      }
+      const biggest = [...activeDebts].sort((a, b) => debtBalance(b) - debtBalance(a))[0];
+      const critical = [...activeDebts].sort((a, b) => dashboardPriorityScore(b) - dashboardPriorityScore(a))[0];
+      const opportunity = [...activeDebts].filter(d => debtBalance(d) > 0).sort((a, b) => debtBalance(a) - debtBalance(b))[0];
+      const overdue = openInstallments.filter(item => daysUntil(item.dueDate) < 0);
+      const paid = payments.reduce((sum, item) => sum + Number(item.paidValue || 0), 0);
+      const rows = [
+        { title: 'Maior pressão hoje', main: biggest ? getCreditorName(biggest.creditorId) : '-', value: biggest ? brl(debtBalance(biggest)) : brl(0), note: totalActive ? Math.round((debtBalance(biggest) / totalActive) * 100) + '% do total ativo' : 'Sem saldo ativo' },
+        { title: 'Melhor oportunidade', main: opportunity ? getCreditorName(opportunity.creditorId) + ' · ' + opportunity.name : '-', value: opportunity ? brl(debtBalance(opportunity)) : brl(0), note: 'Menor saldo restante para quitação' },
+        { title: 'Dívida mais crítica', main: critical ? getCreditorName(critical.creditorId) + ' · ' + critical.name : '-', value: nextInstallment(critical) ? brl(nextInstallment(critical).expectedValue) : brl(debtBalance(critical)), note: nextInstallment(critical) ? dueHint(nextInstallment(critical).dueDate) : 'Sem parcela pendente' },
+        { title: 'Atrasos', main: overdue.length ? overdue.length + ' parcela(s)' : 'Nenhum atraso', value: brl(overdue.reduce((sum, item) => sum + Number(item.expectedValue || 0), 0)), note: overdue.length ? 'Regularize antes de avançar' : 'Continue mantendo a rota em dia' },
+        { title: 'Evolução', main: 'Você já pagou', value: brl(paid), note: paid > 0 ? 'Continue registrando pagamentos' : 'Primeiros pagamentos aparecerão aqui' }
+      ];
+      container.innerHTML = rows.map(item => (
+        '<div class="insight-tile"><div class="metric-label">' + escapeHtml(item.title) + '</div><strong>' + escapeHtml(item.main) + '</strong><div class="insight-value">' + escapeHtml(item.value) + '</div><small>' + escapeHtml(item.note) + '</small></div>'
+      )).join('');
     }
 
     async function loadAll() {

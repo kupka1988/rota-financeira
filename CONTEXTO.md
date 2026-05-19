@@ -33,6 +33,7 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 - Antes de mexer em exclusao, garantir remocao correta de dados vinculados.
 - Nao misturar conceitos de outros projetos.
 - Rota Financeira nao usa projecao, performance, metas de corrida/uber ou conceitos semelhantes.
+- Quando o usuario pedir qualquer alteracao no projeto, finalizar com validacao, atualizacao dos arquivos MD adequados e commit Git. Fazer push quando a tarefa envolver publicacao/entrega no remoto.
 
 ## Comandos relevantes
 - Validar sintaxe JS:
@@ -52,4 +53,5 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 5. Validar sintaxe quando mexer em JavaScript.
 6. Revisar diff antes de commit.
 7. Atualizar a documentacao adequada ao finalizar tarefas relevantes.
-8. Commitar e dar push quando autorizado.
+8. Commitar ao final de toda alteracao solicitada.
+9. Dar push quando a tarefa envolver publicacao/entrega no remoto ou quando o usuario pedir.
