@@ -1,6 +1,7 @@
 # ROADMAP - Rota Financeira
 
 ## Pendencias
+- Este arquivo concentra as pendencias registradas neste chat. Antes de executar uma nova solicitacao feita aqui, consultar esta lista e perguntar ao usuario se alguma pendencia deve ser feita junto; itens concluidos devem ser removidos ao final.
 - Melhorar continuamente mobile no iPhone.
 - Melhorar cadastro de dividas no mobile.
 - Melhorar visualizacao de parcelas no mobile.

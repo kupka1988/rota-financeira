@@ -9,6 +9,13 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 - Ler `ROADMAP.md` quando tratar de pendencias.
 - Ler `CHANGELOG.md` apenas para historico.
 
+## Regra para pendencias
+- Este chat deve ser tratado como canal de registro de pendencias.
+- Quando o usuario pedir algo neste chat, antes de executar qualquer alteracao, consultar `ROADMAP.md`, verificar se ha pendencias relacionadas ou acumuladas e perguntar se alguma delas deve ser feita junto.
+- Se o usuario responder que sim, executar a solicitacao atual junto com as pendencias escolhidas e, ao final, atualizar `ROADMAP.md` removendo o que foi concluido.
+- Se o usuario responder que nao, manter as pendencias registradas em `ROADMAP.md` e seguir apenas com a solicitacao atual.
+- Quando o usuario pedir apenas para registrar uma pendencia, organizar e registrar somente em `ROADMAP.md`, sem implementar.
+
 ## Projeto
 - Nome: Rota Financeira.
 - Objetivo: sistema web pessoal para gestao estrategica de dividas, pagamentos, prioridades e rota de quitacao.
