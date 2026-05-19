@@ -34,6 +34,7 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 - Pasta principal OneDrive: `C:\Users\felipe.k\OneDrive\Documentos\14. Sistemas Kupka\Rota Financeira (Dívidas)`.
 - Git local: a propria pasta OneDrive esta conectada ao remoto GitHub.
 - Backups: `C:\Users\felipe.k\OneDrive\Documentos\14. Sistemas Kupka\Rota Financeira (Dívidas)\backups`.
+- Por seguranca, apos atualizar o Git local, garantir que a pasta principal do OneDrive tambem receba as alteracoes correspondentes.
 
 ## Premissas tecnicas
 - Nunca limpar, sobrescrever ou recriar dados do Firebase.
@@ -69,4 +70,5 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 6. Revisar diff antes de commit.
 7. Atualizar a documentacao adequada ao finalizar tarefas relevantes.
 8. Commitar ao final de toda alteracao solicitada.
-9. Dar push quando a tarefa envolver publicacao/entrega no remoto ou quando o usuario pedir.
+9. Confirmar que a pasta principal do OneDrive esta atualizada com as mesmas alteracoes feitas no Git local.
+10. Dar push quando a tarefa envolver publicacao/entrega no remoto ou quando o usuario pedir.
