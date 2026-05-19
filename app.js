@@ -305,6 +305,9 @@
         const payButton = item.status !== 'Paga'
           ? '<button class="ghost-btn" onclick="window.openPaymentForm(\'' + item.id + '\')">Registrar Pagamento</button>'
           : '';
+        const deletePaymentButton = item.status === 'Paga' && pay
+          ? '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'payment\', \'' + pay.id + '\')">Excluir pagamento</button>'
+          : '';
         const editButton = '<button class="ghost-btn" onclick="window.openInstallmentModal(\'' + item.id + '\')">Editar Parcela</button>';
         let diffText = '-';
         if (discount > 0) diffText = 'Desconto ' + brl(discount);
@@ -317,7 +320,7 @@
           '<div data-label="Valor Pago">' + (pay ? brl(paidValue) : '-') + '</div>' +
           '<div data-label="Desconto / Juros">' + escapeHtml(diffText) + '</div>' +
           '<div data-label="Status"><span class="tag ' + statusClass + '">' + escapeHtml(item.status || 'Pendente') + '</span></div>' +
-          '<div data-label="Ação"><div class="action-group">' + payButton + editButton + '</div></div>' +
+          '<div data-label="Ação"><div class="action-group">' + payButton + deletePaymentButton + editButton + '</div></div>' +
         '</div>';
       });
 
@@ -1276,14 +1279,13 @@
       const inst = installments.find(i => i.id === installmentId);
       if (!inst) return;
       const debt = debts.find(d => d.id === inst.debtId);
+      if (debt) expandedDebtId = debt.id;
       paymentInstallmentId = installmentId;
       $('payDebtName').value = debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida não encontrada';
       $('payInstallmentLabel').value = inst.number + '/' + inst.total;
       $('payDate').value = inst.dueDate;
       $('payValue').value = brl(inst.expectedValue);
       $('paymentForm').classList.add('show');
-      showPage('pagamentos');
-      $('paymentForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     window.closePaymentForm = function() {
@@ -1358,8 +1360,10 @@
       payments.push({ id: created.id, ...paymentPayload });
       inst.status = 'Paga';
       inst.paidAt = $('payDate').value;
+      expandedDebtId = inst.debtId;
       closePaymentForm();
       renderAll();
+      showPage('dividas');
       showToast('Pagamento registrado com sucesso.');
     };
 
@@ -1449,6 +1453,15 @@
         $('deleteModalTitle').textContent = 'Excluir dívida';
         $('deleteModalText').textContent = 'Deseja excluir definitivamente ' + getCreditorName(debt.creditorId) + ' · ' + debt.name + '?';
         $('deleteModalWarning').textContent = 'Essa ação removerá também parcelas e pagamentos vinculados a esta dívida.';
+      } else if (type === 'payment') {
+        const payment = payments.find(p => p.id === id);
+        const inst = payment ? installments.find(i => i.id === payment.installmentId) : null;
+        const debt = inst ? debts.find(d => d.id === inst.debtId) : null;
+        if (!payment || !inst) return;
+        deleteContext = { type, id, installmentId: inst.id, debtId: inst.debtId };
+        $('deleteModalTitle').textContent = 'Excluir pagamento';
+        $('deleteModalText').textContent = 'Deseja excluir o pagamento da parcela ' + inst.number + '/' + inst.total + (debt ? ' de ' + getCreditorName(debt.creditorId) + ' · ' + debt.name : '') + '?';
+        $('deleteModalWarning').textContent = 'A parcela voltará para pendente e o registro sairá da lista de pagamentos.';
       } else {
         const creditor = creditors.find(c => c.id === id);
         if (!creditor) return;
@@ -1482,6 +1495,23 @@
         closeDeleteModal();
         renderAll();
         showToast('Dívida removida com sucesso.');
+      } else if (deleteContext.type === 'payment') {
+        const paymentId = deleteContext.id;
+        const installmentId = deleteContext.installmentId;
+        const debtId = deleteContext.debtId;
+        await deleteDoc(doc(db, 'payments', paymentId));
+        await updateDoc(doc(db, 'installments', installmentId), { status: 'Pendente', paidAt: null, updatedAt: serverTimestamp() });
+        payments = payments.filter(p => p.id !== paymentId);
+        const inst = installments.find(i => i.id === installmentId);
+        if (inst) {
+          inst.status = 'Pendente';
+          delete inst.paidAt;
+        }
+        expandedDebtId = debtId;
+        closeDeleteModal();
+        renderAll();
+        showPage('dividas');
+        showToast('Pagamento excluído com sucesso.');
       } else {
         const hasDebt = debts.some(d => d.creditorId === deleteContext.id);
         if (hasDebt) {

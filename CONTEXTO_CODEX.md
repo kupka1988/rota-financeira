@@ -16,9 +16,9 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 - Nao migrar para React, Angular ou Flutter por enquanto.
 
 ## Pastas Locais
-- Pasta principal OneDrive: `C:\Users\felip\OneDrive\Documentos\14. Sistemas Kupka\Rota Financeira (Dívidas)`.
-- Clone Git local: `C:\Users\felip\Documents\Codex\2026-05-17\rota-financeira-meu-novo-projeto\github-rota-financeira`.
-- Backups ficam em: `C:\Users\felip\OneDrive\Documentos\14. Sistemas Kupka\Rota Financeira (Dívidas)\backups`.
+- Pasta principal OneDrive: `C:\Users\felipe.k\OneDrive\Documentos\14. Sistemas Kupka\Rota Financeira (Dívidas)`.
+- Git local: a propria pasta OneDrive esta conectada ao remoto GitHub.
+- Backups ficam em: `C:\Users\felipe.k\OneDrive\Documentos\14. Sistemas Kupka\Rota Financeira (Dívidas)\backups`.
 
 ## Regras Permanentes
 - Nunca limpar, sobrescrever ou recriar dados do Firebase.
@@ -32,7 +32,7 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 - Sempre atualizar este arquivo ao iniciar/finalizar tarefas relevantes.
 
 ## Estado Atual Importante
-- Commit remoto mais recente conhecido: `22f9aed` (`Corrige rota financeira sem projecoes`).
+- Commit remoto mais recente conhecido: `c16bdf0` (`Adiciona fora do radar e pressao por prazo`).
 - Antes dele houve rollback do commit ruim: `a54ae5e` (`Revert "Evolui branding dashboard e trilha financeira"`).
 - O sistema possui abas: Dashboard, Trilha, Dividas, Em espera, Fora do radar, Renegociacao, Pagamentos, Historico, Configuracoes.
 - Trilha deve mostrar apenas dividas ativas, sem dividas em espera.
@@ -61,7 +61,7 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 1. Ler `CONTEXTO_CODEX.md`.
 2. Fazer backup dos arquivos alterados na pasta `backups` quando a mudanca for relevante.
 3. Trabalhar primeiro na pasta OneDrive quando o usuario pedir que os arquivos fiquem la.
-4. Sincronizar alteracoes para o clone Git.
+4. Usar a propria pasta OneDrive como repositorio Git local.
 5. Validar sintaxe e revisar diff.
 6. Commitar e dar push quando autorizado.
 7. Atualizar este arquivo com resumo, pendencias e proximos passos.
@@ -78,3 +78,5 @@ Arquivo de memoria compartilhada do projeto. Antes de iniciar qualquer trabalho,
 - 2026-05-17: tema claro definido como padrao; filtros selecionados ajustados para contraste; cards de dividas ganharam cor de fundo por prioridade.
 - 2026-05-17: adicionada aba Renegociacao com selecao multipla, modal de novo acordo, status `Renegociada` para dividas antigas e ajustes de contraste das tags no tema claro.
 - 2026-05-17: adicionada aba/status `Fora do radar`, bloco de pressao por prazo no Dashboard, ajustes de tema claro no mobile e reducao de excesso de negrito no layout.
+- 2026-05-19: simplificado o fluxo local; Git inicializado diretamente na pasta OneDrive, remoto origin apontando para GitHub e .gitignore preparado para ignorar backups e arquivos temporarios.
+- 2026-05-19: ajustado fluxo de pagamento na aba Dividas; registro abre em modal sem redirecionar, mantem divida expandida e parcelas pagas ganharam exclusao com retorno para pendente.

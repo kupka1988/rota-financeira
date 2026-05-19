@@ -1,0 +1,7 @@
+﻿backups/
+ChatGPT Image*.png
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+node_modules/

@@ -24,6 +24,24 @@
 
   <div id="toast" class="toast">Operação realizada com sucesso.</div>
 
+  <div id="paymentForm" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-brand">Rota Financeira</div>
+      <div class="modal-title">Registrar pagamento</div>
+      <div class="modal-text">Baixe a parcela selecionada sem sair da dívida aberta.</div>
+      <div class="form-grid" style="grid-template-columns:1fr;">
+        <div><label>Dívida</label><input id="payDebtName" readonly /></div>
+        <div><label>Prestação</label><input id="payInstallmentLabel" readonly /></div>
+        <div><label>Data do pagamento</label><input id="payDate" type="date" /></div>
+        <div><label>Valor pago</label><input id="payValue" inputmode="decimal" /></div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-btn" onclick="closePaymentForm()">Cancelar</button>
+        <button class="primary-action" onclick="savePayment()">Salvar pagamento</button>
+      </div>
+    </div>
+  </div>
+
   <div id="installmentModal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-brand">Rota Financeira</div>
@@ -269,16 +287,6 @@
       <section id="pagamentos" class="page">
         <div class="topbar"><div><div class="eyebrow">Baixa operacional</div><h1>Pagamentos</h1><div class="page-desc">Pagamentos registrados a partir das parcelas das dívidas.</div></div></div>
         <div id="paymentMetrics" class="debt-metrics"></div>
-        <section id="paymentForm" class="form-card">
-          <h2 class="panel-title">Registrar pagamento</h2>
-          <div class="form-grid">
-            <div class="span-2"><label>Dívida</label><input id="payDebtName" readonly /></div>
-            <div><label>Prestação</label><input id="payInstallmentLabel" readonly /></div>
-            <div><label>Data do pagamento</label><input id="payDate" type="date" /></div>
-            <div><label>Valor pago</label><input id="payValue" inputmode="decimal" /></div>
-          </div>
-          <div class="form-actions"><button class="primary-action" onclick="savePayment()">Salvar pagamento</button><button class="ghost-btn" onclick="closePaymentForm()">Cancelar</button></div>
-        </section>
         <div class="panel"><h2 class="panel-title">Pagamentos recentes</h2><div class="payment-ledger" id="paymentsList"></div></div>
       </section>
 
