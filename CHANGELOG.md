@@ -34,6 +34,9 @@
 - 2026-05-19: lista da Rota Financeira ganhou expansao inline, coluna `Proxima Parcela`, tags reduzidas a prioridade/Proximo Alvo e menu `Acoes` com nomenclatura `Mover/Restaurar para Rota Financeira`.
 - 2026-05-19: aba `Em espera` passou a usar o mesmo grid de dividas da Rota Financeira, mantendo filtros, totalizadores, ordenacao e expansao inline.
 - 2026-05-19: aba `Em espera` ganhou painel visual igual ao da Rota Financeira e reordenacao manual por setas ou arrastar.
+- 2026-05-19: abas `Fora do radar` e `Quitadas` passaram a usar o mesmo grid da Rota Financeira, com painel, filtros por credor, ordenacao e reordenacao manual.
+- 2026-05-19: cadastro de nova divida passou a abrir em modal e manteve credores em ordem alfabetica.
+- 2026-05-19: Dashboard compactado com cards superiores em altura uniforme e bloco de pressao financeira menos espaçoso.
 
 ## Referencias de commits
 - Commit remoto mais recente conhecido antes da reorganizacao: `d17333c` (`Ajusta fluxo de pagamento em dividas`).

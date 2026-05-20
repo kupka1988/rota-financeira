@@ -109,6 +109,34 @@
     </div>
   </div>
 
+  <div id="debtForm" class="modal-overlay">
+    <div class="modal-card wide-modal debt-modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="debtFormTitle">Nova dívida</div>
+          <div class="modal-text">Cadastre a dívida sem sair da tela atual.</div>
+        </div>
+        <button class="ghost-btn icon-btn" onclick="closeDebtForm()">×</button>
+      </div>
+      <div class="form-grid">
+        <div><label>Credor</label><select id="debtCreditorSelect"></select></div>
+        <div><label>Nome da dívida</label><input id="debtName" placeholder="Ex.: Pix parcelado, maio/2026" /></div>
+        <div><label>Tipo</label><select id="debtType"><option>Cartão</option><option>Conta corrente</option><option>Empréstimo</option><option>Financiamento</option><option>Outro</option><option>Pix parcelado</option></select></div>
+        <div><label>Forma de pagamento</label><select id="debtPaymentMethod"><option>Boleto</option><option>Débito automático</option><option>Fatura do cartão</option><option>Outro</option><option>PIX</option><option>Transferência</option></select></div>
+        <div><label>Data da primeira parcela</label><input id="debtFirstDue" type="date" /></div>
+        <div><label>Quantidade de parcelas</label><input id="debtInstallmentsQty" inputmode="numeric" placeholder="12" /></div>
+        <div><label>Valor da parcela</label><input id="debtInstallmentValue" inputmode="decimal" placeholder="R$ 0,00" /></div>
+        <div><label>Situação</label><select id="debtStatus"><option>Ativa</option><option>Em espera</option><option>Fora do radar</option><option>Quitada</option></select></div>
+        <div><label>Criticidade</label><select id="debtCriticality"><option>Alta</option><option>Máxima</option><option>Normal</option></select></div>
+        <div><label>Comportamento</label><select id="debtBehavior"><option>Parcelada</option><option>Quitação única</option><option>Rolagem</option></select></div>
+        <div><label>Valor de quitação hoje</label><input id="debtPayoffToday" inputmode="decimal" placeholder="R$ 0,00" /></div>
+        <div><label>Ordem na rota</label><input id="debtPayoffOrder" inputmode="numeric" placeholder="Ex.: 1" /></div>
+        <div class="span-4"><label>Observações</label><textarea id="debtNotes" placeholder="Condição atual, possibilidade de renegociação, contexto interno..."></textarea></div>
+      </div>
+      <div class="form-actions"><button class="primary-action" onclick="saveDebt()">Salvar dívida</button><button class="ghost-btn" onclick="closeDebtForm()">Cancelar</button></div>
+    </div>
+  </div>
+
   <div class="app">
     <aside>
       <div class="brand">
@@ -184,25 +212,6 @@
           </div>
           <button class="primary-action" onclick="goToDebtsAndNew()">+ Nova dívida</button>
         </div>
-        <section id="debtForm" class="form-card">
-          <h2 class="panel-title" id="debtFormTitle">Nova dívida</h2>
-          <div class="form-grid">
-            <div><label>Credor</label><select id="debtCreditorSelect"></select></div>
-            <div><label>Nome da dívida</label><input id="debtName" placeholder="Ex.: Pix parcelado, maio/2026" /></div>
-            <div><label>Tipo</label><select id="debtType"><option>Cartão</option><option>Conta corrente</option><option>Empréstimo</option><option>Financiamento</option><option>Outro</option><option>Pix parcelado</option></select></div>
-            <div><label>Forma de pagamento</label><select id="debtPaymentMethod"><option>Boleto</option><option>Débito automático</option><option>Fatura do cartão</option><option>Outro</option><option>PIX</option><option>Transferência</option></select></div>
-            <div><label>Data da primeira parcela</label><input id="debtFirstDue" type="date" /></div>
-            <div><label>Quantidade de parcelas</label><input id="debtInstallmentsQty" inputmode="numeric" placeholder="12" /></div>
-            <div><label>Valor da parcela</label><input id="debtInstallmentValue" inputmode="decimal" placeholder="R$ 0,00" /></div>
-            <div><label>Situação</label><select id="debtStatus"><option>Ativa</option><option>Em espera</option><option>Fora do radar</option><option>Quitada</option></select></div>
-            <div><label>Criticidade</label><select id="debtCriticality"><option>Alta</option><option>Máxima</option><option>Normal</option></select></div>
-            <div><label>Comportamento</label><select id="debtBehavior"><option>Parcelada</option><option>Quitação única</option><option>Rolagem</option></select></div>
-            <div><label>Valor de quitação hoje</label><input id="debtPayoffToday" inputmode="decimal" placeholder="R$ 0,00" /></div>
-            <div><label>Ordem na rota</label><input id="debtPayoffOrder" inputmode="numeric" placeholder="Ex.: 1" /></div>
-            <div class="span-4"><label>Observações</label><textarea id="debtNotes" placeholder="Condição atual, possibilidade de renegociação, contexto interno..."></textarea></div>
-          </div>
-          <div class="form-actions"><button class="primary-action" onclick="saveDebt()">Salvar dívida</button><button class="ghost-btn" onclick="closeDebtForm()">Cancelar</button></div>
-        </section>
         <div id="trailMetrics" class="route-summary"></div>
         <div id="nextTarget"></div>
         <div class="route-panel">
@@ -277,6 +286,7 @@
           <button class="primary-action" onclick="goToDebtsAndNew('Fora do radar')">+ Nova dívida</button>
         </div>
         <div id="hiddenDebtMetrics" class="debt-metrics"></div>
+        <div id="hiddenCreditorFilters" class="filter-row"></div>
         <div class="sort-bar">
           <label>Ordenar</label>
           <select id="hiddenDebtSort" onchange="setHiddenDebtSort(this.value)">
@@ -286,11 +296,20 @@
             <option value="installment-asc">Menor Parcela</option>
             <option value="progress-asc">Menor Progresso</option>
             <option value="balance-asc">Menor Saldo Devedor</option>
+            <option value="trail">Ordem da Rota</option>
             <option value="priority" selected>Prioridade</option>
             <option value="next-due">Próxima Parcela</option>
           </select>
         </div>
-        <div class="debt-list" id="hiddenDebts"></div>
+        <div class="route-panel hidden-route-panel">
+          <div class="route-panel-head">
+            <div>
+              <h2 class="panel-title">Fora do radar <span>(ordem de prioridade)</span></h2>
+              <div class="metric-note">Arraste ou use as setas para ajustar sua prioridade.</div>
+            </div>
+          </div>
+          <div class="route-list" id="hiddenDebts"></div>
+        </div>
       </section>
 
       <section id="quitadas" class="page">
@@ -299,7 +318,29 @@
         </div>
         <div id="paidOffCreditorFilters" class="filter-row"></div>
         <div id="paidOffDebtMetrics" class="debt-metrics"></div>
-        <div class="debt-list" id="paidOffDebts"></div>
+        <div class="sort-bar">
+          <label>Ordenar</label>
+          <select id="paidOffDebtSort" onchange="setPaidOffDebtSort(this.value)">
+            <option value="installment-desc">Maior Parcela</option>
+            <option value="progress-desc">Maior Progresso</option>
+            <option value="balance-desc">Maior Saldo Devedor</option>
+            <option value="installment-asc">Menor Parcela</option>
+            <option value="progress-asc">Menor Progresso</option>
+            <option value="balance-asc">Menor Saldo Devedor</option>
+            <option value="trail" selected>Ordem da Rota</option>
+            <option value="priority">Prioridade</option>
+            <option value="next-due">Próxima Parcela</option>
+          </select>
+        </div>
+        <div class="route-panel paid-route-panel">
+          <div class="route-panel-head">
+            <div>
+              <h2 class="panel-title">Dívidas quitadas <span>(ordem de prioridade)</span></h2>
+              <div class="metric-note">Arraste ou use as setas para ajustar a ordem do histórico.</div>
+            </div>
+          </div>
+          <div class="route-list" id="paidOffDebts"></div>
+        </div>
       </section>
 
       <section id="renegociacao" class="page">

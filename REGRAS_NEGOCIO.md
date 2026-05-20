@@ -17,6 +17,8 @@
   - longo prazo: acima de 12 meses.
 - Frente de pagamento ordena dividas ativas por prioridade estrategica considerando vencimento proximo, impacto mensal, saldo em aberto, oportunidade de quitacao, atraso e criticidade manual.
 - Insights devem ser uteis para decisao; evitar graficos grandes que nao apoiem acao.
+- Cards superiores devem manter alturas uniformes.
+- Pressao financeira deve ser compacta e ocupar apenas o espaco necessario para decisao.
 
 ## Rota Financeira
 - Funciona como tela principal das dividas ativas e priorizadas.
@@ -41,6 +43,8 @@
 - Registrar pagamento abre modal na propria aba.
 - Registrar pagamento nao redireciona para a aba Pagamentos.
 - Apos salvar pagamento, manter a mesma divida expandida.
+- Cadastro e edicao de divida devem abrir em modal, sem formulario inline acima das listas.
+- No cadastro de divida, credores devem aparecer em ordem alfabetica.
 - Parcelas pagas possuem botao `Excluir pagamento`.
 - Excluir pagamento abre modal de confirmacao.
 - Ao excluir pagamento:
@@ -72,11 +76,13 @@
 - Mostra dividas sem parcelas abertas.
 - Nao entra no Dashboard, Renegociacao ou divida total reconhecida.
 - Permanece na Rota Financeira como item concluido quando tiver passado pela frente ativa.
+- Usa o mesmo grid da Rota Financeira, com painel, filtro por credor, ordenacao e reordenacao manual.
 
 ## Fora do radar
 - Status para dividas reconhecidas que nao entram no Dashboard.
 - Nao entram na divida total reconhecida.
 - Aba propria possui totalizadores.
+- Usa o mesmo grid da Rota Financeira, com painel, filtro por credor, ordenacao e reordenacao manual.
 
 ## Renegociacao
 - Lista dividas ativas e em espera com checkbox.

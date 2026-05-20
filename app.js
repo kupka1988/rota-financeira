@@ -28,10 +28,12 @@
     let selectedCreditorFilter = 'all';
     let selectedPriorityFilter = 'all';
     let selectedWaitingCreditorFilter = 'all';
+    let selectedHiddenCreditorFilter = 'all';
     let selectedPaidOffCreditorFilter = 'all';
     let selectedDebtSort = 'priority';
     let selectedWaitingDebtSort = 'priority';
     let selectedHiddenDebtSort = 'priority';
+    let selectedPaidOffDebtSort = 'trail';
     let selectedRenegotiationDebtIds = new Set();
     let expandedDebtId = null;
     let expandedDebtTab = 'pending';
@@ -40,6 +42,8 @@
     let editingInstallmentId = null;
     let draggedRouteDebtId = null;
     let draggedWaitingDebtId = null;
+    let draggedHiddenDebtId = null;
+    let draggedPaidOffDebtId = null;
 
     const $ = (id) => document.getElementById(id);
     const THEME_KEY = 'rotaFinanceiraTheme';
@@ -476,13 +480,18 @@
       '</div>';
     }
 
-    function waitingDebtRouteRow(debt, index) {
+    function debtRouteGridRow(debt, index, mode) {
       const balance = debtBalance(debt);
       const isExpanded = expandedDebtId === debt.id;
       const next = nextInstallment(debt);
       const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem parcela';
-      const progressValue = debtProgress(debt);
-      return '<div class="route-item waiting-route-item' + (isExpanded ? ' expanded' : '') + '" data-debt-id="' + debt.id + '" draggable="true" ondragstart="window.startWaitingDebtDrag(event, \'' + debt.id + '\')" ondragover="window.waitingDebtDragOver(event)" ondrop="window.dropWaitingDebt(event, \'' + debt.id + '\')" ondragend="window.endWaitingDebtDrag()">' +
+      const progressValue = debt.status === 'Quitada' ? 100 : debtProgress(debt);
+      const config = {
+        waiting: { className: 'waiting-route-item', start: 'startWaitingDebtDrag', over: 'waitingDebtDragOver', drop: 'dropWaitingDebt', end: 'endWaitingDebtDrag', move: 'moveWaitingDebt' },
+        hidden: { className: 'hidden-route-item', start: 'startHiddenDebtDrag', over: 'hiddenDebtDragOver', drop: 'dropHiddenDebt', end: 'endHiddenDebtDrag', move: 'moveHiddenDebt' },
+        paid: { className: 'paid-route-item done', start: 'startPaidOffDebtDrag', over: 'paidOffDebtDragOver', drop: 'dropPaidOffDebt', end: 'endPaidOffDebtDrag', move: 'movePaidOffDebt' }
+      }[mode] || {};
+      return '<div class="route-item ' + config.className + (isExpanded ? ' expanded' : '') + '" data-debt-id="' + debt.id + '" draggable="true" ondragstart="window.' + config.start + '(event, \'' + debt.id + '\')" ondragover="window.' + config.over + '(event)" ondrop="window.' + config.drop + '(event, \'' + debt.id + '\')" ondragend="window.' + config.end + '()">' +
         '<button class="drag-handle" title="Arrastar para reordenar">⋮⋮</button>' +
         '<div class="route-rank">' + (index + 1) + '</div>' +
         '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + '</div></div></div>' +
@@ -491,7 +500,7 @@
         '<div class="route-stat"><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
         '<div class="route-stat"><span>Próxima Parcela</span><strong>' + escapeHtml(nextLabel) + '</strong></div>' +
         '<div class="route-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(debt) + '</strong></div>' +
-        '<div class="route-actions"><button class="ghost-btn subtle" onclick="window.moveWaitingDebt(\'' + debt.id + '\', -1)">↑</button><button class="ghost-btn subtle" onclick="window.moveWaitingDebt(\'' + debt.id + '\', 1)">↓</button><button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button></div>' +
+        '<div class="route-actions"><button class="ghost-btn subtle" onclick="window.' + config.move + '(\'' + debt.id + '\', -1)">↑</button><button class="ghost-btn subtle" onclick="window.' + config.move + '(\'' + debt.id + '\', 1)">↓</button><button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button></div>' +
         (isExpanded ? debtExpandedDetail(debt) : '') +
       '</div>';
     }
@@ -505,19 +514,22 @@
       const waitingFiltered = selectedWaitingCreditorFilter === 'all' ? waitingAll : waitingAll.filter(d => d.creditorId === selectedWaitingCreditorFilter);
       const waiting = sortDebts(waitingFiltered, selectedWaitingDebtSort);
       const hiddenAll = debts.filter(d => d.status === 'Fora do radar');
-      const hidden = sortDebts(hiddenAll, selectedHiddenDebtSort);
+      const hiddenFiltered = selectedHiddenCreditorFilter === 'all' ? hiddenAll : hiddenAll.filter(d => d.creditorId === selectedHiddenCreditorFilter);
+      const hidden = sortDebts(hiddenFiltered, selectedHiddenDebtSort);
       const paidOffAll = debts.filter(d => d.status === 'Quitada');
-      const paidOff = selectedPaidOffCreditorFilter === 'all' ? paidOffAll : paidOffAll.filter(d => d.creditorId === selectedPaidOffCreditorFilter);
+      const paidOffFiltered = selectedPaidOffCreditorFilter === 'all' ? paidOffAll : paidOffAll.filter(d => d.creditorId === selectedPaidOffCreditorFilter);
+      const paidOff = sortDebts(paidOffFiltered, selectedPaidOffDebtSort);
       renderDebtMetrics(activeByPriority);
       renderWaitingCreditorFilters(waitingAll);
       renderWaitingDebtMetrics(waitingAll);
+      renderHiddenCreditorFilters(hiddenAll);
       renderHiddenDebtMetrics(hiddenAll);
       renderPaidOffCreditorFilters(paidOffAll);
       renderPaidOffDebtMetrics(paidOff);
       $('activeDebts').innerHTML = active.length ? active.map(debtCard).join('') : emptyCard('Nenhuma Dívida Encontrada', selectedCreditorFilter === 'all' ? 'Não há dívidas ativas para este filtro.' : 'Não há dívidas ativas para este credor neste filtro.');
-      $('waitingDebts').innerHTML = waiting.length ? waiting.map(waitingDebtRouteRow).join('') : emptyCard('Nenhuma dívida em espera', selectedWaitingCreditorFilter === 'all' ? 'As dívidas fora da frente atual aparecerão aqui.' : 'Não há dívidas em espera para este credor.');
-      $('hiddenDebts').innerHTML = hidden.length ? hidden.map(debtCard).join('') : emptyCard('Nada fora do radar', 'As dívidas que você não quer acompanhar aparecerão aqui.');
-      $('paidOffDebts').innerHTML = paidOff.length ? sortDebts(paidOff, 'progress-desc').map(debtCard).join('') : emptyCard('Nenhuma dívida quitada', selectedPaidOffCreditorFilter === 'all' ? 'Quando uma dívida ficar sem parcelas abertas, ela aparecerá aqui.' : 'Não há dívidas quitadas para este credor.');
+      $('waitingDebts').innerHTML = waiting.length ? waiting.map((debt, index) => debtRouteGridRow(debt, index, 'waiting')).join('') : emptyCard('Nenhuma dívida em espera', selectedWaitingCreditorFilter === 'all' ? 'As dívidas fora da frente atual aparecerão aqui.' : 'Não há dívidas em espera para este credor.');
+      $('hiddenDebts').innerHTML = hidden.length ? hidden.map((debt, index) => debtRouteGridRow(debt, index, 'hidden')).join('') : emptyCard('Nada fora do radar', selectedHiddenCreditorFilter === 'all' ? 'As dívidas que você não quer acompanhar aparecerão aqui.' : 'Não há dívidas fora do radar para este credor.');
+      $('paidOffDebts').innerHTML = paidOff.length ? paidOff.map((debt, index) => debtRouteGridRow(debt, index, 'paid')).join('') : emptyCard('Nenhuma dívida quitada', selectedPaidOffCreditorFilter === 'all' ? 'Quando uma dívida ficar sem parcelas abertas, ela aparecerá aqui.' : 'Não há dívidas quitadas para este credor.');
       renderDashboard();
     }
 
@@ -620,12 +632,25 @@
         debtMetric('Parcelas Reconhecidas', String(hiddenInstallments.length), '◷', 'red');
     }
 
+    function renderHiddenCreditorFilters(hiddenDebts) {
+      const container = $('hiddenCreditorFilters');
+      if (!container) return;
+      const creditorIds = [...new Set(hiddenDebts.map(d => d.creditorId).filter(Boolean))]
+        .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)));
+      let html = '<button class="ghost-btn ' + (selectedHiddenCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterHiddenByCreditor(\'all\')">◎ Todos <span class="filter-count">' + hiddenDebts.length + '</span></button>';
+      creditorIds.forEach(id => {
+        const count = hiddenDebts.filter(d => d.creditorId === id).length;
+        html += '<button class="ghost-btn ' + (selectedHiddenCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterHiddenByCreditor(\'' + id + '\')">' + creditorLogoHtml(id) + escapeHtml(getCreditorName(id)) + '<span class="filter-count">' + count + '</span></button>';
+      });
+      container.innerHTML = html;
+    }
+
     function renderPaidOffCreditorFilters(paidOffDebts) {
       const container = $('paidOffCreditorFilters');
       if (!container) return;
       const creditorIds = [...new Set(paidOffDebts.map(d => d.creditorId).filter(Boolean))]
         .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)));
-      let html = '<button class="ghost-btn ' + (selectedPaidOffCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterPaidOffByCreditor(\'all\')">✓ Todas quitadas <span class="filter-count">' + paidOffDebts.length + '</span></button>';
+      let html = '<button class="ghost-btn ' + (selectedPaidOffCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterPaidOffByCreditor(\'all\')">✓ Todos <span class="filter-count">' + paidOffDebts.length + '</span></button>';
       creditorIds.forEach(id => {
         const count = paidOffDebts.filter(d => d.creditorId === id).length;
         html += '<button class="ghost-btn ' + (selectedPaidOffCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterPaidOffByCreditor(\'' + id + '\')">' + creditorLogoHtml(id) + escapeHtml(getCreditorName(id)) + '<span class="filter-count">' + count + '</span></button>';
@@ -757,6 +782,18 @@
     function orderedWaitingDebts() {
       return debts
         .filter(debt => debt.status === 'Em espera')
+        .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+    }
+
+    function orderedHiddenDebts() {
+      return debts
+        .filter(debt => debt.status === 'Fora do radar')
+        .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+    }
+
+    function orderedPaidOffDebts() {
+      return debts
+        .filter(debt => debt.status === 'Quitada')
         .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
     }
 
@@ -1214,7 +1251,6 @@
     }
 
     window.openDebtForm = function(mode = 'new', id = null, defaultStatus = 'Ativa') {
-      showPage('trilha');
       closePaymentForm();
       window.closePayoffModal();
       editingDebtId = mode === 'edit' ? id : null;
@@ -1251,7 +1287,6 @@
         $('debtNotes').value = '';
       }
       $('debtForm').classList.add('show');
-      $('debtForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     window.closeDebtForm = function() {
@@ -1302,6 +1337,12 @@
       renderDebts();
     };
 
+    window.filterHiddenByCreditor = function(id) {
+      selectedHiddenCreditorFilter = id;
+      expandedDebtId = null;
+      renderDebts();
+    };
+
     window.filterPaidOffByCreditor = function(id) {
       selectedPaidOffCreditorFilter = id;
       expandedDebtId = null;
@@ -1322,6 +1363,12 @@
 
     window.setHiddenDebtSort = function(mode) {
       selectedHiddenDebtSort = mode;
+      expandedDebtId = null;
+      renderDebts();
+    };
+
+    window.setPaidOffDebtSort = function(mode) {
+      selectedPaidOffDebtSort = mode;
       expandedDebtId = null;
       renderDebts();
     };
@@ -1889,7 +1936,6 @@
     }
 
     window.goToDebtsAndNew = function(defaultStatus = 'Ativa') {
-      showPage('trilha');
       window.openDebtForm('new', null, defaultStatus);
     };
 
@@ -2006,6 +2052,132 @@
     window.endWaitingDebtDrag = function() {
       draggedWaitingDebtId = null;
       document.querySelectorAll('.waiting-route-item.dragging').forEach(item => item.classList.remove('dragging'));
+    };
+
+    async function persistHiddenOrder(route) {
+      const batch = writeBatch(db);
+      route.forEach((debt, index) => {
+        const payoffOrder = index + 1;
+        batch.update(doc(db, 'debts', debt.id), { payoffOrder, updatedAt: serverTimestamp() });
+        const local = debts.find(item => item.id === debt.id);
+        if (local) local.payoffOrder = payoffOrder;
+      });
+      await batch.commit();
+      selectedHiddenDebtSort = 'trail';
+      if ($('hiddenDebtSort')) $('hiddenDebtSort').value = 'trail';
+      renderAll();
+      showToast('Ordem fora do radar atualizada.');
+    }
+
+    window.moveHiddenDebt = async function(id, direction) {
+      const route = orderedHiddenDebts().map((debt, index) => ({ ...debt, payoffOrder: index + 1 }));
+      const currentIndex = route.findIndex(debt => debt.id === id);
+      const nextIndex = currentIndex + direction;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= route.length) return;
+      const current = route[currentIndex];
+      route[currentIndex] = route[nextIndex];
+      route[nextIndex] = current;
+      await persistHiddenOrder(route);
+    };
+
+    window.startHiddenDebtDrag = function(event, id) {
+      const debt = debts.find(item => item.id === id);
+      if (!debt || debt.status !== 'Fora do radar') return;
+      draggedHiddenDebtId = id;
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', id);
+      }
+      const item = event.currentTarget;
+      if (item) item.classList.add('dragging');
+    };
+
+    window.hiddenDebtDragOver = function(event) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    };
+
+    window.dropHiddenDebt = async function(event, targetId) {
+      event.preventDefault();
+      const sourceId = draggedHiddenDebtId || event.dataTransfer?.getData('text/plain');
+      draggedHiddenDebtId = null;
+      document.querySelectorAll('.hidden-route-item.dragging').forEach(item => item.classList.remove('dragging'));
+      if (!sourceId || sourceId === targetId) return;
+      const route = orderedHiddenDebts();
+      const from = route.findIndex(debt => debt.id === sourceId);
+      const to = route.findIndex(debt => debt.id === targetId);
+      if (from < 0 || to < 0) return;
+      const [moved] = route.splice(from, 1);
+      route.splice(to, 0, moved);
+      await persistHiddenOrder(route);
+    };
+
+    window.endHiddenDebtDrag = function() {
+      draggedHiddenDebtId = null;
+      document.querySelectorAll('.hidden-route-item.dragging').forEach(item => item.classList.remove('dragging'));
+    };
+
+    async function persistPaidOffOrder(route) {
+      const batch = writeBatch(db);
+      route.forEach((debt, index) => {
+        const payoffOrder = index + 1;
+        batch.update(doc(db, 'debts', debt.id), { payoffOrder, updatedAt: serverTimestamp() });
+        const local = debts.find(item => item.id === debt.id);
+        if (local) local.payoffOrder = payoffOrder;
+      });
+      await batch.commit();
+      selectedPaidOffDebtSort = 'trail';
+      if ($('paidOffDebtSort')) $('paidOffDebtSort').value = 'trail';
+      renderAll();
+      showToast('Ordem das quitadas atualizada.');
+    }
+
+    window.movePaidOffDebt = async function(id, direction) {
+      const route = orderedPaidOffDebts().map((debt, index) => ({ ...debt, payoffOrder: index + 1 }));
+      const currentIndex = route.findIndex(debt => debt.id === id);
+      const nextIndex = currentIndex + direction;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= route.length) return;
+      const current = route[currentIndex];
+      route[currentIndex] = route[nextIndex];
+      route[nextIndex] = current;
+      await persistPaidOffOrder(route);
+    };
+
+    window.startPaidOffDebtDrag = function(event, id) {
+      const debt = debts.find(item => item.id === id);
+      if (!debt || debt.status !== 'Quitada') return;
+      draggedPaidOffDebtId = id;
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', id);
+      }
+      const item = event.currentTarget;
+      if (item) item.classList.add('dragging');
+    };
+
+    window.paidOffDebtDragOver = function(event) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    };
+
+    window.dropPaidOffDebt = async function(event, targetId) {
+      event.preventDefault();
+      const sourceId = draggedPaidOffDebtId || event.dataTransfer?.getData('text/plain');
+      draggedPaidOffDebtId = null;
+      document.querySelectorAll('.paid-route-item.dragging').forEach(item => item.classList.remove('dragging'));
+      if (!sourceId || sourceId === targetId) return;
+      const route = orderedPaidOffDebts();
+      const from = route.findIndex(debt => debt.id === sourceId);
+      const to = route.findIndex(debt => debt.id === targetId);
+      if (from < 0 || to < 0) return;
+      const [moved] = route.splice(from, 1);
+      route.splice(to, 0, moved);
+      await persistPaidOffOrder(route);
+    };
+
+    window.endPaidOffDebtDrag = function() {
+      draggedPaidOffDebtId = null;
+      document.querySelectorAll('.paid-route-item.dragging').forEach(item => item.classList.remove('dragging'));
     };
 
     window.moveDebtInTrail = async function(id, direction) {
