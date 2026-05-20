@@ -174,11 +174,14 @@
     .next-action-card .primary-action { position: relative; z-index: 1; min-width: 170px; }
     .summary-card { height: 100%; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--panel); box-shadow: var(--shadow); }
     .summary-card .panel-title { margin-bottom: 10px; }
-    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .summary-grid { display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
     .summary-grid div { min-height: 74px; padding: 10px; border-right: 1px solid var(--border); background: rgba(255,255,255,0.018); }
+    .summary-grid div:nth-child(2n) { border-right: 0; }
+    .summary-grid div:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
     .summary-grid div:last-child { border-right: 0; }
     .summary-grid span, .summary-grid small { display: block; color: var(--muted); font-size: 12px; }
-    .summary-grid strong { display: block; margin-top: 6px; font-size: 16px; letter-spacing: -0.025em; color: var(--text); overflow-wrap: anywhere; }
+    .summary-grid strong, .summary-grid small { white-space: nowrap; }
+    .summary-grid strong { display: block; margin-top: 6px; font-size: 16px; letter-spacing: -0.025em; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
     .summary-status { margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: var(--green-soft); color: #8ae1b8; font-weight: 700; font-size: 13px; }
     body[data-theme="light"] .summary-status { color: #087a4e; }
     .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 16px; }
@@ -276,7 +279,7 @@
     .route-summary-copy strong { display: block; font-size: 17px; color: var(--text); }
     .route-summary-copy span { color: var(--muted); font-size: 13px; line-height: 1.35; }
     .route-summary-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--border); }
-    .next-target-card { display: grid; grid-template-columns: minmax(320px, 1.55fr) minmax(160px, 0.7fr) repeat(3, minmax(104px, 0.42fr)); gap: 14px; align-items: center; margin-bottom: 16px; padding: 18px 22px; border-radius: var(--radius-lg); border: 1px solid rgba(216,164,65,0.34); background: linear-gradient(90deg, rgba(216,164,65,0.16), rgba(255,255,255,0.025)), var(--panel); box-shadow: var(--shadow); overflow: hidden; }
+    .next-target-card { display: grid; grid-template-columns: minmax(320px, 1.45fr) minmax(150px, 0.62fr) repeat(4, minmax(104px, 0.42fr)); gap: 14px; align-items: center; margin-bottom: 16px; padding: 18px 22px; border-radius: var(--radius-lg); border: 1px solid rgba(216,164,65,0.34); background: linear-gradient(90deg, rgba(216,164,65,0.16), rgba(255,255,255,0.025)), var(--panel); box-shadow: var(--shadow); overflow: hidden; }
     .next-target-card.complete { grid-template-columns: 1fr; border-color: rgba(63,185,133,0.34); background: linear-gradient(90deg, rgba(63,185,133,0.14), rgba(255,255,255,0.025)), var(--panel); }
     .next-target-main { display: flex; align-items: center; gap: 14px; min-width: 0; }
     .next-target-main h2 { margin: 3px 0 0; font-size: 20px; letter-spacing: -0.02em; line-height: 1.2; }
@@ -284,12 +287,17 @@
     .complete .target-icon { background: linear-gradient(135deg, var(--green), #7addad); color: #071018; }
     .next-target-stat span, .route-stat span { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 5px; }
     .next-target-stat strong, .route-stat strong { color: var(--text); font-size: 16px; white-space: nowrap; }
+    .next-target-stat small, .route-stat small { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .payoff-stat strong { color: var(--green); }
+    .payoff-stat .muted-value { color: var(--muted); }
+    .payoff-economy { display: inline-flex; width: max-content; max-width: 100%; margin-top: 6px; padding: 3px 7px; border-radius: 999px; background: var(--green-soft); color: #8ae1b8; font-size: 11px; font-weight: 750; white-space: nowrap; }
+    body[data-theme="light"] .payoff-economy { color: #087a4e; background: #ddf5e8; }
     .route-panel { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
     .route-panel-head { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.026); }
     .route-panel-head .panel-title { margin: 0 0 4px; }
     .route-panel-head .panel-title span { color: var(--muted); font-size: 14px; font-weight: 600; }
     .route-list { display: grid; }
-    .route-item { display: grid; grid-template-columns: 24px 38px minmax(210px, 1.25fr) minmax(150px, 0.9fr) minmax(108px, 0.55fr) minmax(108px, 0.5fr) minmax(126px, 0.58fr) minmax(82px, 0.38fr) minmax(112px, 0.5fr); gap: 10px; align-items: center; min-height: 76px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.018); }
+    .route-item { display: grid; grid-template-columns: 24px 38px minmax(210px, 1.22fr) minmax(140px, 0.78fr) minmax(108px, 0.48fr) minmax(126px, 0.58fr) minmax(108px, 0.48fr) minmax(126px, 0.58fr) minmax(82px, 0.36fr) minmax(112px, 0.48fr); gap: 10px; align-items: center; min-height: 76px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.018); }
     .route-item:last-child { border-bottom: 0; }
     .route-item.current { background: linear-gradient(90deg, rgba(216,164,65,0.12), rgba(255,255,255,0.018)); }
     .route-item.done { background: linear-gradient(90deg, rgba(63,185,133,0.09), rgba(255,255,255,0.012)); }
@@ -324,7 +332,7 @@
     .debt-card.expanded.priority-max { border-color: rgba(216,164,65,0.76); }
     .debt-card.expanded.priority-high { border-color: rgba(77,141,247,0.62); }
     .debt-card.expanded.priority-normal { border-color: rgba(63,185,133,0.48); }
-    .debt-row { display: grid; grid-template-columns: minmax(260px, 1.35fr) minmax(128px, 0.7fr) minmax(118px, 0.62fr) minmax(150px, 0.8fr) minmax(130px, 0.7fr) 44px; gap: 16px; align-items: center; padding: 16px 18px; }
+    .debt-row { display: grid; grid-template-columns: minmax(260px, 1.35fr) minmax(128px, 0.65fr) minmax(136px, 0.68fr) minmax(118px, 0.58fr) minmax(150px, 0.74fr) minmax(130px, 0.64fr) 44px; gap: 16px; align-items: center; padding: 16px 18px; }
     .debt-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; min-width: 0; }
     .debt-title { min-width: 0; flex: 1; }
     .debt-name { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
@@ -353,12 +361,12 @@
     .finance-item { background: rgba(255,255,255,0.032); border: 1px solid var(--border); border-radius: 14px; padding: 12px; min-height: 78px; }
     .finance-item.primary { background: linear-gradient(180deg, rgba(63,185,133,0.13), rgba(255,255,255,0.03)); border-color: rgba(63,185,133,0.24); }
     .finance-item.primary .debt-value { font-size: 23px; }
-    .debt-value { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+    .debt-value { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
     .progress-box { margin-top:16px; max-width:720px; }
     .progress-line { height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; }
     .progress-fill { height:100%; background:linear-gradient(90deg,var(--blue),var(--green)); border-radius:999px; }
     .row-stat .metric-label { margin-bottom: 6px; }
-    .row-stat strong { display: block; color: var(--text); font-size: 18px; letter-spacing: -0.025em; }
+    .row-stat strong { display: block; color: var(--text); font-size: 18px; letter-spacing: -0.025em; white-space: nowrap; }
     .row-stat small { display: block; color: var(--muted); margin-top: 4px; font-size: 12px; }
     .row-toggle { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; }
     .debt-actions { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap: 10px; flex-wrap: wrap; align-items:center; }
@@ -470,7 +478,7 @@
       .dashboard-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .front-row { grid-template-columns: 34px minmax(220px, 1fr) auto; }
       .front-row .front-value, .front-row .ghost-btn { grid-column: 2 / -1; justify-self: start; }
-      .debt-row { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(120px, 0.5fr)) 44px; }
+      .debt-row { grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(118px, 0.5fr)) 44px; }
       .creditor-row { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(120px, 0.5fr)); }
       .creditor-actions { grid-column: 1 / -1; justify-content: flex-start; min-width: 0; }
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
@@ -484,6 +492,7 @@
       .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: 3; }
       .route-stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
       .route-stat span { margin-bottom: 0; }
+      .route-stat small { grid-column: 1 / -1; justify-self: end; margin-top: -3px; }
       .route-actions { grid-column: 3 / -1; justify-self: start; }
     }
 
@@ -604,8 +613,8 @@
       .impact-line { width: 100%; font-size: 13px; }
       .summary-card { padding: 16px; }
       .summary-grid { grid-template-columns: 1fr; }
-      .summary-grid div { min-height: 72px; border-right: 0; }
-      .summary-grid div:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
+      .summary-grid div { min-height: 72px; border-right: 0; border-bottom: 1px solid var(--border); }
+      .summary-grid div:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
       .summary-grid div:last-child { border-bottom: 0; }
       .front-row { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
       .front-row .priority-badge, .front-row .front-value, .front-row .ghost-btn { grid-column: 2; justify-self: start; }

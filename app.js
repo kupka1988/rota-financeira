@@ -30,6 +30,7 @@
     let selectedWaitingCreditorFilter = 'all';
     let selectedHiddenCreditorFilter = 'all';
     let selectedPaidOffCreditorFilter = 'all';
+    let selectedTrailDebtSort = 'trail';
     let selectedDebtSort = 'priority';
     let selectedWaitingDebtSort = 'priority';
     let selectedHiddenDebtSort = 'priority';
@@ -137,6 +138,16 @@
     }
     function debtBalance(debt) {
       return openInstallmentsForDebt(debt).reduce((sum, item) => sum + Number(item.expectedValue || 0), 0);
+    }
+    function payoffTodayValue(debt) { return Number(debt.payoffToday || 0); }
+    function hasPayoffToday(debt) { return payoffTodayValue(debt) > 0; }
+    function payoffTodayHtml(debt) {
+      const value = payoffTodayValue(debt);
+      const balance = debtBalance(debt);
+      if (!value) return '<strong class="muted-value">—</strong>';
+      const economy = balance - value;
+      return '<strong>' + brl(value) + '</strong>' +
+        (economy > 0 ? '<small class="payoff-economy">economia ' + brl(economy) + '</small>' : '');
     }
     function debtProgress(debt) {
       const progress = installmentProgress(debt);
@@ -453,6 +464,7 @@
             '</div>' +
           '</div>' +
           '<div class="row-stat"><div class="metric-label">Saldo Devedor</div><strong>' + brl(balance) + '</strong></div>' +
+          '<div class="row-stat payoff-stat"><div class="metric-label">Quitação Hoje</div>' + payoffTodayHtml(debt) + '</div>' +
           '<div class="row-stat"><div class="metric-label">Parcela</div><strong>' + brl(debt.installmentValue) + '</strong></div>' +
           '<div class="row-stat next"><div class="metric-label">Próxima Parcela</div><strong>' + escapeHtml(nextLabel) + '</strong><small>' + escapeHtml(next ? dueHint(next.dueDate) : '') + '</small></div>' +
           '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + installmentCount.paid + '/' + installmentCount.total + '</strong><small>' + progress + '% das parcelas</small><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
@@ -497,6 +509,7 @@
         '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + '</div></div></div>' +
         routeProgressHtml(progressValue) +
         '<div class="route-stat"><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
+        '<div class="route-stat payoff-stat"><span>Quitação Hoje</span>' + payoffTodayHtml(debt) + '</div>' +
         '<div class="route-stat"><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
         '<div class="route-stat"><span>Próxima Parcela</span><strong>' + escapeHtml(nextLabel) + '</strong></div>' +
         '<div class="route-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(debt) + '</strong></div>' +
@@ -738,6 +751,13 @@
         if (mode === 'balance-asc') return debtBalance(a) - debtBalance(b);
         if (mode === 'progress-desc') return debtProgress(b) - debtProgress(a);
         if (mode === 'progress-asc') return debtProgress(a) - debtProgress(b);
+        if (mode === 'payoff-today') {
+          const hasA = hasPayoffToday(a);
+          const hasB = hasPayoffToday(b);
+          if (hasA !== hasB) return hasA ? -1 : 1;
+          if (hasA && hasB) return payoffTodayValue(a) - payoffTodayValue(b);
+          return trailOrderValue(a) - trailOrderValue(b);
+        }
         if (mode === 'next-due') return String(nextA?.dueDate || '9999-12-31').localeCompare(String(nextB?.dueDate || '9999-12-31'));
         if (mode === 'trail') return trailOrderValue(a) - trailOrderValue(b);
         return (priorityScore(b) - priorityScore(a)) || (debtBalance(b) - debtBalance(a));
@@ -753,6 +773,15 @@
       const active = debts
         .filter(debt => debt.status === 'Ativa')
         .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+      const paidOff = debts
+        .filter(debt => debt.status === 'Quitada')
+        .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
+      return [...active, ...paidOff];
+    }
+
+    function sortedTrailDebts() {
+      if (selectedTrailDebtSort === 'trail') return orderedTrailDebts();
+      const active = sortDebts(debts.filter(debt => debt.status === 'Ativa'), selectedTrailDebtSort);
       const paidOff = debts
         .filter(debt => debt.status === 'Quitada')
         .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
@@ -954,7 +983,7 @@
       const nextTarget = $('nextTarget');
       if (!metrics || !road || !position || !nextTarget) return;
 
-      const route = orderedTrailDebts();
+      const route = sortedTrailDebts();
       const totalBalance = route.reduce((sum, debt) => sum + debtBalance(debt), 0);
       const monthlyCommitment = route
         .filter(debt => debt.status === 'Ativa' && debtBalance(debt) > 0)
@@ -992,6 +1021,7 @@
           '</div>' +
           routeProgressHtml(nextProgress) +
           '<div class="next-target-stat"><span>Saldo</span><strong>' + brl(debtBalance(next)) + '</strong></div>' +
+          '<div class="next-target-stat payoff-stat"><span>Quitação Hoje</span>' + payoffTodayHtml(next) + '</div>' +
           '<div class="next-target-stat"><span>Parcela</span><strong>' + brl(next.installmentValue) + '</strong></div>' +
           '<div class="next-target-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(next) + '</strong></div>' +
         '</div>';
@@ -1008,16 +1038,19 @@
         const nextLabel = nextItem ? formatDateBR(nextItem.dueDate) : 'Sem parcela';
         const progressValue = done ? 100 : debtProgress(debt);
         const rank = done ? '✓' : route.filter(item => item.status === 'Ativa').findIndex(item => item.id === debt.id) + 1;
-        const dragAttrs = done ? 'draggable="false"' : 'draggable="true" ondragstart="window.startRouteDrag(event, \'' + debt.id + '\')" ondragover="window.routeDragOver(event, \'' + debt.id + '\')" ondrop="window.dropRouteDebt(event, \'' + debt.id + '\')" ondragend="window.endRouteDrag()"';
-        const reorderActions = done
-          ? ''
-          : '<button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">↑</button><button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">↓</button>';
+        const canReorder = selectedTrailDebtSort === 'trail' && !done;
+        const dragAttrs = canReorder ? 'draggable="true" ondragstart="window.startRouteDrag(event, \'' + debt.id + '\')" ondragover="window.routeDragOver(event, \'' + debt.id + '\')" ondrop="window.dropRouteDebt(event, \'' + debt.id + '\')" ondragend="window.endRouteDrag()"' : 'draggable="false"';
+        const reorderActions = canReorder
+          ? '<button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', -1)">↑</button><button class="ghost-btn subtle" onclick="window.moveDebtInTrail(\'' + debt.id + '\', 1)">↓</button>'
+          : '';
+        const dragTitle = done ? 'Dívida concluída' : selectedTrailDebtSort === 'trail' ? 'Arrastar para reordenar' : 'Reordenação manual disponível em Ordem da Rota';
         return '<div class="route-item' + (done ? ' done' : '') + (current ? ' current' : '') + (isExpanded ? ' expanded' : '') + '" data-debt-id="' + debt.id + '" ' + dragAttrs + '>' +
-          '<button class="drag-handle" title="' + (done ? 'Dívida concluída' : 'Arrastar para reordenar') + '"' + (done ? ' disabled' : '') + '>⋮⋮</button>' +
+          '<button class="drag-handle" title="' + dragTitle + '"' + (canReorder ? '' : ' disabled') + '>⋮⋮</button>' +
           '<div class="route-rank">' + rank + '</div>' +
           '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt, current) + '</div></div></div>' +
           routeProgressHtml(progressValue) +
           '<div class="route-stat"><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
+          '<div class="route-stat payoff-stat"><span>Quitação Hoje</span>' + payoffTodayHtml(debt) + '</div>' +
           '<div class="route-stat"><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
           '<div class="route-stat"><span>Próxima Parcela</span><strong>' + escapeHtml(nextLabel) + '</strong></div>' +
           '<div class="route-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(debt) + '</strong></div>' +
@@ -1353,6 +1386,12 @@
       selectedDebtSort = mode;
       expandedDebtId = null;
       renderDebts();
+    };
+
+    window.setTrailDebtSort = function(mode) {
+      selectedTrailDebtSort = mode;
+      expandedDebtId = null;
+      renderTrail();
     };
 
     window.setWaitingDebtSort = function(mode) {
