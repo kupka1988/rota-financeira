@@ -39,6 +39,7 @@
     let payoffDebtId = null;
     let editingInstallmentId = null;
     let draggedRouteDebtId = null;
+    let draggedWaitingDebtId = null;
 
     const $ = (id) => document.getElementById(id);
     const THEME_KEY = 'rotaFinanceiraTheme';
@@ -481,8 +482,8 @@
       const next = nextInstallment(debt);
       const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem parcela';
       const progressValue = debtProgress(debt);
-      return '<div class="route-item waiting-route-item' + (isExpanded ? ' expanded' : '') + '" data-debt-id="' + debt.id + '">' +
-        '<button class="drag-handle" title="Dívida em espera" disabled>⋮⋮</button>' +
+      return '<div class="route-item waiting-route-item' + (isExpanded ? ' expanded' : '') + '" data-debt-id="' + debt.id + '" draggable="true" ondragstart="window.startWaitingDebtDrag(event, \'' + debt.id + '\')" ondragover="window.waitingDebtDragOver(event)" ondrop="window.dropWaitingDebt(event, \'' + debt.id + '\')" ondragend="window.endWaitingDebtDrag()">' +
+        '<button class="drag-handle" title="Arrastar para reordenar">⋮⋮</button>' +
         '<div class="route-rank">' + (index + 1) + '</div>' +
         '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + '</div></div></div>' +
         routeProgressHtml(progressValue) +
@@ -490,7 +491,7 @@
         '<div class="route-stat"><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
         '<div class="route-stat"><span>Próxima Parcela</span><strong>' + escapeHtml(nextLabel) + '</strong></div>' +
         '<div class="route-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(debt) + '</strong></div>' +
-        '<div class="route-actions"><button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button></div>' +
+        '<div class="route-actions"><button class="ghost-btn subtle" onclick="window.moveWaitingDebt(\'' + debt.id + '\', -1)">↑</button><button class="ghost-btn subtle" onclick="window.moveWaitingDebt(\'' + debt.id + '\', 1)">↓</button><button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button></div>' +
         (isExpanded ? debtExpandedDetail(debt) : '') +
       '</div>';
     }
@@ -751,6 +752,12 @@
         .filter(debt => debt.id !== exceptId && debt.status === 'Ativa')
         .reduce((value, debt) => Math.max(value, Number(debt.payoffOrder || 0)), 0);
       return max + 1;
+    }
+
+    function orderedWaitingDebts() {
+      return debts
+        .filter(debt => debt.status === 'Em espera')
+        .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
     }
 
     function renderHistory() {
@@ -1935,6 +1942,71 @@
       renderAll();
       showToast('Ordem da rota atualizada.');
     }
+
+    async function persistWaitingOrder(route) {
+      const batch = writeBatch(db);
+      route.forEach((debt, index) => {
+        const payoffOrder = index + 1;
+        batch.update(doc(db, 'debts', debt.id), { payoffOrder, updatedAt: serverTimestamp() });
+        const local = debts.find(item => item.id === debt.id);
+        if (local) local.payoffOrder = payoffOrder;
+      });
+      await batch.commit();
+      selectedWaitingDebtSort = 'trail';
+      if ($('waitingDebtSort')) $('waitingDebtSort').value = 'trail';
+      renderAll();
+      showToast('Ordem de espera atualizada.');
+    }
+
+    window.moveWaitingDebt = async function(id, direction) {
+      const route = orderedWaitingDebts().map((debt, index) => ({ ...debt, payoffOrder: index + 1 }));
+      const currentIndex = route.findIndex(debt => debt.id === id);
+      const nextIndex = currentIndex + direction;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= route.length) return;
+
+      const current = route[currentIndex];
+      route[currentIndex] = route[nextIndex];
+      route[nextIndex] = current;
+      await persistWaitingOrder(route);
+    };
+
+    window.startWaitingDebtDrag = function(event, id) {
+      const debt = debts.find(item => item.id === id);
+      if (!debt || debt.status !== 'Em espera') return;
+      draggedWaitingDebtId = id;
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', id);
+      }
+      const item = event.currentTarget;
+      if (item) item.classList.add('dragging');
+    };
+
+    window.waitingDebtDragOver = function(event) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    };
+
+    window.dropWaitingDebt = async function(event, targetId) {
+      event.preventDefault();
+      const sourceId = draggedWaitingDebtId || event.dataTransfer?.getData('text/plain');
+      draggedWaitingDebtId = null;
+      document.querySelectorAll('.waiting-route-item.dragging').forEach(item => item.classList.remove('dragging'));
+      if (!sourceId || sourceId === targetId) return;
+
+      const route = orderedWaitingDebts();
+      const from = route.findIndex(debt => debt.id === sourceId);
+      const to = route.findIndex(debt => debt.id === targetId);
+      if (from < 0 || to < 0) return;
+      const [moved] = route.splice(from, 1);
+      route.splice(to, 0, moved);
+      await persistWaitingOrder(route);
+    };
+
+    window.endWaitingDebtDrag = function() {
+      draggedWaitingDebtId = null;
+      document.querySelectorAll('.waiting-route-item.dragging').forEach(item => item.classList.remove('dragging'));
+    };
 
     window.moveDebtInTrail = async function(id, direction) {
       const targetDebt = debts.find(debt => debt.id === id);
