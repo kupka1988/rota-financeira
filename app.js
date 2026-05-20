@@ -475,6 +475,26 @@
       '</div>';
     }
 
+    function waitingDebtRouteRow(debt, index) {
+      const balance = debtBalance(debt);
+      const isExpanded = expandedDebtId === debt.id;
+      const next = nextInstallment(debt);
+      const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem parcela';
+      const progressValue = debtProgress(debt);
+      return '<div class="route-item waiting-route-item' + (isExpanded ? ' expanded' : '') + '" data-debt-id="' + debt.id + '">' +
+        '<button class="drag-handle" title="Dívida em espera" disabled>⋮⋮</button>' +
+        '<div class="route-rank">' + (index + 1) + '</div>' +
+        '<div class="route-title">' + creditorLogoHtml(debt.creditorId) + '<div><div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + escapeHtml(getCreditorName(debt.creditorId) + ' · ' + debt.name) + '</div><div class="debt-meta">' + compactTagsForDebt(debt) + '</div></div></div>' +
+        routeProgressHtml(progressValue) +
+        '<div class="route-stat"><span>Saldo</span><strong>' + brl(balance) + '</strong></div>' +
+        '<div class="route-stat"><span>Parcela</span><strong>' + brl(debt.installmentValue) + '</strong></div>' +
+        '<div class="route-stat"><span>Próxima Parcela</span><strong>' + escapeHtml(nextLabel) + '</strong></div>' +
+        '<div class="route-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(debt) + '</strong></div>' +
+        '<div class="route-actions"><button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button></div>' +
+        (isExpanded ? debtExpandedDetail(debt) : '') +
+      '</div>';
+    }
+
     function renderDebts() {
       const activeAll = debts.filter(d => d.status === 'Ativa');
       const activeByPriority = selectedPriorityFilter === 'all' ? activeAll : activeAll.filter(d => d.criticality === selectedPriorityFilter);
@@ -494,7 +514,7 @@
       renderPaidOffCreditorFilters(paidOffAll);
       renderPaidOffDebtMetrics(paidOff);
       $('activeDebts').innerHTML = active.length ? active.map(debtCard).join('') : emptyCard('Nenhuma Dívida Encontrada', selectedCreditorFilter === 'all' ? 'Não há dívidas ativas para este filtro.' : 'Não há dívidas ativas para este credor neste filtro.');
-      $('waitingDebts').innerHTML = waiting.length ? waiting.map(debtCard).join('') : emptyCard('Nenhuma dívida em espera', selectedWaitingCreditorFilter === 'all' ? 'As dívidas fora da frente atual aparecerão aqui.' : 'Não há dívidas em espera para este credor.');
+      $('waitingDebts').innerHTML = waiting.length ? waiting.map(waitingDebtRouteRow).join('') : emptyCard('Nenhuma dívida em espera', selectedWaitingCreditorFilter === 'all' ? 'As dívidas fora da frente atual aparecerão aqui.' : 'Não há dívidas em espera para este credor.');
       $('hiddenDebts').innerHTML = hidden.length ? hidden.map(debtCard).join('') : emptyCard('Nada fora do radar', 'As dívidas que você não quer acompanhar aparecerão aqui.');
       $('paidOffDebts').innerHTML = paidOff.length ? sortDebts(paidOff, 'progress-desc').map(debtCard).join('') : emptyCard('Nenhuma dívida quitada', selectedPaidOffCreditorFilter === 'all' ? 'Quando uma dívida ficar sem parcelas abertas, ela aparecerá aqui.' : 'Não há dívidas quitadas para este credor.');
       renderDashboard();
@@ -577,7 +597,7 @@
       if (!container) return;
       const creditorIds = [...new Set(waitingDebts.map(d => d.creditorId).filter(Boolean))]
         .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)));
-      let html = '<button class="ghost-btn ' + (selectedWaitingCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterWaitingByCreditor(\'all\')">◌ Todos em espera <span class="filter-count">' + waitingDebts.length + '</span></button>';
+      let html = '<button class="ghost-btn ' + (selectedWaitingCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterWaitingByCreditor(\'all\')">◌ Todos <span class="filter-count">' + waitingDebts.length + '</span></button>';
       creditorIds.forEach(id => {
         const count = waitingDebts.filter(d => d.creditorId === id).length;
         html += '<button class="ghost-btn ' + (selectedWaitingCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterWaitingByCreditor(\'' + id + '\')">' + creditorLogoHtml(id) + escapeHtml(getCreditorName(id)) + '<span class="filter-count">' + count + '</span></button>';

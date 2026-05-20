@@ -32,6 +32,7 @@
 - 2026-05-19: adicionado modal de quitacao de divida com calculo de desconto, registro de pagamento de quitacao e encerramento das parcelas futuras.
 - 2026-05-19: aba `Rota` renomeada para `Rota Financeira`, aba `Dividas Ativas` descontinuada na navegacao e Rota Financeira assumiu a lista principal de dividas ativas/priorizadas.
 - 2026-05-19: lista da Rota Financeira ganhou expansao inline, coluna `Proxima Parcela`, tags reduzidas a prioridade/Proximo Alvo e menu `Acoes` com nomenclatura `Mover/Restaurar para Rota Financeira`.
+- 2026-05-19: aba `Em espera` passou a usar o mesmo grid de dividas da Rota Financeira, mantendo filtros, totalizadores, ordenacao e expansao inline.
 
 ## Referencias de commits
 - Commit remoto mais recente conhecido antes da reorganizacao: `d17333c` (`Ajusta fluxo de pagamento em dividas`).
