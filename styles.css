@@ -519,16 +519,43 @@
     .toast { position: fixed; right: 24px; bottom: 24px; background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)), var(--panel); border: 1px solid rgba(63,185,133,0.28); color: var(--text); border-radius: 18px; padding: 14px 16px; box-shadow: 0 24px 70px rgba(0,0,0,0.36); display: none; z-index: 60; font-size: 14px; font-weight: 750; }
     .toast.show { display: block; }
 
-    @media (max-width: 1500px) {
-      .debt-row { grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(118px, 0.5fr)) 44px; }
-      .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
-      .next-target-card { grid-template-columns: minmax(280px, 1fr) minmax(180px, 0.8fr) repeat(2, minmax(120px, 0.55fr)); }
-      .route-item { grid-template-columns: 24px 38px minmax(0, 1fr); gap: 10px; align-items: start; }
-      .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: 3; }
-      .route-stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
-      .route-stat span { margin-bottom: 0; }
-      .route-stat small { grid-column: 1 / -1; justify-self: end; margin-top: -3px; }
-      .route-actions { grid-column: 3 / -1; justify-self: start; }
+    @media (min-width: 981px) and (max-width: 1500px) {
+      main { padding: 24px; }
+      .route-item {
+        grid-template-columns: 14px 24px minmax(130px, 1.18fr) minmax(72px, 0.48fr) minmax(70px, 0.4fr) minmax(74px, 0.42fr) minmax(70px, 0.4fr) minmax(80px, 0.44fr) minmax(48px, 0.28fr) minmax(64px, 0.34fr);
+        gap: 4px;
+        min-height: 60px;
+        padding: 8px;
+      }
+      .drag-handle { width: 16px; height: 28px; font-size: 12px; }
+      .route-rank { width: 28px; height: 28px; font-size: 12px; }
+      .route-title { gap: 8px; }
+      .route-title > div { min-width: 0; }
+      .route-title .creditor-logo { width: 32px; height: 32px; border-radius: 11px; }
+      .route-title .debt-name { font-size: 13px; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .route-title .debt-meta { margin-top: 3px; gap: 4px; font-size: 10px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+      .route-progress-top { margin-bottom: 5px; font-size: 10px; }
+      .route-progress-track { height: 5px; }
+      .next-target-stat span, .route-stat span { font-size: 10px; margin-bottom: 3px; }
+      .next-target-stat strong, .route-stat strong { font-size: 12px; letter-spacing: -0.015em; overflow: hidden; text-overflow: ellipsis; }
+      .next-target-stat small, .route-stat small { font-size: 10px; margin-top: 3px; }
+      .payoff-economy { margin-top: 3px; padding: 2px 5px; font-size: 9px; }
+      .route-actions { justify-content: flex-end; gap: 4px; }
+      .ghost-btn.subtle { width: 26px; height: 26px; font-size: 11px; }
+      .route-actions .row-toggle { width: 30px; height: 30px; }
+      .debt-row {
+        grid-template-columns: minmax(210px, 1.24fr) minmax(92px, 0.54fr) minmax(96px, 0.54fr) minmax(88px, 0.48fr) minmax(108px, 0.58fr) minmax(96px, 0.5fr) 34px;
+        gap: 9px;
+        padding: 12px;
+      }
+      .debt-name { font-size: 14px; }
+      .debt-meta { font-size: 10px; gap: 5px; }
+      .debt-head { gap: 8px; }
+      .debt-head .creditor-logo { width: 36px; height: 36px; border-radius: 12px; }
+      .row-stat strong { font-size: 13px; }
+      .row-stat small { font-size: 10px; }
+      .row-stat .metric-label { font-size: 10px; margin-bottom: 3px; }
+      .row-toggle { width: 32px; height: 32px; }
     }
 
     @media (max-width: 1180px) {
@@ -559,6 +586,17 @@
       .route-actions { grid-column: 3 / -1; justify-self: start; }
       .preference-grid.three { grid-template-columns: 1fr 1fr; }
       .data-actions-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (min-width: 981px) and (max-width: 1180px) {
+      .debt-row { grid-template-columns: minmax(210px, 1.24fr) minmax(92px, 0.54fr) minmax(96px, 0.54fr) minmax(88px, 0.48fr) minmax(108px, 0.58fr) minmax(96px, 0.5fr) 34px; }
+      .debt-row .row-stat.next, .debt-row .row-stat.progress { display: block; }
+      .route-item { grid-template-columns: 14px 24px minmax(130px, 1.18fr) minmax(72px, 0.48fr) minmax(70px, 0.4fr) minmax(74px, 0.42fr) minmax(70px, 0.4fr) minmax(80px, 0.44fr) minmax(48px, 0.28fr) minmax(64px, 0.34fr); }
+      .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: auto; }
+      .route-stat { display: block; width: auto; padding: 0; border: 0; border-radius: 0; background: transparent; }
+      .route-stat span { margin-bottom: 3px; }
+      .route-stat small { display: block; justify-self: auto; margin-top: 3px; }
+      .route-actions { grid-column: auto; justify-self: end; }
     }
 
     @media (max-width: 980px) {
