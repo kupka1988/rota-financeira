@@ -519,6 +519,18 @@
     .toast { position: fixed; right: 24px; bottom: 24px; background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)), var(--panel); border: 1px solid rgba(63,185,133,0.28); color: var(--text); border-radius: 18px; padding: 14px 16px; box-shadow: 0 24px 70px rgba(0,0,0,0.36); display: none; z-index: 60; font-size: 14px; font-weight: 750; }
     .toast.show { display: block; }
 
+    @media (max-width: 1500px) {
+      .debt-row { grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(118px, 0.5fr)) 44px; }
+      .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
+      .next-target-card { grid-template-columns: minmax(280px, 1fr) minmax(180px, 0.8fr) repeat(2, minmax(120px, 0.55fr)); }
+      .route-item { grid-template-columns: 24px 38px minmax(0, 1fr); gap: 10px; align-items: start; }
+      .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: 3; }
+      .route-stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
+      .route-stat span { margin-bottom: 0; }
+      .route-stat small { grid-column: 1 / -1; justify-self: end; margin-top: -3px; }
+      .route-actions { grid-column: 3 / -1; justify-self: start; }
+    }
+
     @media (max-width: 1180px) {
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
       .donut-panel { grid-template-columns: 1fr; }
