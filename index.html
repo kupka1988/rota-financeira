@@ -24,6 +24,40 @@
 
   <div id="toast" class="toast">Operação realizada com sucesso.</div>
 
+  <div id="creditorModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="creditorFormTitle">Novo credor</div>
+          <div class="modal-text">Mantenha apenas as informações úteis para reconhecer o credor na sua rota.</div>
+        </div>
+        <button class="ghost-btn icon-btn" onclick="closeCreditorModal()">×</button>
+      </div>
+      <div class="form-grid" style="grid-template-columns: 1fr;">
+        <div><label>Nome</label><input id="creditorName" placeholder="Ex.: Santander" /></div>
+        <div><label>Tipo</label><select id="creditorType"><option>Banco</option><option>Cartão</option><option>Financeira</option><option>Loja</option><option>Outro</option><option>Pessoa física</option></select></div>
+        <div>
+          <label>Logo</label>
+          <div class="logo-upload">
+            <div id="creditorLogoPreview" class="creditor-logo">RF</div>
+            <div>
+              <input id="creditorLogoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="handleCreditorLogoUpload(event)" />
+              <input id="creditorLogoUrl" type="hidden" />
+              <button class="ghost-btn" type="button" onclick="clearCreditorLogo()">Remover logo</button>
+            </div>
+          </div>
+        </div>
+        <div><label>Observação</label><textarea id="creditorNotes" placeholder="Ex.: costuma oferecer desconto, tem portal próprio..."></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-btn" onclick="closeCreditorModal()">Cancelar</button>
+        <button class="primary-action" onclick="saveCreditor()">Salvar credor</button>
+      </div>
+    </div>
+  </div>
+
+  <input id="jsonImportFile" class="sr-only-file" type="file" accept="application/json,.json" onchange="handleJsonImport(event)" />
+
   <div id="paymentForm" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-brand">Rota Financeira</div>
@@ -155,7 +189,7 @@
         <button class="nav-item" data-page="renegociacao"><span>⇄</span> Renegociação</button>
         <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
         <button class="nav-item" data-page="historico"><span>↺</span> Histórico</button>
-        <button class="nav-item" data-page="configuracoes"><span>⚙</span> Configurações</button>
+        <button class="nav-item" data-page="configuracoes"><span>⚙</span> Preferências</button>
       </nav>
     </aside>
 
@@ -393,36 +427,72 @@
       </section>
 
       <section id="configuracoes" class="page">
-        <div class="topbar"><div><div class="eyebrow">Parâmetros</div><h1>Configurações</h1><div class="page-desc">Ajuste aparência, identidade e cadastros de apoio do sistema.</div></div></div>
-        <div class="panel settings-panel">
-          <h2 class="panel-title">Aparência do sistema</h2>
-          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
-            <div><label>Tema</label><select id="themeSelect" onchange="setThemePreference(this.value)"><option value="light">Claro</option><option value="dark">Escuro</option></select></div>
-            <div><label>Identidade visual</label><div class="debt-meta">Logo e favicon do Rota Financeira ativos no sistema.</div></div>
+        <div class="topbar"><div><div class="eyebrow">Preferências</div><h1>Preferências</h1><div class="page-desc">Personalize sua experiência e defina como a Rota Financeira deve se comportar para você.</div></div></div>
+        <div class="preferences-stack">
+          <div class="panel preference-panel">
+            <div class="preference-title"><span class="preference-icon green">⌾</span><div><h2 class="panel-title">1. Estratégia financeira</h2></div></div>
+            <div class="preference-grid three">
+              <div class="preference-block">
+                <label>Capacidade mensal da rota</label>
+                <div class="money-input"><span>R$</span><input id="monthlyCapacity" inputmode="decimal" placeholder="0,00" onchange="setPreferenceValue('monthlyCapacity', this.value)" /></div>
+                <div class="preference-help">Valor disponível por mês para quitar dívidas.</div>
+                <span class="future-badge">Futuro: usado em projeções</span>
+              </div>
+              <div class="preference-block">
+                <label>Estratégia padrão</label>
+                <select id="defaultStrategy" onchange="setPreferenceValue('defaultStrategy', this.value)"><option>Ordem manual</option><option>Menor quitação</option><option>Maior parcela</option><option>Maior desconto</option></select>
+                <span class="future-badge">Futuro</span>
+              </div>
+              <div class="preference-block">
+                <label>Notificações</label>
+                <div class="check-list">
+                  <label><input id="notifyDueSoon" type="checkbox" onchange="setPreferenceValue('notifyDueSoon', this.checked)" /> Vencimento em 3 dias</label>
+                  <label><input id="notifyOverdue" type="checkbox" onchange="setPreferenceValue('notifyOverdue', this.checked)" /> Parcela vencida</label>
+                  <label><input id="notifyPaidOff" type="checkbox" onchange="setPreferenceValue('notifyPaidOff', this.checked)" /> Dívida quitada</label>
+                </div>
+                <span class="future-badge">Futuro</span>
+              </div>
+            </div>
           </div>
-        </div>
-        <div id="creditorMetrics" class="debt-metrics"></div>
-        <div class="grid-2">
-          <div class="panel"><h2 class="panel-title">Credores cadastrados</h2><div class="debt-list" id="creditorsList"></div></div>
-          <div class="panel">
-            <h2 class="panel-title" id="creditorFormTitle">Novo credor</h2>
-            <div class="form-grid" style="grid-template-columns: 1fr;">
-              <div><label>Nome do credor</label><input id="creditorName" placeholder="Ex.: Santander" /></div>
-              <div><label>Tipo</label><select id="creditorType"><option>Banco</option><option>Cartão</option><option>Financeira</option><option>Loja</option><option>Outro</option><option>Pessoa física</option></select></div>
-              <div>
-                <label>Logo do credor</label>
-                <div class="logo-upload">
-                  <div id="creditorLogoPreview" class="creditor-logo">RF</div>
-                  <div>
-                    <input id="creditorLogoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="handleCreditorLogoUpload(event)" />
-                    <input id="creditorLogoUrl" type="hidden" />
-                    <button class="ghost-btn" type="button" onclick="clearCreditorLogo()">Remover logo</button>
-                  </div>
+
+          <div class="panel preference-panel">
+            <div class="preference-title"><span class="preference-icon blue">▣</span><div><h2 class="panel-title">2. Aparência</h2></div></div>
+            <div class="preference-grid two">
+              <div class="preference-block">
+                <label>Tema</label>
+                <div class="segmented-control" id="themeSelect">
+                  <button type="button" data-value="light" onclick="setThemePreference('light')">Claro</button>
+                  <button type="button" data-value="dark" onclick="setThemePreference('dark')">Escuro</button>
+                  <button type="button" data-value="auto" onclick="setThemePreference('auto')">Automático</button>
                 </div>
               </div>
-              <div><label>Observações</label><textarea id="creditorNotes" placeholder="Ex.: costuma oferecer desconto, tem portal próprio..."></textarea></div>
+              <div class="preference-block">
+                <label>Densidade</label>
+                <div class="segmented-control" id="densitySelect">
+                  <button type="button" data-value="compact" onclick="setDensityPreference('compact')">Compacta</button>
+                  <button type="button" data-value="comfortable" onclick="setDensityPreference('comfortable')">Confortável</button>
+                </div>
+              </div>
             </div>
-            <div class="form-actions"><button class="primary-action" onclick="saveCreditor()">Salvar credor</button><button class="ghost-btn" onclick="resetCreditorForm()">Cancelar edição</button></div>
+          </div>
+
+          <div class="panel preference-panel creditors-panel">
+            <div class="panel-head">
+              <div class="preference-title"><span class="preference-icon purple">◫</span><div><h2 class="panel-title">3. Credores</h2><div class="metric-note">Gerencie os credores cadastrados sem ocupar a tela com formulário fixo.</div></div></div>
+              <button class="primary-action compact-action" onclick="openCreditorModal()">+ Novo credor</button>
+            </div>
+            <div class="creditor-table" id="creditorsList"></div>
+          </div>
+
+          <div class="panel preference-panel">
+            <div class="preference-title"><span class="preference-icon blue">⇩</span><div><h2 class="panel-title">4. Dados</h2><div class="metric-note">Exporte, importe ou limpe seus dados com confirmação.</div></div></div>
+            <div class="data-actions-grid">
+              <button class="data-action" onclick="exportJson()"><strong>Exportar JSON</strong><span>Backup completo da estrutura.</span></button>
+              <button class="data-action" onclick="triggerJsonImport()"><strong>Importar JSON</strong><span>Restaura dados de um backup.</span></button>
+              <button class="data-action" onclick="exportDebtsCsv()"><strong>Exportar CSV dívidas</strong><span>Planilha das dívidas cadastradas.</span></button>
+              <button class="data-action" onclick="exportPaymentsCsv()"><strong>Exportar CSV pagamentos</strong><span>Planilha dos pagamentos registrados.</span></button>
+              <button class="data-action danger" onclick="openClearAllModal()"><strong>Limpar todos os dados</strong><span>Remove credores, dívidas, parcelas e pagamentos.</span></button>
+            </div>
           </div>
         </div>
       </section>

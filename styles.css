@@ -106,6 +106,7 @@
     .secondary-action { padding: 13px 16px; }
     .ghost-btn { padding: 9px 11px; font-size: 12px; }
     .danger-btn { color: #eda2a2; border-color: rgba(216,100,100,0.28); }
+    .icon-only { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; font-size: 16px; }
 
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .grid-2 { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 18px; margin-top: 18px; }
@@ -121,6 +122,56 @@
 
     .panel, .form-card { padding: 22px; }
     .panel-title { font-size: 18px; font-weight: 700; margin: 0 0 16px; letter-spacing: -0.02em; }
+    .preference-panel { margin-bottom: 18px; }
+    .preferences-stack { max-width: 1320px; }
+    .preference-title { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .preference-title .panel-title { margin: 0; }
+    .preference-icon { width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; }
+    .preference-icon.green { color: #8ae1b8; background: var(--green-soft); }
+    .preference-icon.blue { color: #a8c3ff; background: var(--blue-soft); }
+    .preference-icon.purple { color: #d8b5ff; background: rgba(145, 96, 255, 0.16); }
+    .preference-grid { display: grid; gap: 20px; }
+    .preference-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .preference-grid.two { grid-template-columns: 1fr 1fr; }
+    .preference-block { min-width: 0; }
+    .preference-help { margin-top: 9px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .money-input { display: grid; grid-template-columns: 54px 1fr; overflow: hidden; border: 1px solid var(--border); border-radius: 13px; background: var(--panel-2); }
+    .money-input span { display: grid; place-items: center; color: var(--text); font-weight: 800; border-right: 1px solid var(--border); }
+    .money-input input { border: 0; border-radius: 0; background: transparent; }
+    .future-badge { width: fit-content; display: inline-flex; align-items: center; min-height: 28px; margin-top: 14px; padding: 6px 11px; border-radius: 999px; border: 1px solid rgba(216,164,65,0.34); color: #ffe2a0; background: var(--amber-soft); font-size: 12px; font-weight: 800; }
+    body[data-theme="light"] .future-badge { color: #8a5a08; background: #fff0c9; }
+    .check-list { display: grid; gap: 12px; margin-top: 4px; }
+    .check-list label { display: flex; align-items: center; gap: 9px; margin: 0; color: var(--soft); font-size: 13px; }
+    .check-list input { width: 17px; height: 17px; padding: 0; accent-color: var(--green); }
+    .segmented-control { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+    .segmented-control button { min-height: 46px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.04); color: var(--soft); cursor: pointer; font-size: 13px; font-weight: 800; }
+    .segmented-control button.is-active { color: #8ae1b8; border-color: rgba(63,185,133,0.54); background: linear-gradient(135deg, rgba(63,185,133,0.18), rgba(255,255,255,0.035)); box-shadow: 0 12px 30px rgba(63,185,133,0.10); }
+    body[data-theme="light"] .segmented-control button.is-active { color: #087a4e; background: linear-gradient(135deg, #e4f8ee, #ffffff); }
+    .compact-action { padding: 11px 15px; border-radius: 12px; white-space: nowrap; }
+    .creditors-panel .panel-head { align-items: center; margin-bottom: 14px; }
+    .creditors-panel .preference-title { margin-bottom: 0; }
+    .creditor-table { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.02); }
+    .creditor-table .debt-card { border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+    .creditor-table-head, .creditor-table-row { display: grid; grid-template-columns: minmax(260px, 1.25fr) minmax(80px, 0.35fr) minmax(150px, 0.55fr) minmax(90px, 0.32fr); gap: 14px; align-items: center; }
+    .creditor-table-head { padding: 11px 14px; color: var(--muted); background: rgba(255,255,255,0.026); font-size: 12px; font-weight: 800; }
+    .creditor-table-row { min-height: 64px; padding: 10px 14px; border-top: 1px solid var(--border); }
+    .creditor-table-row strong { color: var(--text); font-size: 14px; }
+    .creditor-table-row .debt-head { justify-content: flex-start; }
+    .creditor-table-row .creditor-logo { width: 36px; height: 36px; border-radius: 12px; }
+    .creditor-table-row .debt-name { font-size: 14px; }
+    .creditor-table-row .creditor-actions { justify-content: flex-end; min-width: 0; }
+    .creditor-table-row .creditor-actions .ghost-btn,
+    .creditor-table-row .creditor-actions .danger-btn { min-width: 0; width: 38px; }
+    .data-actions-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+    .data-action { min-height: 106px; padding: 15px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.03); color: var(--text); text-align: left; cursor: pointer; }
+    .data-action strong { display: block; margin-bottom: 8px; font-size: 14px; }
+    .data-action span { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .data-action:hover { border-color: var(--border-strong); background: rgba(255,255,255,0.055); }
+    .data-action.danger { border-color: rgba(216,100,100,0.32); color: #eda2a2; background: linear-gradient(180deg, rgba(216,100,100,0.12), rgba(255,255,255,0.018)); }
+    .sr-only-file { position: fixed; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    body[data-density="comfortable"] .creditor-table-row { min-height: 78px; padding-top: 16px; padding-bottom: 16px; }
+    body[data-density="comfortable"] .debt-row { padding-top: 20px; padding-bottom: 20px; }
+    body[data-density="comfortable"] .debt-card { margin-bottom: 12px; }
     .strategy-box { border-radius: var(--radius-md); padding: 18px; background: var(--blue-soft); border: 1px solid rgba(77,141,247,0.26); margin-bottom: 14px; }
     .strategy-title { font-size: 13px; color: #b7ccff; margin-bottom: 6px; font-weight: 700; }
     .strategy-main { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
@@ -494,6 +545,8 @@
       .route-stat span { margin-bottom: 0; }
       .route-stat small { grid-column: 1 / -1; justify-self: end; margin-top: -3px; }
       .route-actions { grid-column: 3 / -1; justify-self: start; }
+      .preference-grid.three { grid-template-columns: 1fr 1fr; }
+      .data-actions-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
 
     @media (max-width: 980px) {
@@ -503,6 +556,12 @@
       .nav-item { min-width: max-content; }
       .grid-2, .form-grid { grid-template-columns: 1fr; }
       .grid-4 { grid-template-columns: 1fr; }
+      .preference-grid.three, .preference-grid.two { grid-template-columns: 1fr; }
+      .creditor-table-head { display: none; }
+      .creditor-table-row { grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+      .creditor-table-row > strong { text-align: right; }
+      .creditor-table-row .creditor-actions { grid-column: 1 / -1; justify-content: flex-start; }
+      .data-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .debt-metrics { grid-template-columns: 1fr; }
       .focus-card { grid-template-columns: 44px 1fr; }
       .focus-card .primary-action { grid-column: 1 / -1; justify-self: start; }
@@ -554,7 +613,7 @@
       body[data-theme="light"] aside { background: rgba(248,251,253,0.94); }
       .brand { display: none; }
       nav { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; overflow: visible; padding: 0; }
-      .nav-item { min-width: 0; justify-content: center; flex-direction: column; gap: 3px; padding: 7px 1px; border-radius: 13px; font-size: 8px; line-height: 1.1; white-space: normal; text-align: center; }
+      .nav-item { min-width: 0; justify-content: center; flex-direction: column; gap: 0; padding: 7px 1px; border-radius: 13px; font-size: 0; line-height: 1; white-space: normal; text-align: center; }
       body[data-theme="light"] .nav-item.active,
       body[data-theme="light"] .nav-item:hover { background: #e5edf5; color: var(--text); }
       .nav-item span { font-size: 15px; line-height: 1; }
@@ -620,6 +679,15 @@
       .front-row .priority-badge, .front-row .front-value, .front-row .ghost-btn { grid-column: 2; justify-self: start; }
       .dashboard-insights { grid-template-columns: 1fr; }
       .panel-head { align-items: flex-start; flex-direction: column; gap: 4px; }
+      .preference-panel { padding: 16px; border-radius: 16px; margin-bottom: 10px; }
+      .preference-title { align-items: flex-start; margin-bottom: 14px; }
+      .preference-icon { width: 36px; height: 36px; border-radius: 12px; }
+      .segmented-control { grid-auto-flow: row; grid-auto-rows: 44px; }
+      .creditors-panel .panel-head { align-items: stretch; flex-direction: column; }
+      .creditor-table { border: 0; background: transparent; display: grid; gap: 8px; }
+      .creditor-table-row { border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.025); }
+      .data-actions-grid { grid-template-columns: 1fr; gap: 8px; }
+      .data-action { min-height: 0; }
       .route-summary { grid-template-columns: 1fr; gap: 8px; border: 0; background: transparent; box-shadow: none; }
       .route-summary .debt-metric, .route-donut, .route-summary-copy { border: 1px solid var(--border); border-radius: 16px; }
       .route-summary-metrics { grid-template-columns: 1fr; gap: 8px; background: transparent; }

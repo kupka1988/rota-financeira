@@ -48,20 +48,81 @@
 
     const $ = (id) => document.getElementById(id);
     const THEME_KEY = 'rotaFinanceiraTheme';
+    const DENSITY_KEY = 'rotaFinanceiraDensity';
+    const PREFERENCES_KEY = 'rotaFinanceiraPreferences';
+    const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+    const defaultPreferences = {
+      monthlyCapacity: '',
+      defaultStrategy: 'Ordem manual',
+      notifyDueSoon: true,
+      notifyOverdue: true,
+      notifyPaidOff: true
+    };
+
+    function readPreferences() {
+      try {
+        return { ...defaultPreferences, ...(JSON.parse(localStorage.getItem(PREFERENCES_KEY) || '{}')) };
+      } catch {
+        return { ...defaultPreferences };
+      }
+    }
+
+    let userPreferences = readPreferences();
 
     function applyTheme(theme) {
-      const nextTheme = theme === 'light' ? 'light' : 'dark';
+      const preference = ['light', 'dark', 'auto'].includes(theme) ? theme : 'light';
+      const nextTheme = preference === 'auto' ? (themeMedia.matches ? 'dark' : 'light') : preference;
       document.body.dataset.theme = nextTheme;
-      const select = $('themeSelect');
-      if (select) select.value = nextTheme;
-      localStorage.setItem(THEME_KEY, nextTheme);
+      document.body.dataset.themePreference = preference;
+      updateSegmentedControl('themeSelect', preference);
+      localStorage.setItem(THEME_KEY, preference);
     }
 
     window.setThemePreference = function(theme) {
       applyTheme(theme);
     };
 
+    function applyDensity(density) {
+      const nextDensity = density === 'comfortable' ? 'comfortable' : 'compact';
+      document.body.dataset.density = nextDensity;
+      updateSegmentedControl('densitySelect', nextDensity);
+      localStorage.setItem(DENSITY_KEY, nextDensity);
+    }
+
+    window.setDensityPreference = function(density) {
+      applyDensity(density);
+    };
+
+    function updateSegmentedControl(id, value) {
+      const control = $(id);
+      if (!control) return;
+      control.querySelectorAll('button').forEach(button => {
+        button.classList.toggle('is-active', button.dataset.value === value);
+      });
+    }
+
+    function renderPreferenceValues() {
+      const monthlyCapacity = $('monthlyCapacity');
+      if (!monthlyCapacity) return;
+      monthlyCapacity.value = userPreferences.monthlyCapacity || '';
+      $('defaultStrategy').value = userPreferences.defaultStrategy || 'Ordem manual';
+      $('notifyDueSoon').checked = Boolean(userPreferences.notifyDueSoon);
+      $('notifyOverdue').checked = Boolean(userPreferences.notifyOverdue);
+      $('notifyPaidOff').checked = Boolean(userPreferences.notifyPaidOff);
+      updateSegmentedControl('themeSelect', localStorage.getItem(THEME_KEY) || 'light');
+      updateSegmentedControl('densitySelect', localStorage.getItem(DENSITY_KEY) || 'compact');
+    }
+
+    window.setPreferenceValue = function(key, value) {
+      userPreferences = { ...userPreferences, [key]: value };
+      localStorage.setItem(PREFERENCES_KEY, JSON.stringify(userPreferences));
+    };
+
     applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+    applyDensity(localStorage.getItem(DENSITY_KEY) || 'compact');
+    themeMedia.addEventListener('change', () => {
+      if ((localStorage.getItem(THEME_KEY) || 'light') === 'auto') applyTheme('auto');
+    });
 
     function brl(value) { return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     function parseMoney(value) {
@@ -888,19 +949,20 @@
       if (!creditors.length) {
         $('creditorsList').innerHTML = emptyCard('Nenhum credor cadastrado', 'Cadastre credores para usar na criação das dívidas.');
       } else {
-        $('creditorsList').innerHTML = sortedCreditors().map(creditor => {
-          const notes = creditor.notes ? '<span>' + escapeHtml(creditor.notes) + '</span>' : '';
+        $('creditorsList').innerHTML =
+          '<div class="creditor-table-head"><span>Credor</span><span>Dívidas</span><span>Saldo</span><span>Ações</span></div>' +
+          sortedCreditors().map(creditor => {
           const linkedDebts = debts.filter(d => d.creditorId === creditor.id);
           const linkedBalance = linkedDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
           const deleteButton = linkedDebts.length
-            ? '<button class="ghost-btn danger-btn" onclick="showToast(\'Este credor está vinculado a dívidas.\')">Exclusão bloqueada</button>'
-            : '<button class="ghost-btn danger-btn" onclick="window.openDeleteModal(\'creditor\', \'' + creditor.id + '\')">Excluir</button>';
-          return '<div class="debt-card"><div class="debt-row creditor-row">' +
-            '<div class="debt-head">' + creditorLogoHtml(creditor.id) + '<div><div class="debt-name">' + escapeHtml(creditor.name) + '</div><div class="debt-meta"><span>' + escapeHtml(creditor.type) + '</span>' + notes + '</div></div></div>' +
-            '<div class="row-stat"><div class="metric-label">Dívidas</div><strong>' + linkedDebts.length + '</strong></div>' +
-            '<div class="row-stat"><div class="metric-label">Saldo Vinculado</div><strong>' + brl(linkedBalance) + '</strong></div>' +
-            '<div class="action-group creditor-actions"><button class="ghost-btn" onclick="window.editCreditor(\'' + creditor.id + '\')">Editar</button>' + deleteButton + '</div>' +
-          '</div></div>';
+            ? '<button class="ghost-btn icon-only danger-btn" title="Exclusão bloqueada" onclick="showToast(\'Este credor está vinculado a dívidas.\')">⊘</button>'
+            : '<button class="ghost-btn icon-only danger-btn" title="Excluir" onclick="window.openDeleteModal(\'creditor\', \'' + creditor.id + '\')">⌫</button>';
+          return '<div class="creditor-table-row">' +
+            '<div class="debt-head">' + creditorLogoHtml(creditor.id) + '<div><div class="debt-name">' + escapeHtml(creditor.name) + '</div><div class="debt-meta"><span>' + escapeHtml(creditor.type) + '</span></div></div></div>' +
+            '<strong>' + linkedDebts.length + '</strong>' +
+            '<strong>' + brl(linkedBalance) + '</strong>' +
+            '<div class="action-group creditor-actions"><button class="ghost-btn icon-only" title="Editar" onclick="window.editCreditor(\'' + creditor.id + '\')">✎</button>' + deleteButton + '</div>' +
+          '</div>';
         }).join('');
       }
 
@@ -1274,6 +1336,7 @@
 
     function renderAll() {
       rebuildIndexes();
+      renderPreferenceValues();
       renderCreditors();
       renderDebts();
       renderRenegotiation();
@@ -1827,13 +1890,25 @@
         showToast('Credor cadastrado com sucesso.');
       }
       resetCreditorForm();
+      closeCreditorModal();
       renderAll();
+    };
+
+    window.openCreditorModal = function() {
+      resetCreditorForm();
+      $('creditorModal').classList.add('show');
+    };
+
+    window.closeCreditorModal = function() {
+      $('creditorModal').classList.remove('show');
+      resetCreditorForm();
     };
 
     window.editCreditor = function(id) {
       const creditor = creditors.find(c => c.id === id);
       if (!creditor) return;
       editingCreditorId = id;
+      $('creditorModal').classList.add('show');
       $('creditorFormTitle').textContent = 'Editar credor';
       $('creditorName').value = creditor.name || '';
       $('creditorType').value = creditor.type || 'Banco';
@@ -1886,6 +1961,153 @@
       $('creditorLogoUrl').value = '';
       $('creditorLogoFile').value = '';
       renderCreditorLogoPreview('', $('creditorName').value || 'RF');
+    };
+
+    function downloadText(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function serializable(item) {
+      return Object.fromEntries(Object.entries(item).map(([key, value]) => {
+        if (value && typeof value.toDate === 'function') return [key, value.toDate().toISOString()];
+        if (value && value.seconds) return [key, new Date(value.seconds * 1000).toISOString()];
+        return [key, value ?? ''];
+      }));
+    }
+
+    function csvValue(value) {
+      const text = String(value ?? '');
+      return /[",\n;]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+    }
+
+    function toCsv(headers, rows) {
+      return [headers.join(';')].concat(rows.map(row => headers.map(header => csvValue(row[header])).join(';'))).join('\n');
+    }
+
+    function cleanImportedPayload(item, idMap = {}) {
+      const payload = { ...item };
+      delete payload.id;
+      delete payload.createdAt;
+      delete payload.updatedAt;
+      if (payload.creditorId && idMap.creditors?.has(payload.creditorId)) payload.creditorId = idMap.creditors.get(payload.creditorId);
+      if (payload.debtId && idMap.debts?.has(payload.debtId)) payload.debtId = idMap.debts.get(payload.debtId);
+      if (payload.installmentId && idMap.installments?.has(payload.installmentId)) payload.installmentId = idMap.installments.get(payload.installmentId);
+      return { ...payload, importedAt: serverTimestamp(), updatedAt: serverTimestamp() };
+    }
+
+    window.exportJson = function() {
+      const backup = {
+        exportedAt: new Date().toISOString(),
+        app: 'Rota Financeira',
+        preferences: userPreferences,
+        creditors: creditors.map(serializable),
+        debts: debts.map(serializable),
+        installments: installments.map(serializable),
+        payments: payments.map(serializable)
+      };
+      downloadText('rota-financeira-backup.json', JSON.stringify(backup, null, 2), 'application/json;charset=utf-8');
+    };
+
+    window.triggerJsonImport = function() {
+      $('jsonImportFile').click();
+    };
+
+    window.handleJsonImport = function(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const payload = JSON.parse(String(reader.result || '{}'));
+          await importJsonBackup(payload);
+          event.target.value = '';
+        } catch (error) {
+          showToast('Não foi possível importar este JSON.');
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    async function importJsonBackup(payload) {
+      const importedCreditors = Array.isArray(payload.creditors) ? payload.creditors : [];
+      const importedDebts = Array.isArray(payload.debts) ? payload.debts : [];
+      const importedInstallments = Array.isArray(payload.installments) ? payload.installments : [];
+      const importedPayments = Array.isArray(payload.payments) ? payload.payments : [];
+      const idMap = { creditors: new Map(), debts: new Map(), installments: new Map() };
+
+      for (const item of importedCreditors) {
+        const created = await addDoc(collection(db, 'creditors'), cleanImportedPayload(item, idMap));
+        if (item.id) idMap.creditors.set(item.id, created.id);
+      }
+      for (const item of importedDebts) {
+        const created = await addDoc(collection(db, 'debts'), cleanImportedPayload(item, idMap));
+        if (item.id) idMap.debts.set(item.id, created.id);
+      }
+      for (const item of importedInstallments) {
+        const created = await addDoc(collection(db, 'installments'), cleanImportedPayload(item, idMap));
+        if (item.id) idMap.installments.set(item.id, created.id);
+      }
+      for (const item of importedPayments) {
+        await addDoc(collection(db, 'payments'), cleanImportedPayload(item, idMap));
+      }
+      if (payload.preferences) {
+        userPreferences = { ...defaultPreferences, ...payload.preferences };
+        localStorage.setItem(PREFERENCES_KEY, JSON.stringify(userPreferences));
+      }
+      await loadAll();
+      showToast('JSON importado com sucesso.');
+    }
+
+    window.exportDebtsCsv = function() {
+      const headers = ['credor', 'divida', 'tipo', 'situacao', 'criticidade', 'parcelas', 'valorParcela', 'saldo', 'quitacaoHoje', 'primeiroVencimento'];
+      const rows = debts.map(debt => ({
+        credor: getCreditorName(debt.creditorId),
+        divida: debt.name || '',
+        tipo: debt.type || '',
+        situacao: debt.status || '',
+        criticidade: debt.criticality || '',
+        parcelas: debt.installmentsQty || '',
+        valorParcela: Number(debt.installmentValue || 0).toFixed(2).replace('.', ','),
+        saldo: debtBalance(debt).toFixed(2).replace('.', ','),
+        quitacaoHoje: Number(debt.payoffToday || 0).toFixed(2).replace('.', ','),
+        primeiroVencimento: debt.firstDue || ''
+      }));
+      downloadText('rota-financeira-dividas.csv', toCsv(headers, rows), 'text/csv;charset=utf-8');
+    };
+
+    window.exportPaymentsCsv = function() {
+      const headers = ['data', 'credor', 'divida', 'parcela', 'valorPrevisto', 'valorPago', 'desconto', 'juros'];
+      const rows = payments.map(payment => {
+        const debt = debts.find(item => item.id === payment.debtId);
+        const installment = installments.find(item => item.id === payment.installmentId);
+        return {
+          data: payment.paymentDate || '',
+          credor: debt ? getCreditorName(debt.creditorId) : '',
+          divida: debt?.name || '',
+          parcela: installment ? installment.number + '/' + installment.total : '',
+          valorPrevisto: Number(payment.expectedValue || 0).toFixed(2).replace('.', ','),
+          valorPago: Number(payment.paidValue || 0).toFixed(2).replace('.', ','),
+          desconto: Number(payment.discount || 0).toFixed(2).replace('.', ','),
+          juros: Number(payment.interest || 0).toFixed(2).replace('.', ',')
+        };
+      });
+      downloadText('rota-financeira-pagamentos.csv', toCsv(headers, rows), 'text/csv;charset=utf-8');
+    };
+
+    window.openClearAllModal = function() {
+      deleteContext = { type: 'all' };
+      $('deleteModalTitle').textContent = 'Limpar todos os dados';
+      $('deleteModalText').textContent = 'Deseja remover definitivamente credores, dívidas, parcelas e pagamentos?';
+      $('deleteModalWarning').textContent = 'Essa ação limpa a base atual e não poderá ser desfeita. Exporte um JSON antes se quiser guardar backup.';
+      $('deleteModal').classList.add('show');
     };
 
     window.openDeleteModal = function(type, id) {
@@ -1955,6 +2177,32 @@
         closeDeleteModal();
         renderAll();
         showToast('Pagamento excluído com sucesso.');
+      } else if (deleteContext.type === 'all') {
+        let batch = writeBatch(db);
+        let operations = 0;
+        const collectionNames = ['payments', 'installments', 'debts', 'creditors'];
+        for (const name of collectionNames) {
+          const snapshot = await getDocs(collection(db, name));
+          for (const d of snapshot.docs) {
+            batch.delete(d.ref);
+            operations += 1;
+            if (operations === 450) {
+              await batch.commit();
+              batch = writeBatch(db);
+              operations = 0;
+            }
+          }
+        }
+        if (operations) await batch.commit();
+        creditors = [];
+        debts = [];
+        installments = [];
+        payments = [];
+        expandedDebtId = null;
+        selectedRenegotiationDebtIds.clear();
+        closeDeleteModal();
+        renderAll();
+        showToast('Todos os dados foram removidos.');
       } else {
         const hasDebt = debts.some(d => d.creditorId === deleteContext.id);
         if (hasDebt) {
