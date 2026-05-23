@@ -25,13 +25,10 @@
     let editingCreditorId = null;
     let paymentInstallmentId = null;
     let deleteContext = null;
-    let selectedCreditorFilter = 'all';
-    let selectedPriorityFilter = 'all';
     let selectedWaitingCreditorFilter = 'all';
     let selectedHiddenCreditorFilter = 'all';
     let selectedPaidOffCreditorFilter = 'all';
     let selectedTrailDebtSort = 'trail';
-    let selectedDebtSort = 'priority';
     let selectedWaitingDebtSort = 'priority';
     let selectedHiddenDebtSort = 'priority';
     let selectedPaidOffDebtSort = 'trail';
@@ -503,38 +500,6 @@
       return '<div class="compact-stat"><div class="metric-label">' + escapeHtml(label) + '</div><strong>' + escapeHtml(value) + '</strong>' + extraHtml + '</div>';
     }
 
-    function debtCard(debt) {
-      const next = nextInstallment(debt);
-      const progress = debtProgress(debt);
-      const installmentCount = installmentProgress(debt);
-      const isExpanded = expandedDebtId === debt.id;
-      const title = escapeHtml(getCreditorName(debt.creditorId)) + ' · ' + escapeHtml(debt.name);
-      const toneClass = debt.criticality === 'Máxima' ? ' priority-max' : debt.criticality === 'Alta' ? ' priority-high' : ' priority-normal';
-      const cardClass = 'debt-card' + toneClass + (isExpanded ? ' expanded' : '');
-      const balance = debtBalance(debt);
-      const nextLabel = next ? formatDateBR(next.dueDate) : 'Sem Parcela';
-      const metaHtml = compactTagsForDebt(debt);
-
-      return '<div class="' + cardClass + '">' +
-        '<div class="debt-row">' +
-          '<div class="debt-head">' +
-            creditorLogoHtml(debt.creditorId) +
-            '<div class="debt-title">' +
-              '<div class="debt-name clickable" onclick="window.toggleDebt(\'' + debt.id + '\')">' + title + '</div>' +
-              '<div class="debt-meta">' + metaHtml + '</div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="row-stat"><div class="metric-label">Saldo Devedor</div><strong>' + brl(balance) + '</strong></div>' +
-          '<div class="row-stat payoff-stat"><div class="metric-label">Quitação Hoje</div>' + payoffTodayHtml(debt) + '</div>' +
-          '<div class="row-stat"><div class="metric-label">Parcela</div><strong>' + brl(debt.installmentValue) + '</strong></div>' +
-          '<div class="row-stat next"><div class="metric-label">Próxima Parcela</div><strong>' + escapeHtml(nextLabel) + '</strong><small>' + escapeHtml(next ? dueHint(next.dueDate) : '') + '</small></div>' +
-          '<div class="row-stat progress"><div class="metric-label">Progresso</div><strong>' + installmentCount.paid + '/' + installmentCount.total + '</strong><small>' + progress + '% das parcelas</small><div class="compact-progress"><div class="progress-fill" style="width:' + progress + '%;"></div></div></div>' +
-          '<button class="ghost-btn row-toggle" onclick="window.toggleDebt(\'' + debt.id + '\')">' + (isExpanded ? '⌃' : '⌄') + '</button>' +
-        '</div>' +
-        (isExpanded ? debtExpandedDetail(debt) : '') +
-      '</div>';
-    }
-
     function debtExpandedDetail(debt) {
       const next = nextInstallment(debt);
       const installmentCount = installmentProgress(debt);
@@ -580,10 +545,6 @@
     }
 
     function renderDebts() {
-      const activeAll = debts.filter(d => d.status === 'Ativa');
-      const activeByPriority = selectedPriorityFilter === 'all' ? activeAll : activeAll.filter(d => d.criticality === selectedPriorityFilter);
-      const activeFiltered = selectedCreditorFilter === 'all' ? activeByPriority : activeByPriority.filter(d => d.creditorId === selectedCreditorFilter);
-      const active = sortDebts(activeFiltered, selectedDebtSort);
       const waitingAll = debts.filter(d => d.status === 'Em espera');
       const waitingFiltered = selectedWaitingCreditorFilter === 'all' ? waitingAll : waitingAll.filter(d => d.creditorId === selectedWaitingCreditorFilter);
       const waiting = sortDebts(waitingFiltered, selectedWaitingDebtSort);
@@ -593,14 +554,12 @@
       const paidOffAll = debts.filter(d => d.status === 'Quitada');
       const paidOffFiltered = selectedPaidOffCreditorFilter === 'all' ? paidOffAll : paidOffAll.filter(d => d.creditorId === selectedPaidOffCreditorFilter);
       const paidOff = sortDebts(paidOffFiltered, selectedPaidOffDebtSort);
-      renderDebtMetrics(activeByPriority);
       renderWaitingCreditorFilters(waitingAll);
       renderWaitingDebtMetrics(waitingAll);
       renderHiddenCreditorFilters(hiddenAll);
       renderHiddenDebtMetrics(hiddenAll);
       renderPaidOffCreditorFilters(paidOffAll);
       renderPaidOffDebtMetrics(paidOff);
-      $('activeDebts').innerHTML = active.length ? active.map(debtCard).join('') : emptyCard('Nenhuma Dívida Encontrada', selectedCreditorFilter === 'all' ? 'Não há dívidas ativas para este filtro.' : 'Não há dívidas ativas para este credor neste filtro.');
       $('waitingDebts').innerHTML = waiting.length ? waiting.map((debt, index) => debtRouteGridRow(debt, index, 'waiting')).join('') : emptyCard('Nenhuma dívida em espera', selectedWaitingCreditorFilter === 'all' ? 'As dívidas fora da frente atual aparecerão aqui.' : 'Não há dívidas em espera para este credor.');
       $('hiddenDebts').innerHTML = hidden.length ? hidden.map((debt, index) => debtRouteGridRow(debt, index, 'hidden')).join('') : emptyCard('Nada fora do radar', selectedHiddenCreditorFilter === 'all' ? 'As dívidas que você não quer acompanhar aparecerão aqui.' : 'Não há dívidas fora do radar para este credor.');
       $('paidOffDebts').innerHTML = paidOff.length ? paidOff.map((debt, index) => debtRouteGridRow(debt, index, 'paid')).join('') : emptyCard('Nenhuma dívida quitada', selectedPaidOffCreditorFilter === 'all' ? 'Quando uma dívida ficar sem parcelas abertas, ela aparecerá aqui.' : 'Não há dívidas quitadas para este credor.');
@@ -609,56 +568,6 @@
 
     function debtMetric(label, value, icon, tone) {
       return '<div class="debt-metric"><div class="metric-icon ' + tone + '">' + escapeHtml(icon) + '</div><div><div class="metric-label">' + escapeHtml(label) + '</div><div class="debt-value">' + escapeHtml(value) + '</div></div></div>';
-    }
-
-    function renderDebtMetrics(activeDebts) {
-      const container = $('debtMetrics');
-      if (!container) return;
-      const activeIds = new Set(activeDebts.map(d => d.id));
-      const openInstallments = installments.filter(i => isOpenInstallment(i) && activeIds.has(i.debtId));
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const limit = new Date(today);
-      limit.setDate(limit.getDate() + 30);
-      const next30 = openInstallments.filter(i => {
-        const due = new Date(i.dueDate + 'T00:00:00');
-        return due >= today && due <= limit;
-      });
-      const totalBalance = activeDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
-      const next30Value = next30.reduce((sum, item) => sum + Number(item.expectedValue || 0), 0);
-      const avoidInterest = activeDebts.filter(d => d.criticality === 'Máxima' || d.behavior === 'Rolagem').reduce((sum, debt) => sum + Number(debt.installmentValue || 0), 0);
-
-      container.innerHTML =
-        priorityFilterPanel(activeDebts) +
-        creditorDebtPanel(activeDebts) +
-        debtMetric('Parcelas em Aberto', String(openInstallments.length), '◷', 'red') +
-        debtMetric('Próximas Parcelas (30 dias)', brl(next30Value), '▤', 'green') +
-        debtMetric('Juros a Evitar', brl(avoidInterest), '⌁', '');
-    }
-
-    function priorityFilterPanel(activeDebts) {
-      const priorities = ['all', 'Máxima', 'Alta', 'Normal'];
-      const labels = { all: 'Todas', 'Máxima': 'Máxima', Alta: 'Alta', Normal: 'Normal' };
-      return '<div class="debt-metric filter-panel"><div class="metric-label">Prioridade</div><div class="panel-filter-row">' + priorities.map(priority => {
-        const count = priority === 'all' ? debts.filter(d => d.status === 'Ativa').length : debts.filter(d => d.status === 'Ativa' && d.criticality === priority).length;
-        const active = selectedPriorityFilter === priority ? ' is-active' : '';
-        return '<button class="mini-filter' + active + '" onclick="window.filterByPriority(\'' + priority + '\')">' + escapeHtml(labels[priority]) + '<span>' + count + '</span></button>';
-      }).join('') + '</div></div>';
-    }
-
-    function creditorDebtPanel(activeDebts) {
-      const totalBalance = activeDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
-      const creditorIds = [...new Set(activeDebts.map(d => d.creditorId).filter(Boolean))]
-        .sort((a, b) => compareText(getCreditorName(a), getCreditorName(b)));
-      let html = '<div class="debt-metric creditor-panel"><div class="metric-label">Credores da Frente</div><div class="creditor-summary-grid">';
-      html += '<button class="creditor-summary ' + (selectedCreditorFilter === 'all' ? 'is-active' : '') + '" onclick="window.filterByCreditor(\'all\')"><span class="creditor-logo">Σ</span><strong>Todos</strong><small>' + activeDebts.length + ' dívidas · ' + brl(totalBalance) + '</small></button>';
-      creditorIds.forEach(id => {
-        const creditorDebts = activeDebts.filter(d => d.creditorId === id);
-        const balance = creditorDebts.reduce((sum, debt) => sum + debtBalance(debt), 0);
-        html += '<button class="creditor-summary ' + (selectedCreditorFilter === id ? 'is-active' : '') + '" onclick="window.filterByCreditor(\'' + id + '\')">' + creditorLogoHtml(id) + '<strong>' + escapeHtml(getCreditorName(id)) + '</strong><small>' + creditorDebts.length + ' dívidas · ' + brl(balance) + '</small></button>';
-      });
-      html += '</div></div>';
-      return html;
     }
 
     function renderWaitingDebtMetrics(waitingDebts) {
@@ -1293,19 +1202,6 @@
       renderTrail();
     };
 
-    window.filterByCreditor = function(id) {
-      selectedCreditorFilter = id;
-      expandedDebtId = null;
-      renderDebts();
-    };
-
-    window.filterByPriority = function(priority) {
-      selectedPriorityFilter = priority;
-      selectedCreditorFilter = 'all';
-      expandedDebtId = null;
-      renderDebts();
-    };
-
     window.filterWaitingByCreditor = function(id) {
       selectedWaitingCreditorFilter = id;
       expandedDebtId = null;
@@ -1320,12 +1216,6 @@
 
     window.filterPaidOffByCreditor = function(id) {
       selectedPaidOffCreditorFilter = id;
-      expandedDebtId = null;
-      renderDebts();
-    };
-
-    window.setDebtSort = function(mode) {
-      selectedDebtSort = mode;
       expandedDebtId = null;
       renderDebts();
     };
@@ -1552,7 +1442,6 @@
         debt.status = status;
         if (payload.payoffOrder) debt.payoffOrder = payload.payoffOrder;
       }
-      if (status !== 'Ativa' && selectedCreditorFilter !== 'all') selectedCreditorFilter = 'all';
       renderAll();
       const messages = {
         Ativa: 'Dívida movida para Rota Financeira.',
@@ -1749,7 +1638,7 @@
       const debtWasPaidOff = paidOff.some(debt => debt.id === inst.debtId);
       closePaymentForm();
       renderAll();
-      showToast(debtWasPaidOff ? 'Pagamento registrado. Dívida concluída na Rota Financeira.' : 'Pagamento registrado com sucesso.');
+      showToast(debtWasPaidOff ? 'Pagamento registrado. Dívida movida para encerradas.' : 'Pagamento registrado com sucesso.');
     };
 
     window.saveCreditor = async function() {
@@ -2005,7 +1894,7 @@
         deleteContext = { type, id, installmentId: inst.id, debtId: inst.debtId };
         $('deleteModalTitle').textContent = 'Excluir pagamento';
         $('deleteModalText').textContent = 'Deseja excluir o pagamento da parcela ' + inst.number + '/' + inst.total + (debt ? ' de ' + getCreditorName(debt.creditorId) + ' · ' + debt.name : '') + '?';
-        $('deleteModalWarning').textContent = 'A parcela voltará para pendente e o registro sairá da lista de pagamentos.';
+        $('deleteModalWarning').textContent = 'A parcela voltará para pendente e o registro de pagamento será removido.';
       } else {
         const creditor = creditors.find(c => c.id === id);
         if (!creditor) return;

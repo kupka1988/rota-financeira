@@ -272,30 +272,6 @@
         </div>
       </section>
 
-      <section id="dividas" class="page legacy-page">
-        <div class="topbar">
-          <div><div class="eyebrow">Tela descontinuada</div><h1>Rota Financeira</h1><div class="page-desc">A Rota Financeira é a referência para dívidas ativas e priorizadas.</div></div>
-          <button class="primary-action" onclick="openDebtForm('new')">+ Nova dívida</button>
-        </div>
-        <div id="debtMetrics" class="debt-metrics"></div>
-        <div class="sort-bar">
-          <label>Ordenar</label>
-          <select id="debtSort" onchange="setDebtSort(this.value)">
-            <option value="installment-desc">Maior Parcela</option>
-            <option value="progress-desc">Maior Progresso</option>
-            <option value="balance-desc">Maior Saldo Devedor</option>
-            <option value="installment-asc">Menor Parcela</option>
-            <option value="progress-asc">Menor Progresso</option>
-            <option value="balance-asc">Menor Saldo Devedor</option>
-            <option value="payoff-today">Quitação Hoje</option>
-            <option value="trail">Ordem da Rota</option>
-            <option value="priority" selected>Prioridade</option>
-            <option value="next-due">Próxima Parcela</option>
-          </select>
-        </div>
-        <div class="debt-list" id="activeDebts"></div>
-      </section>
-
       <section id="espera" class="page">
         <div class="topbar">
           <div><div class="eyebrow">Fora da frente atual</div><h1>Dívidas em espera</h1><div class="page-desc">Acompanhe compromissos reconhecidos que ainda não entraram na frente de pagamento principal.</div></div>
