@@ -21,8 +21,7 @@
 - Insights devem ser uteis para decisao; evitar graficos grandes que nao apoiem acao.
 - Dashboard nao deve listar ou celebrar dividas quitadas. O alivio vem delas sairem da frente visual.
 - Resumo geral deve separar `Na rota agora` e `Em espera`; nao usar `reconhecida` como conceito de total.
-- Plano do mes deve comparar parcelas pendentes da rota ativa com a capacidade mensal definida em Preferencias.
-- Capacidade mensal da rota deve ser funcional no Dashboard e atualizar o Plano do mes ao ser alterada.
+- A propria Rota Financeira representa a capacidade operacional escolhida pelo usuario; nao criar um segundo conceito de capacidade mensal competindo com ela.
 - Cards superiores devem manter alturas uniformes.
 - Pressao financeira deve ser compacta e ocupar apenas o espaco necessario para decisao.
 

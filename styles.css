@@ -238,16 +238,6 @@
     .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 16px; }
     .panel-head .panel-title { margin: 0; }
     .panel-head span { color: var(--muted); font-size: 12px; font-weight: 650; }
-    .dashboard-plan-panel { margin-top: 14px; padding: 16px; }
-    .month-plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
-    .plan-total-card { min-height: 108px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,0.026); }
-    .plan-total-card strong { display: block; margin-top: 8px; color: var(--text); font-size: 21px; letter-spacing: -0.035em; }
-    .plan-total-card small { display: block; margin-top: 7px; color: var(--muted); line-height: 1.35; }
-    .plan-list { display: grid; gap: 8px; }
-    .plan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.018); }
-    .plan-row strong { color: var(--text); }
-    .plan-row small { display: block; margin-top: 3px; color: var(--muted); }
-    .plan-row span { color: var(--text); font-weight: 800; white-space: nowrap; }
     .dashboard-pressure-panel { margin-top: 14px; padding: 16px; }
     .dashboard-main-grid { display: grid; grid-template-columns: 0.95fr 1.35fr; gap: 18px; margin-top: 18px; }
     .front-explain { color: var(--muted); font-size: 13px; line-height: 1.4; margin: -6px 0 12px; }
@@ -570,7 +560,6 @@
       .debt-metric.creditor-panel { grid-column: 1 / -1; }
       .decision-grid { grid-template-columns: 1fr; }
       .dashboard-hero, .dashboard-main-grid { grid-template-columns: 1fr; }
-      .month-plan-grid { grid-template-columns: 1fr; }
       .dashboard-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .front-row { grid-template-columns: 34px minmax(220px, 1fr) auto; }
       .front-row .front-value, .front-row .ghost-btn { grid-column: 2 / -1; justify-self: start; }
@@ -728,8 +717,6 @@
       .summary-grid div { min-height: 72px; border-right: 0; border-bottom: 1px solid var(--border); }
       .summary-grid div:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
       .summary-grid div:last-child { border-bottom: 0; }
-      .plan-row { grid-template-columns: 1fr; }
-      .plan-row span { white-space: normal; }
       .front-row { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
       .front-row .priority-badge, .front-row .front-value, .front-row .ghost-btn { grid-column: 2; justify-self: start; }
       .dashboard-insights { grid-template-columns: 1fr; }

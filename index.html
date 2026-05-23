@@ -205,13 +205,6 @@
           <div id="dashboardNextAction"></div>
           <div id="dashboardSummary"></div>
         </div>
-        <div class="panel dashboard-plan-panel">
-          <div class="panel-head">
-            <h2 class="panel-title" id="monthPlanTitle">Plano do mês</h2>
-            <span>capacidade mensal</span>
-          </div>
-          <div id="monthPlan"></div>
-        </div>
         <div class="panel dashboard-pressure-panel">
           <div class="panel-head">
             <h2 class="panel-title">Pressão financeira</h2>
@@ -403,12 +396,7 @@
         <div class="preferences-stack">
           <div class="panel preference-panel">
             <div class="preference-title"><span class="preference-icon green">⌾</span><div><h2 class="panel-title">1. Estratégia financeira</h2></div></div>
-            <div class="preference-grid three">
-              <div class="preference-block">
-                <label>Capacidade mensal da rota</label>
-                <div class="money-input"><span>R$</span><input id="monthlyCapacity" inputmode="decimal" placeholder="0,00" oninput="setPreferenceValue('monthlyCapacity', this.value)" onchange="setPreferenceValue('monthlyCapacity', this.value)" /></div>
-                <div class="preference-help">Valor disponível por mês para quitar dívidas.</div>
-              </div>
+            <div class="preference-grid two">
               <div class="preference-block">
                 <label>Estratégia padrão</label>
                 <select id="defaultStrategy" onchange="setPreferenceValue('defaultStrategy', this.value)"><option>Ordem manual</option><option>Menor quitação</option><option>Maior parcela</option><option>Maior desconto</option></select>
