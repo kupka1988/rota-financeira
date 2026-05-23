@@ -20,6 +20,9 @@
 - Frente de pagamento ordena dividas ativas por prioridade estrategica considerando vencimento proximo, impacto mensal, saldo em aberto, oportunidade de quitacao, atraso e criticidade manual.
 - Insights devem ser uteis para decisao; evitar graficos grandes que nao apoiem acao.
 - Dashboard nao deve listar ou celebrar dividas quitadas. O alivio vem delas sairem da frente visual.
+- Resumo geral deve separar `Na rota agora` e `Em espera`; nao usar `reconhecida` como conceito de total.
+- Plano do mes deve comparar parcelas pendentes da rota ativa com a capacidade mensal definida em Preferencias.
+- Capacidade mensal da rota deve ser funcional no Dashboard e atualizar o Plano do mes ao ser alterada.
 - Cards superiores devem manter alturas uniformes.
 - Pressao financeira deve ser compacta e ocupar apenas o espaco necessario para decisao.
 
@@ -68,14 +71,14 @@
 - Ao confirmar quitacao, registrar pagamento de quitacao, encerrar parcelas futuras, mover divida para Quitadas e remover da Rota Financeira.
 
 ## Em espera
-- Mostra dividas reconhecidas que estao fora da frente atual.
+- Mostra dividas cadastradas que estao fora da frente atual.
 - Mostra progresso em quantidade de parcelas, ex.: `2/12`.
 - Dividas em espera nao entram na Rota Financeira nem no Dashboard.
 
 ## Fora do radar
-- Status para dividas reconhecidas que o usuario decidiu nao acompanhar na frente atual.
+- Status para dividas cadastradas que o usuario decidiu nao acompanhar na frente atual.
 - Nao entram no Dashboard.
-- Nao entram na divida em aberto reconhecida do Dashboard.
+- Nao entram nos totais da frente atual do Dashboard.
 - Aba propria possui totalizadores.
 - Usa o mesmo grid operacional, com painel, filtro por credor, ordenacao e reordenacao manual.
 

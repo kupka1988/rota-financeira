@@ -205,6 +205,13 @@
           <div id="dashboardNextAction"></div>
           <div id="dashboardSummary"></div>
         </div>
+        <div class="panel dashboard-plan-panel">
+          <div class="panel-head">
+            <h2 class="panel-title" id="monthPlanTitle">Plano do mês</h2>
+            <span>capacidade mensal</span>
+          </div>
+          <div id="monthPlan"></div>
+        </div>
         <div class="panel dashboard-pressure-panel">
           <div class="panel-head">
             <h2 class="panel-title">Pressão financeira</h2>
@@ -307,7 +314,7 @@
 
       <section id="radar" class="page">
         <div class="topbar">
-          <div><div class="eyebrow">Arquivo estratégico</div><h1>Fora do radar</h1><div class="page-desc">Dívidas reconhecidas, mas que você decidiu não acompanhar nem no curto nem no longo prazo. Elas não entram no Dashboard nem na dívida total reconhecida.</div></div>
+          <div><div class="eyebrow">Arquivo estratégico</div><h1>Fora do radar</h1><div class="page-desc">Dívidas cadastradas, mas que você decidiu não acompanhar nem no curto nem no longo prazo. Elas não entram no Dashboard nem nos totais da frente atual.</div></div>
           <button class="primary-action" onclick="goToDebtsAndNew('Fora do radar')">+ Nova dívida</button>
         </div>
         <div id="hiddenDebtMetrics" class="debt-metrics"></div>
@@ -399,9 +406,8 @@
             <div class="preference-grid three">
               <div class="preference-block">
                 <label>Capacidade mensal da rota</label>
-                <div class="money-input"><span>R$</span><input id="monthlyCapacity" inputmode="decimal" placeholder="0,00" onchange="setPreferenceValue('monthlyCapacity', this.value)" /></div>
+                <div class="money-input"><span>R$</span><input id="monthlyCapacity" inputmode="decimal" placeholder="0,00" oninput="setPreferenceValue('monthlyCapacity', this.value)" onchange="setPreferenceValue('monthlyCapacity', this.value)" /></div>
                 <div class="preference-help">Valor disponível por mês para quitar dívidas.</div>
-                <span class="future-badge">Futuro: usado em projeções</span>
               </div>
               <div class="preference-block">
                 <label>Estratégia padrão</label>

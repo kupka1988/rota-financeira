@@ -113,6 +113,7 @@
     window.setPreferenceValue = function(key, value) {
       userPreferences = { ...userPreferences, [key]: value };
       localStorage.setItem(PREFERENCES_KEY, JSON.stringify(userPreferences));
+      renderDashboard();
     };
 
     applyTheme(localStorage.getItem(THEME_KEY) || 'light');
@@ -144,6 +145,13 @@
       return date.toISOString().slice(0, 10);
     }
     function currentMonthKey() { return new Date().toISOString().slice(0, 7); }
+
+    function monthLabel(monthKey) {
+      if (!monthKey) return '-';
+      const [year, month] = monthKey.split('-').map(Number);
+      const label = new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    }
     function byDueDate(a, b) { return String(a.dueDate || '').localeCompare(String(b.dueDate || '')); }
 
     function showToast(message) {
@@ -916,9 +924,10 @@
 
     function renderDashboard() {
       const active = debts.filter(d => d.status === 'Ativa');
+      const waiting = debts.filter(d => d.status === 'Em espera');
       const activeIds = new Set(active.map(d => d.id));
       const totalActive = active.reduce((sum, d) => sum + debtBalance(d), 0);
-      const totalRecognized = debts.filter(d => d.status !== 'Renegociada' && d.status !== 'Fora do radar' && d.status !== 'Quitada').reduce((sum, d) => sum + debtBalance(d), 0);
+      const totalWaiting = waiting.reduce((sum, d) => sum + debtBalance(d), 0);
       const month = currentMonthKey();
       const monthInstallments = installments
         .filter(i => isOpenInstallment(i) && String(i.dueDate || '').startsWith(month) && activeIds.has(i.debtId))
@@ -929,7 +938,8 @@
         .sort(byDueDate);
 
       renderDashboardAction(active, openInstallments);
-      renderDashboardSummary({ totalRecognized, totalActive, monthCommitment, monthInstallments, active });
+      renderDashboardSummary({ totalActive, totalWaiting, monthCommitment, monthInstallments, active });
+      renderMonthPlan({ month, monthInstallments, monthCommitment, openInstallments });
       renderDeadlinePressure(active);
       renderDashboardDecision(active, openInstallments);
       renderDashboardInsights(active, openInstallments, totalActive);
@@ -1018,12 +1028,60 @@
         '<div class="summary-card">' +
           '<h2 class="panel-title">Resumo geral</h2>' +
           '<div class="summary-grid">' +
-            '<div><span>Dívida em aberto reconhecida</span><strong>' + brl(data.totalRecognized) + '</strong></div>' +
-            '<div><span>Total em aberto</span><strong>' + brl(data.totalActive) + '</strong></div>' +
-            '<div><span>Compromisso mensal</span><strong>' + brl(data.monthCommitment) + '</strong></div>' +
+            '<div><span>Na rota agora</span><strong>' + brl(data.totalActive) + '</strong></div>' +
+            '<div><span>Em espera</span><strong>' + brl(data.totalWaiting) + '</strong></div>' +
+            '<div><span>Compromisso do mês</span><strong>' + brl(data.monthCommitment) + '</strong></div>' +
             '<div><span>Parcelas do mês</span><strong>' + data.monthInstallments.length + '</strong><small>' + brl(data.monthCommitment) + '</small></div>' +
           '</div>' +
           '<div class="summary-status">' + escapeHtml(statusText) + '</div>' +
+        '</div>';
+    }
+
+    function renderMonthPlan({ month, monthInstallments, monthCommitment, openInstallments }) {
+      const title = $('monthPlanTitle');
+      const container = $('monthPlan');
+      if (!container) return;
+      if (title) title.textContent = 'Plano de ' + monthLabel(month);
+      const capacity = parseMoney(userPreferences.monthlyCapacity || 0);
+      const balance = capacity - monthCommitment;
+      const monthRows = monthInstallments.slice(0, 5).map(item => {
+        const debt = debts.find(d => d.id === item.debtId);
+        const name = debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida não encontrada';
+        return '<div class="plan-row">' +
+          '<div><strong>' + escapeHtml(name) + '</strong><small>' + formatDateBR(item.dueDate) + ' · ' + dueHint(item.dueDate) + '</small></div>' +
+          '<span>' + brl(item.expectedValue) + '</span>' +
+        '</div>';
+      }).join('');
+      const nextOutsideMonth = openInstallments.find(item => !String(item.dueDate || '').startsWith(month));
+      const nextDebt = nextOutsideMonth ? debts.find(d => d.id === nextOutsideMonth.debtId) : null;
+      const nextText = nextDebt
+        ? getCreditorName(nextDebt.creditorId) + ' · ' + nextDebt.name + ' em ' + formatDateBR(nextOutsideMonth.dueDate)
+        : 'Nenhuma próxima parcela fora deste mês.';
+      const capacityStatus = capacity
+        ? balance >= 0
+          ? (monthCommitment ? 'Sobra ' + brl(balance) + ' depois das parcelas do mês.' : brl(capacity) + ' disponível para antecipar a rota.')
+          : 'Faltam ' + brl(Math.abs(balance)) + ' para cobrir o mês.'
+        : 'Defina sua capacidade mensal em Preferências para comparar o plano.';
+      container.innerHTML =
+        '<div class="month-plan-grid">' +
+          '<div class="plan-total-card">' +
+            '<div class="metric-label">Capacidade mensal</div>' +
+            '<strong>' + (capacity ? brl(capacity) : 'Não definida') + '</strong>' +
+            '<small>' + escapeHtml(capacityStatus) + '</small>' +
+          '</div>' +
+          '<div class="plan-total-card">' +
+            '<div class="metric-label">Obrigatório no mês</div>' +
+            '<strong>' + brl(monthCommitment) + '</strong>' +
+            '<small>' + monthInstallments.length + ' parcela(s) da rota ativa.</small>' +
+          '</div>' +
+          '<div class="plan-total-card">' +
+            '<div class="metric-label">Próximo depois do mês</div>' +
+            '<strong>' + (nextOutsideMonth ? brl(nextOutsideMonth.expectedValue) : brl(0)) + '</strong>' +
+            '<small>' + escapeHtml(nextText) + '</small>' +
+          '</div>' +
+        '</div>' +
+        '<div class="plan-list">' +
+          (monthRows || emptyCard('Sem parcelas no mês', 'Nenhuma parcela pendente da rota ativa vence neste mês.')) +
         '</div>';
     }
 
