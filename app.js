@@ -937,10 +937,8 @@
         .filter(debt => debt.status === 'Ativa' && debtBalance(debt) > 0)
         .reduce((sum, debt) => sum + Number(debt.installmentValue || 0), 0);
       const next = route.find(debt => debtBalance(debt) > 0) || null;
-      const activeProgress = route.length ? Math.round(route.reduce((sum, debt) => sum + debtProgress(debt), 0) / route.length) : 0;
 
       metrics.innerHTML =
-        '<div class="route-donut" style="--route-progress:' + activeProgress + '%;"><strong>' + activeProgress + '%</strong><span>rota ativa</span></div>' +
         '<div class="route-summary-copy"><div class="metric-label">Frente atual</div><strong>' + (route.length ? route.length + ' dívida(s) na rota' : 'Nenhuma dívida ativa na rota') + '</strong><span>' + (route.length ? 'Aqui ficam apenas os compromissos que ainda pedem ação.' : 'Cadastre ou reative uma dívida para montar sua próxima frente.') + '</span></div>' +
         '<div class="route-summary-metrics">' +
         debtMetric('Dívidas ativas', String(route.length), '⇄', 'blue') +

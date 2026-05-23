@@ -51,6 +51,7 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 - Nao misturar conceitos de outros projetos.
 - Rota Financeira nao usa projecao, performance, metas de corrida/uber ou conceitos semelhantes.
 - Quando o usuario pedir qualquer alteracao no projeto, finalizar com validacao, atualizacao dos arquivos MD adequados e commit Git. Fazer push quando a tarefa envolver publicacao/entrega no remoto.
+- Combinado operacional fixo: se a alteracao precisa ser validada em producao/GitHub Pages, nao parar apos editar ou validar localmente. O ciclo so termina depois de `git commit`, `git push origin main` e checagem basica da versao publicada.
 
 ## Comandos relevantes
 - Validar sintaxe JS:

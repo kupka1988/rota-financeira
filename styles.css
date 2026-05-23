@@ -317,15 +317,10 @@
     .insight-tile strong { display: block; color: var(--text); margin-top: 8px; line-height: 1.25; }
     .insight-value { margin-top: 9px; font-size: 20px; color: var(--text); font-weight: 800; letter-spacing: -0.025em; }
     .insight-tile small { display: block; margin-top: 7px; color: var(--muted); line-height: 1.35; }
-    .route-summary { display: grid; grid-template-columns: 104px minmax(260px, 0.85fr) minmax(420px, 1.4fr); gap: 1px; align-items: stretch; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--border); box-shadow: var(--shadow); }
+    .route-summary { display: grid; grid-template-columns: minmax(260px, 0.85fr) minmax(420px, 1.4fr); gap: 1px; align-items: stretch; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--border); box-shadow: var(--shadow); }
     .route-summary .debt-metric { min-width: 0; grid-template-columns: 36px minmax(0, 1fr); box-shadow: none; border: 0; margin: 0; padding: 16px; }
     .route-summary .metric-value { overflow-wrap: anywhere; font-size: clamp(18px, 1.55vw, 24px); letter-spacing: -0.02em; }
     .route-summary .metric-icon { width: 36px; height: 36px; border-radius: 12px; }
-    .route-donut { display: grid; place-items: center; align-content: center; gap: 2px; background: conic-gradient(var(--green) var(--route-progress), rgba(255,255,255,0.09) 0); min-height: 116px; position: relative; }
-    .route-donut::after { content: ""; position: absolute; inset: 16px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); }
-    .route-donut strong, .route-donut span { position: relative; z-index: 1; }
-    .route-donut strong { font-size: 24px; letter-spacing: -0.03em; }
-    .route-donut span { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
     .route-summary-copy { display: grid; align-content: center; gap: 6px; padding: 18px; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--panel); }
     .route-summary-copy strong { display: block; font-size: 17px; color: var(--text); }
     .route-summary-copy span { color: var(--muted); font-size: 13px; line-height: 1.35; }
@@ -574,9 +569,8 @@
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: none; }
       .debt-summary { grid-template-columns: 1fr; }
       .debt-insights { grid-template-columns: 1fr; }
-      .route-summary { grid-template-columns: 104px minmax(0, 1fr); }
-      .route-summary-copy { grid-column: auto; }
-      .route-summary-metrics { grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .route-summary { grid-template-columns: minmax(0, 1fr); }
+      .route-summary-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .next-target-card { grid-template-columns: minmax(280px, 1fr) minmax(180px, 0.8fr) repeat(2, minmax(120px, 0.55fr)); }
       .route-item { grid-template-columns: 24px 38px minmax(0, 1fr); gap: 10px; align-items: start; }
       .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: 3; }
@@ -642,9 +636,7 @@
       .payment-row { grid-template-columns: 1fr 1fr; }
       .history-grid { grid-template-columns: 1fr; }
       .installment-row.header { display: none; }
-      .route-summary { grid-template-columns: 1fr 1fr; }
-      .route-donut { min-height: 132px; }
-      .route-summary-copy { grid-column: span 1; }
+      .route-summary { grid-template-columns: 1fr; }
       .route-summary-metrics { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .next-target-card { grid-template-columns: 1fr 1fr; gap: 12px; }
       .next-target-main, .next-target-card .route-progress { grid-column: 1 / -1; }
@@ -739,9 +731,8 @@
       .data-actions-grid { grid-template-columns: 1fr; gap: 8px; }
       .data-action { min-height: 0; }
       .route-summary { grid-template-columns: 1fr; gap: 8px; border: 0; background: transparent; box-shadow: none; }
-      .route-summary .debt-metric, .route-donut, .route-summary-copy { border: 1px solid var(--border); border-radius: 16px; }
+      .route-summary .debt-metric, .route-summary-copy { border: 1px solid var(--border); border-radius: 16px; }
       .route-summary-metrics { grid-template-columns: 1fr; gap: 8px; background: transparent; }
-      .route-donut { min-height: 116px; }
       .next-target-card { grid-template-columns: 1fr; padding: 16px; border-radius: 16px; }
       .next-target-stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
       .next-target-stat span { margin-bottom: 0; }
