@@ -122,7 +122,7 @@
     <div class="modal-card wide-modal">
       <div class="modal-brand">Rota Financeira</div>
       <div class="modal-title">Novo acordo</div>
-      <div class="modal-text">Cadastre a nova dívida renegociada. As dívidas selecionadas serão preservadas no histórico como renegociadas.</div>
+      <div class="modal-text">Cadastre a nova dívida renegociada. As dívidas selecionadas serão arquivadas como renegociadas.</div>
       <div id="renegotiationSummary" class="renegotiation-summary"></div>
       <div class="form-grid">
         <div><label>Credor do acordo</label><select id="renCreditorSelect"></select></div>
@@ -187,8 +187,6 @@
         <button class="nav-item" data-page="radar"><span>◎</span> Fora do radar</button>
         <button class="nav-item" data-page="quitadas"><span>✓</span> Quitadas</button>
         <button class="nav-item" data-page="renegociacao"><span>⇄</span> Renegociação</button>
-        <button class="nav-item" data-page="pagamentos"><span>✓</span> Pagamentos</button>
-        <button class="nav-item" data-page="historico"><span>↺</span> Histórico</button>
         <button class="nav-item" data-page="configuracoes"><span>⚙</span> Preferências</button>
       </nav>
     </aside>
@@ -366,7 +364,7 @@
 
       <section id="quitadas" class="page">
         <div class="topbar">
-          <div><div class="eyebrow">Fechadas</div><h1>Dívidas quitadas</h1><div class="page-desc">Aqui ficam as dívidas sem parcelas abertas. Elas não entram no Dashboard nem nos cálculos da frente atual.</div></div>
+          <div><div class="eyebrow">Arquivo encerrado</div><h1>Dívidas encerradas</h1><div class="page-desc">Consulta discreta das dívidas que já saíram da sua vida operacional. Elas não entram no Dashboard nem na Rota Financeira.</div></div>
         </div>
         <div id="paidOffCreditorFilters" class="filter-row"></div>
         <div id="paidOffDebtMetrics" class="debt-metrics"></div>
@@ -387,8 +385,8 @@
         <div class="route-panel paid-route-panel">
           <div class="route-panel-head">
             <div>
-              <h2 class="panel-title">Dívidas quitadas <span>(ordem de prioridade)</span></h2>
-              <div class="metric-note">Arraste ou use as setas para ajustar a ordem do histórico.</div>
+              <h2 class="panel-title">Arquivo de dívidas encerradas</h2>
+              <div class="metric-note">Use apenas quando quiser consultar ou restaurar alguma dívida encerrada.</div>
             </div>
           </div>
           <div class="route-list" id="paidOffDebts"></div>
@@ -397,7 +395,7 @@
 
       <section id="renegociacao" class="page">
         <div class="topbar">
-          <div><div class="eyebrow">Acordos</div><h1>Renegociação</h1><div class="page-desc">Selecione uma ou mais dívidas para transformar em um novo acordo. As dívidas antigas saem da frente atual e ficam preservadas no histórico.</div></div>
+          <div><div class="eyebrow">Acordos</div><h1>Renegociação</h1><div class="page-desc">Selecione uma ou mais dívidas para transformar em um novo acordo. As dívidas antigas saem da frente atual e ficam arquivadas aqui.</div></div>
           <button class="primary-action" onclick="openRenegotiationModal()">Renegociar</button>
         </div>
         <div id="renegotiationMetrics" class="debt-metrics"></div>
@@ -411,19 +409,10 @@
           </div>
           <div class="renegotiation-list" id="renegotiationList"></div>
         </div>
-      </section>
-
-      <section id="pagamentos" class="page">
-        <div class="topbar"><div><div class="eyebrow">Baixa operacional</div><h1>Pagamentos</h1><div class="page-desc">Pagamentos registrados a partir das parcelas das dívidas.</div></div></div>
-        <div id="paymentMetrics" class="debt-metrics"></div>
-        <div class="panel"><h2 class="panel-title">Pagamentos recentes</h2><div class="payment-ledger" id="paymentsList"></div></div>
-      </section>
-
-      <section id="historico" class="page">
-        <div class="topbar"><div><div class="eyebrow">Fechamentos</div><h1>Histórico mensal</h1><div class="page-desc">Evolução, quitações, redução real da dívida e comparativo mês a mês.</div></div></div>
-        <div id="historyMetrics" class="debt-metrics"></div>
-        <div class="panel"><h2 class="panel-title">Evolução mensal</h2><div class="history-grid" id="historyList"></div></div>
-        <div class="panel"><h2 class="panel-title">Dívidas renegociadas</h2><div class="debt-list" id="renegotiatedHistoryList"></div></div>
+        <div class="panel">
+          <h2 class="panel-title">Dívidas arquivadas por renegociação</h2>
+          <div class="debt-list" id="renegotiatedHistoryList"></div>
+        </div>
       </section>
 
       <section id="configuracoes" class="page">

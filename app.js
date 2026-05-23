@@ -412,7 +412,7 @@
       const isPreview = expandedDebtListMode !== 'all';
       const visible = isPreview ? source.slice(0, 5) : source;
       const emptyText = currentTab === 'paid' ? 'Nenhuma parcela paga registrada.' : 'Nenhuma parcela pendente.';
-      const buttonText = currentTab === 'paid' ? 'Ver histórico completo' : 'Ver todas as parcelas pendentes';
+      const buttonText = currentTab === 'paid' ? 'Ver parcelas pagas' : 'Ver todas as parcelas pendentes';
       const countText = currentTab === 'paid' ? '5 últimas' : '5 próximas';
 
       let html = '<div class="installment-tabs">' +
@@ -740,60 +740,11 @@
       const discountValue = filteredPaidOffDebts.reduce((sum, debt) => sum + debtDiscount(debt), 0);
       const creditorsCount = new Set(filteredPaidOffDebts.map(d => d.creditorId).filter(Boolean)).size;
       container.innerHTML =
-        debtMetric('Dívidas Quitadas', String(filteredPaidOffDebts.length), '✓', 'green') +
-        debtMetric('Total Quitado', brl(paidValue), '▣', 'blue') +
+        debtMetric('Encerradas', String(filteredPaidOffDebts.length), '✓', 'green') +
+        debtMetric('Valor Encerrado', brl(paidValue), '▣', 'blue') +
         debtMetric('Valor Original', brl(expectedValue), '◇', '') +
-        debtMetric('Economia', brl(discountValue), '↓', discountValue ? 'green' : '') +
+        debtMetric('Diferença', brl(discountValue), '↓', discountValue ? 'green' : '') +
         debtMetric('Credores', String(creditorsCount), '◌', creditorsCount ? 'blue' : '');
-    }
-
-    function renderPayments() {
-      renderPaymentMetrics();
-      renderHistory();
-      const sorted = [...payments].sort((a, b) => String(b.paymentDate || '').localeCompare(String(a.paymentDate || '')));
-      if (!sorted.length) {
-        $('paymentsList').innerHTML = emptyCard('Nenhum pagamento registrado', 'Os pagamentos baixados aparecerão aqui.');
-        return;
-      }
-
-      $('paymentsList').innerHTML = sorted.map(item => {
-        const debt = debts.find(d => d.id === item.debtId);
-        const title = debt ? getCreditorName(debt.creditorId) + ' · ' + debt.name : 'Dívida removida';
-        const discount = Number(item.discount || 0);
-        const interest = Number(item.interest || 0);
-        const adjustment = discount > 0 ? tag('Desconto ' + brl(discount), 'green') : interest > 0 ? tag('Juros ' + brl(interest), 'red') : tag('Sem Ajuste', 'gray');
-        return '<div class="payment-row">' +
-          '<div><strong>' + escapeHtml(title) + '</strong><small>Prestação ' + escapeHtml(item.installmentNumber || '-') + '</small></div>' +
-          '<div><div class="metric-label">Pago Em</div><strong>' + formatDateBR(item.paymentDate) + '</strong></div>' +
-          '<div><div class="metric-label">Valor Pago</div><strong>' + brl(item.paidValue) + '</strong></div>' +
-          '<div><div class="metric-label">Valor Previsto</div><strong>' + brl(item.expectedValue) + '</strong></div>' +
-          '<div>' + adjustment + '</div>' +
-        '</div>';
-      }).join('');
-    }
-
-    function renderPaymentMetrics() {
-      const container = $('paymentMetrics');
-      if (!container) return;
-      const month = currentMonthKey();
-      const monthPayments = payments.filter(p => String(p.paymentDate || '').startsWith(month));
-      const paidMonth = monthPayments.reduce((sum, item) => sum + Number(item.paidValue || 0), 0);
-      const discountMonth = monthPayments.reduce((sum, item) => sum + Number(item.discount || 0), 0);
-      const interestMonth = monthPayments.reduce((sum, item) => sum + Number(item.interest || 0), 0);
-      const totalPaid = payments.reduce((sum, item) => sum + Number(item.paidValue || 0), 0);
-
-      container.innerHTML =
-        debtMetric('Pago no Mês', brl(paidMonth), '✓', 'green') +
-        debtMetric('Desconto no Mês', brl(discountMonth), '↓', 'green') +
-        debtMetric('Juros no Mês', brl(interestMonth), '!', 'red') +
-        debtMetric('Total Já Pago', brl(totalPaid), '▣', 'blue');
-    }
-
-    function monthLabel(monthKey) {
-      if (!monthKey) return '-';
-      const [year, month] = monthKey.split('-').map(Number);
-      const label = new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-      return label.charAt(0).toUpperCase() + label.slice(1);
     }
 
     function priorityScore(debt) {
@@ -831,22 +782,14 @@
     }
 
     function orderedTrailDebts() {
-      const active = debts
+      return debts
         .filter(debt => debt.status === 'Ativa')
         .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
-      const paidOff = debts
-        .filter(debt => debt.status === 'Quitada')
-        .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
-      return [...active, ...paidOff];
     }
 
     function sortedTrailDebts() {
       if (selectedTrailDebtSort === 'trail') return orderedTrailDebts();
-      const active = sortDebts(debts.filter(debt => debt.status === 'Ativa'), selectedTrailDebtSort);
-      const paidOff = debts
-        .filter(debt => debt.status === 'Quitada')
-        .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
-      return [...active, ...paidOff];
+      return sortDebts(debts.filter(debt => debt.status === 'Ativa'), selectedTrailDebtSort);
     }
 
     function eligibleRenegotiationDebts() {
@@ -885,63 +828,6 @@
       return debts
         .filter(debt => debt.status === 'Quitada')
         .sort((a, b) => trailOrderValue(a) - trailOrderValue(b));
-    }
-
-    function renderHistory() {
-      const metrics = $('historyMetrics');
-      const list = $('historyList');
-      if (!metrics || !list) return;
-      if (!payments.length) {
-        metrics.innerHTML =
-          debtMetric('Meses com Pagamento', '0', '↺', 'blue') +
-          debtMetric('Total Pago', brl(0), '✓', 'green') +
-          debtMetric('Descontos', brl(0), '↓', 'green') +
-          debtMetric('Juros', brl(0), '!', 'red');
-        list.innerHTML = emptyCard('Sem histórico ainda', 'Os fechamentos mensais aparecerão conforme os pagamentos forem registrados.');
-        return;
-      }
-
-      const monthly = new Map();
-      payments.forEach(item => {
-        const key = String(item.paymentDate || item.expectedDate || '').slice(0, 7) || 'Sem data';
-        if (!monthly.has(key)) monthly.set(key, { paid: 0, expected: 0, discount: 0, interest: 0, count: 0 });
-        const bucket = monthly.get(key);
-        bucket.paid += Number(item.paidValue || 0);
-        bucket.expected += Number(item.expectedValue || 0);
-        bucket.discount += Number(item.discount || 0);
-        bucket.interest += Number(item.interest || 0);
-        bucket.count += 1;
-      });
-
-      const rows = [...monthly.entries()].sort((a, b) => String(b[0]).localeCompare(String(a[0])));
-      const totalPaid = rows.reduce((sum, [, item]) => sum + item.paid, 0);
-      const totalDiscount = rows.reduce((sum, [, item]) => sum + item.discount, 0);
-      const totalInterest = rows.reduce((sum, [, item]) => sum + item.interest, 0);
-      const maxPaid = Math.max(...rows.map(([, item]) => item.paid), 1);
-
-      metrics.innerHTML =
-        debtMetric('Meses com Pagamento', String(rows.length), '↺', 'blue') +
-        debtMetric('Total Pago', brl(totalPaid), '✓', 'green') +
-        debtMetric('Economia Total', brl(totalDiscount), '↓', 'green') +
-        debtMetric('Custo com Juros', brl(totalInterest), '!', 'red');
-
-      list.innerHTML = rows.map(([key, item]) => {
-        const paidPct = Math.max(4, Math.round((item.paid / maxPaid) * 100));
-        const netSaving = item.discount - item.interest;
-        const resultTag = netSaving > 0
-          ? tag('Economia ' + brl(netSaving), 'green')
-          : netSaving < 0
-            ? tag('Impacto de Juros ' + brl(Math.abs(netSaving)), 'red')
-            : tag('Equilíbrio', 'gray');
-        return '<div class="history-month">' +
-          '<div class="history-month-head"><div><div class="debt-name">' + escapeHtml(monthLabel(key)) + '</div><div class="debt-meta"><span>' + item.count + ' pagamentos</span>' + resultTag + '</div></div><strong>' + brl(item.paid) + '</strong></div>' +
-          '<div class="history-bars">' +
-            '<div class="history-bar"><span>Pago</span><div class="bar-track"><div class="bar-fill" style="width:' + paidPct + '%;"></div></div><strong>' + brl(item.paid) + '</strong></div>' +
-            '<div class="history-bar"><span>Economia</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, Math.round((item.discount / Math.max(item.paid, 1)) * 100)) + '%;"></div></div><strong>' + brl(item.discount) + '</strong></div>' +
-            '<div class="history-bar"><span>Juros</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, Math.round((item.interest / Math.max(item.paid, 1)) * 100)) + '%; background: linear-gradient(90deg, var(--amber), var(--danger));"></div></div><strong>' + brl(item.interest) + '</strong></div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
     }
 
     function renderCreditors() {
@@ -1050,23 +936,22 @@
       const monthlyCommitment = route
         .filter(debt => debt.status === 'Ativa' && debtBalance(debt) > 0)
         .reduce((sum, debt) => sum + Number(debt.installmentValue || 0), 0);
-      const completed = route.filter(debt => debt.status === 'Quitada' || debtBalance(debt) === 0).length;
-      const next = route.find(debt => debt.status !== 'Quitada' && debtBalance(debt) > 0) || null;
-      const progress = route.length ? Math.round((completed / route.length) * 100) : 0;
+      const next = route.find(debt => debtBalance(debt) > 0) || null;
+      const activeProgress = route.length ? Math.round(route.reduce((sum, debt) => sum + debtProgress(debt), 0) / route.length) : 0;
 
       metrics.innerHTML =
-        '<div class="route-donut" style="--route-progress:' + progress + '%;"><strong>' + progress + '%</strong><span>jornada</span></div>' +
-        '<div class="route-summary-copy"><div class="metric-label">Progresso da sua jornada</div><strong>Você já quitou ' + completed + ' de ' + route.length + ' dívidas</strong><span>' + (route.length ? 'Continue avançando na ordem definida para sua rota.' : 'Cadastre uma dívida ativa para iniciar sua rota.') + '</span></div>' +
+        '<div class="route-donut" style="--route-progress:' + activeProgress + '%;"><strong>' + activeProgress + '%</strong><span>rota ativa</span></div>' +
+        '<div class="route-summary-copy"><div class="metric-label">Frente atual</div><strong>' + (route.length ? route.length + ' dívida(s) na rota' : 'Nenhuma dívida ativa na rota') + '</strong><span>' + (route.length ? 'Aqui ficam apenas os compromissos que ainda pedem ação.' : 'Cadastre ou reative uma dívida para montar sua próxima frente.') + '</span></div>' +
         '<div class="route-summary-metrics">' +
-        debtMetric('Total de dívidas', String(route.length), '⇄', 'blue') +
-        debtMetric('Saldo total', brl(totalBalance), '▣', 'red') +
-        debtMetric('Concluídas', String(completed), '✓', 'green') +
+        debtMetric('Dívidas ativas', String(route.length), '⇄', 'blue') +
+        debtMetric('Saldo ativo', brl(totalBalance), '▣', 'red') +
+        debtMetric('Próximo alvo', next ? getCreditorName(next.creditorId) : '-', '!', next ? 'amber' : '') +
         debtMetric('Compromisso mensal', brl(monthlyCommitment), '▤', 'green') +
         '</div>';
 
       position.textContent = next
         ? 'Próximo alvo: ' + getCreditorName(next.creditorId) + ' · ' + next.name
-        : route.length ? 'Todas as dívidas da rota foram concluídas' : 'Defina sua primeira dívida na rota';
+        : route.length ? 'Nenhuma dívida ativa com saldo em aberto' : 'Defina sua primeira dívida na rota';
 
       if (!route.length) {
         nextTarget.innerHTML = '';
@@ -1088,7 +973,7 @@
           '<div class="next-target-stat"><span>Status</span><strong>' + routeInstallmentStatusLabel(next) + '</strong></div>' +
         '</div>';
       } else {
-        nextTarget.innerHTML = '<div class="next-target-card complete"><div class="next-target-main"><div class="target-icon">✓</div><div><div class="eyebrow">Jornada concluída</div><h2>Todas as dívidas da rota foram quitadas</h2><div class="debt-meta">Seu histórico permanece aqui para mostrar o caminho percorrido.</div></div></div></div>';
+        nextTarget.innerHTML = '<div class="next-target-card complete"><div class="next-target-main"><div class="target-icon">✓</div><div><div class="eyebrow">Rota sem pressão</div><h2>Nenhuma dívida ativa com saldo em aberto</h2><div class="debt-meta">A frente atual fica vazia até você cadastrar ou reativar uma dívida.</div></div></div></div>';
       }
 
       road.innerHTML = route.map((debt, index) => {
@@ -1226,7 +1111,7 @@
         '<div class="summary-card">' +
           '<h2 class="panel-title">Resumo geral</h2>' +
           '<div class="summary-grid">' +
-            '<div><span>Dívida total reconhecida</span><strong>' + brl(data.totalRecognized) + '</strong></div>' +
+            '<div><span>Dívida em aberto reconhecida</span><strong>' + brl(data.totalRecognized) + '</strong></div>' +
             '<div><span>Total em aberto</span><strong>' + brl(data.totalActive) + '</strong></div>' +
             '<div><span>Compromisso mensal</span><strong>' + brl(data.monthCommitment) + '</strong></div>' +
             '<div><span>Parcelas do mês</span><strong>' + data.monthInstallments.length + '</strong><small>' + brl(data.monthCommitment) + '</small></div>' +
@@ -1311,13 +1196,11 @@
       const critical = [...activeDebts].sort((a, b) => dashboardPriorityScore(b) - dashboardPriorityScore(a))[0];
       const opportunity = [...activeDebts].filter(d => debtBalance(d) > 0).sort((a, b) => debtBalance(a) - debtBalance(b))[0];
       const overdue = openInstallments.filter(item => daysUntil(item.dueDate) < 0);
-      const paid = payments.reduce((sum, item) => sum + Number(item.paidValue || 0), 0);
       const rows = [
         { title: 'Maior pressão hoje', main: biggest ? getCreditorName(biggest.creditorId) : '-', value: biggest ? brl(debtBalance(biggest)) : brl(0), note: totalActive ? Math.round((debtBalance(biggest) / totalActive) * 100) + '% do total ativo' : 'Sem saldo ativo' },
         { title: 'Melhor oportunidade', main: opportunity ? getCreditorName(opportunity.creditorId) + ' · ' + opportunity.name : '-', value: opportunity ? brl(debtBalance(opportunity)) : brl(0), note: 'Menor saldo restante para quitação' },
         { title: 'Dívida mais crítica', main: critical ? getCreditorName(critical.creditorId) + ' · ' + critical.name : '-', value: nextInstallment(critical) ? brl(nextInstallment(critical).expectedValue) : brl(debtBalance(critical)), note: nextInstallment(critical) ? dueHint(nextInstallment(critical).dueDate) : 'Sem parcela pendente' },
-        { title: 'Atrasos', main: overdue.length ? overdue.length + ' parcela(s)' : 'Nenhum atraso', value: brl(overdue.reduce((sum, item) => sum + Number(item.expectedValue || 0), 0)), note: overdue.length ? 'Regularize antes de avançar' : 'Continue mantendo a rota em dia' },
-        { title: 'Evolução', main: 'Você já pagou', value: brl(paid), note: paid > 0 ? 'Continue registrando pagamentos' : 'Primeiros pagamentos aparecerão aqui' }
+        { title: 'Atrasos', main: overdue.length ? overdue.length + ' parcela(s)' : 'Nenhum atraso', value: brl(overdue.reduce((sum, item) => sum + Number(item.expectedValue || 0), 0)), note: overdue.length ? 'Regularize antes de avançar' : 'Continue mantendo a rota em dia' }
       ];
       container.innerHTML = rows.map(item => (
         '<div class="insight-tile"><div class="metric-label">' + escapeHtml(item.title) + '</div><strong>' + escapeHtml(item.main) + '</strong><div class="insight-value">' + escapeHtml(item.value) + '</div><small>' + escapeHtml(item.note) + '</small></div>'
@@ -1341,8 +1224,6 @@
       renderDebts();
       renderRenegotiation();
       renderTrail();
-      renderPayments();
-      renderHistory();
       renderRenegotiatedHistory();
     }
 
