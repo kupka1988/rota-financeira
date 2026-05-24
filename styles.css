@@ -325,7 +325,7 @@
     .route-summary-copy strong { display: block; font-size: 17px; color: var(--text); }
     .route-summary-copy span { color: var(--muted); font-size: 13px; line-height: 1.35; }
     .route-summary-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--border); }
-    .next-target-card { display: grid; grid-template-columns: minmax(320px, 1.45fr) minmax(150px, 0.62fr) repeat(4, minmax(104px, 0.42fr)); gap: 14px; align-items: center; margin-bottom: 16px; padding: 18px 22px; border-radius: var(--radius-lg); border: 1px solid rgba(216,164,65,0.34); background: linear-gradient(90deg, rgba(216,164,65,0.16), rgba(255,255,255,0.025)), var(--panel); box-shadow: var(--shadow); overflow: hidden; }
+    .next-target-card { display: grid; grid-template-columns: minmax(320px, 1.45fr) minmax(150px, 0.62fr) repeat(5, minmax(104px, 0.42fr)); gap: 14px; align-items: center; margin-bottom: 16px; padding: 18px 22px; border-radius: var(--radius-lg); border: 1px solid rgba(216,164,65,0.34); background: linear-gradient(90deg, rgba(216,164,65,0.16), rgba(255,255,255,0.025)), var(--panel); box-shadow: var(--shadow); overflow: hidden; }
     .next-target-card.complete { grid-template-columns: 1fr; border-color: rgba(63,185,133,0.34); background: linear-gradient(90deg, rgba(63,185,133,0.14), rgba(255,255,255,0.025)), var(--panel); }
     .next-target-main { display: flex; align-items: center; gap: 14px; min-width: 0; }
     .next-target-main h2 { margin: 3px 0 0; font-size: 20px; letter-spacing: -0.02em; line-height: 1.2; }
@@ -344,6 +344,7 @@
     .route-panel-head .panel-title span { color: var(--muted); font-size: 14px; font-weight: 600; }
     .route-list { display: grid; }
     .route-item { display: grid; grid-template-columns: 24px 38px minmax(210px, 1.22fr) minmax(140px, 0.78fr) minmax(108px, 0.48fr) minmax(126px, 0.58fr) minmax(108px, 0.48fr) minmax(126px, 0.58fr) minmax(82px, 0.36fr) minmax(112px, 0.48fr); gap: 10px; align-items: center; min-height: 76px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.018); }
+    .paid-route-item { grid-template-columns: 38px minmax(240px, 1.35fr) minmax(128px, 0.58fr) minmax(128px, 0.58fr) minmax(150px, 0.72fr) minmax(116px, 0.52fr) minmax(82px, 0.34fr); }
     .route-item:last-child { border-bottom: 0; }
     .route-item.current { background: linear-gradient(90deg, rgba(216,164,65,0.12), rgba(255,255,255,0.018)); }
     .route-item.done { background: linear-gradient(90deg, rgba(63,185,133,0.09), rgba(255,255,255,0.012)); }
@@ -364,6 +365,10 @@
     .route-progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--green)); }
     .route-item.current .route-progress-fill { background: linear-gradient(90deg, #ec4e4e, var(--amber)); }
     .route-actions { display: flex; justify-content: flex-start; align-items: center; gap: 6px; min-width: 0; }
+    .paid-off-actions { justify-content: flex-end; }
+    .paid-difference.positive strong { color: var(--green); }
+    .paid-difference.negative strong { color: #eda2a2; }
+    .paid-difference.neutral strong { color: var(--muted); }
     .route-item .debt-detail { grid-column: 1 / -1; margin: 4px -14px -12px; }
     .ghost-btn.subtle { width: 32px; height: 32px; padding: 0; color: var(--muted); }
 
@@ -571,9 +576,11 @@
       .debt-insights { grid-template-columns: 1fr; }
       .route-summary { grid-template-columns: minmax(0, 1fr); }
       .route-summary-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-      .next-target-card { grid-template-columns: minmax(280px, 1fr) minmax(180px, 0.8fr) repeat(2, minmax(120px, 0.55fr)); }
+      .next-target-card { grid-template-columns: minmax(280px, 1fr) minmax(180px, 0.8fr) repeat(3, minmax(120px, 0.55fr)); }
       .route-item { grid-template-columns: 24px 38px minmax(0, 1fr); gap: 10px; align-items: start; }
+      .paid-route-item { grid-template-columns: 38px minmax(0, 1fr); }
       .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: 3; }
+      .paid-route-item .route-stat, .paid-route-item .route-actions { grid-column: 2; }
       .route-stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; }
       .route-stat span { margin-bottom: 0; }
       .route-stat small { grid-column: 1 / -1; justify-self: end; margin-top: -3px; }
@@ -586,7 +593,9 @@
       .debt-row { grid-template-columns: minmax(210px, 1.24fr) minmax(92px, 0.54fr) minmax(96px, 0.54fr) minmax(88px, 0.48fr) minmax(108px, 0.58fr) minmax(96px, 0.5fr) 34px; }
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: block; }
       .route-item { grid-template-columns: 14px 24px minmax(130px, 1.18fr) minmax(72px, 0.48fr) minmax(70px, 0.4fr) minmax(74px, 0.42fr) minmax(70px, 0.4fr) minmax(80px, 0.44fr) minmax(48px, 0.28fr) minmax(64px, 0.34fr); }
+      .paid-route-item { grid-template-columns: 28px minmax(150px, 1.18fr) minmax(92px, 0.54fr) minmax(92px, 0.54fr) minmax(108px, 0.62fr) minmax(88px, 0.48fr) minmax(70px, 0.38fr); }
       .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: auto; }
+      .paid-route-item .route-stat, .paid-route-item .route-actions { grid-column: auto; }
       .route-stat { display: block; width: auto; padding: 0; border: 0; border-radius: 0; background: transparent; }
       .route-stat span { margin-bottom: 3px; }
       .route-stat small { display: block; justify-self: auto; margin-top: 3px; }
@@ -642,7 +651,9 @@
       .next-target-main, .next-target-card .route-progress { grid-column: 1 / -1; }
       .route-panel-head { align-items: flex-start; flex-direction: column; }
       .route-item { grid-template-columns: 28px 38px minmax(0, 1fr); gap: 10px; align-items: start; }
+      .paid-route-item { grid-template-columns: 38px minmax(0, 1fr); }
       .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: 3; }
+      .paid-route-item .route-stat, .paid-route-item .route-actions { grid-column: 2; }
       .route-actions { flex-wrap: wrap; }
     }
 
