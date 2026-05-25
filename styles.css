@@ -344,7 +344,7 @@
     .route-panel-head .panel-title span { color: var(--muted); font-size: 14px; font-weight: 600; }
     .route-list { display: grid; }
     .route-item { display: grid; grid-template-columns: 24px 38px minmax(210px, 1.22fr) minmax(140px, 0.78fr) minmax(108px, 0.48fr) minmax(126px, 0.58fr) minmax(108px, 0.48fr) minmax(126px, 0.58fr) minmax(82px, 0.36fr) minmax(112px, 0.48fr); gap: 10px; align-items: center; min-height: 76px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.018); }
-    .paid-route-item { grid-template-columns: 38px minmax(240px, 1.35fr) minmax(128px, 0.58fr) minmax(128px, 0.58fr) minmax(150px, 0.72fr) minmax(116px, 0.52fr) minmax(82px, 0.34fr); }
+    .paid-route-item { grid-template-columns: 38px minmax(260px, 1.22fr) minmax(136px, 0.6fr) minmax(136px, 0.6fr) minmax(168px, 0.72fr) minmax(128px, 0.54fr) minmax(90px, 0.36fr); gap: 14px; min-height: 88px; padding: 14px 18px; }
     .route-item:last-child { border-bottom: 0; }
     .route-item.current { background: linear-gradient(90deg, rgba(216,164,65,0.12), rgba(255,255,255,0.018)); }
     .route-item.done { background: linear-gradient(90deg, rgba(63,185,133,0.09), rgba(255,255,255,0.012)); }
@@ -366,6 +366,10 @@
     .route-item.current .route-progress-fill { background: linear-gradient(90deg, #ec4e4e, var(--amber)); }
     .route-actions { display: flex; justify-content: flex-start; align-items: center; gap: 6px; min-width: 0; }
     .paid-off-actions { justify-content: flex-end; }
+    .paid-route-item .route-title > div,
+    .paid-route-item .route-stat { min-width: 0; }
+    .paid-route-item .route-stat strong { line-height: 1.2; }
+    .paid-route-item .paid-difference strong { white-space: normal; }
     .paid-difference.positive strong { color: var(--green); }
     .paid-difference.negative strong { color: #eda2a2; }
     .paid-difference.neutral strong { color: var(--muted); }
@@ -527,6 +531,12 @@
         min-height: 60px;
         padding: 8px;
       }
+      .paid-route-item {
+        grid-template-columns: 30px minmax(220px, 1.16fr) minmax(120px, 0.56fr) minmax(120px, 0.56fr) minmax(148px, 0.66fr) minmax(112px, 0.5fr) minmax(78px, 0.36fr);
+        gap: 10px;
+        min-height: 78px;
+        padding: 12px;
+      }
       .drag-handle { width: 16px; height: 28px; font-size: 12px; }
       .route-rank { width: 28px; height: 28px; font-size: 12px; }
       .route-title { gap: 8px; }
@@ -593,7 +603,7 @@
       .debt-row { grid-template-columns: minmax(210px, 1.24fr) minmax(92px, 0.54fr) minmax(96px, 0.54fr) minmax(88px, 0.48fr) minmax(108px, 0.58fr) minmax(96px, 0.5fr) 34px; }
       .debt-row .row-stat.next, .debt-row .row-stat.progress { display: block; }
       .route-item { grid-template-columns: 14px 24px minmax(130px, 1.18fr) minmax(72px, 0.48fr) minmax(70px, 0.4fr) minmax(74px, 0.42fr) minmax(70px, 0.4fr) minmax(80px, 0.44fr) minmax(48px, 0.28fr) minmax(64px, 0.34fr); }
-      .paid-route-item { grid-template-columns: 28px minmax(150px, 1.18fr) minmax(92px, 0.54fr) minmax(92px, 0.54fr) minmax(108px, 0.62fr) minmax(88px, 0.48fr) minmax(70px, 0.38fr); }
+      .paid-route-item { grid-template-columns: 30px minmax(210px, 1.16fr) minmax(118px, 0.56fr) minmax(118px, 0.56fr) minmax(140px, 0.66fr) minmax(112px, 0.5fr) minmax(78px, 0.36fr); }
       .route-item .route-progress, .route-stat, .route-status, .route-actions { grid-column: auto; }
       .paid-route-item .route-stat, .paid-route-item .route-actions { grid-column: auto; }
       .route-stat { display: block; width: auto; padding: 0; border: 0; border-radius: 0; background: transparent; }

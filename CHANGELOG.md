@@ -1,6 +1,7 @@
 # CHANGELOG - Rota Financeira
 
 ## Historico resumido
+- 2026-05-25: ajustado espacamento da grade da aba Quitadas para evitar linhas e colunas acavaladas no layout de notebook.
 - 2026-05-20: adicionada coluna `Quitacao Hoje` na Rota Financeira, Em espera e Fora do radar, com economia compacta e ordenacao por menor quitacao; Dashboard ajustado para nao quebrar valores monetarios em telas menores.
 - 2026-05-19: definida a pasta OneDrive como repositorio local oficial entre maquinas e regra para backups sempre no OneDrive.
 - 2026-05-17: criado arquivo de contexto como regra permanente do projeto.
