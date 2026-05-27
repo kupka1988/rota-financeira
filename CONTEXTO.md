@@ -32,9 +32,50 @@ Memoria compartilhada do projeto. Antes de iniciar qualquer trabalho, consultar 
 - Clones, copias ou pastas Git locais fora do OneDrive servem apenas como area temporaria de edicao antes de sincronizar, commitar e publicar no GitHub Pages.
 - Nunca tratar uma pasta local fora do OneDrive como fonte oficial do projeto.
 
+## Estado atual (atualizado 2026-05-27)
+
+### Estrutura de arquivos
+```
+index.html          — HTML principal (aponta para js/app.js)
+styles.css          — CSS único (não dividido)
+js/
+  app.js            — entry point: loadAll, renderAll, navegação, boot
+  firebase.js       — config Firebase + re-export de funções Firestore
+  state.js          — estado global (state object) + rebuildIndexes
+  utils.js          — utilitários puros + helpers HTML (brl, escapeHtml, etc.)
+  calc.js           — cálculos de dívidas (debtBalance, debtProgress, etc.)
+  preferences.js    — tema, densidade, preferências de usuário
+  dashboard.js      — render Dashboard + renderRenegotiatedHistory
+  trail.js          — render Rota Financeira + drag/drop da rota
+  debts.js          — render Em espera / Fora do radar / Quitadas + drag/drop
+  renegotiation.js  — render + modal Renegociação
+  debt-form.js      — modal dívida + saveDebt + changeDebtStatus + rollDebt
+  payment.js        — modal pagamento + payoff + parcela + reactivateDebtIfOpen
+  creditors.js      — render + form de credores + logo
+  data.js           — CSV/JSON export/import + modal de exclusão
+assets/
+  favicon.png       — ícone ativo
+  icon-192.png      — ativo (apple-touch-icon)
+_arquivo/           — arquivos não usados pelo app (ignorado pelo git)
+backups/            — backups automáticos (ignorado pelo git)
+```
+
+### Padrão de estado
+- Todo estado mutável fica em `state` (objeto exportado de `state.js`).
+- Módulos chamam `state.renderFn()` para renderizar tudo, `state.loadAllFn()` para recarregar do Firebase.
+- Funções expostas ao HTML ficam em `window.*`.
+
+### Comandos de validação
+- Validar sintaxe de um módulo:
+  `sed 's/^\s*import\s.*;//g; s/^\s*export\s//' js/<arquivo>.js | node --input-type=module --check`
+- Ver status Git:
+  `& 'C:\Program Files\Git\cmd\git.exe' status --short --branch`
+- Push:
+  `& 'C:\Program Files\Git\cmd\git.exe' push origin main`
+
 ## Stack atual
-- HTML, CSS e JavaScript puro.
-- Arquivos principais: `index.html`, `styles.css`, `app.js`.
+- HTML, CSS e JavaScript puro (ES Modules nativos).
+- Entry point: `js/app.js` (carregado em `index.html` com `type="module"`).
 - Firebase/Firestore ja conectado.
 - Nao migrar para React, Angular ou Flutter por enquanto.
 
